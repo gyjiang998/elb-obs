@@ -1,0 +1,60 @@
+{
+  "schema_version": "agent_cli_adapter_catalog/v1",
+  "adapters": [
+    {
+      "adapter_id": "team-codeagent",
+      "display_name": "Team CodeAgent",
+      "description": "示例：接入团队自研的交互式 Coding Agent CLI。",
+      "executable": "/home/user/bin/team-codeagent",
+      "args": [
+        "--workspace",
+        "{workspace}",
+        "--mcp-config",
+        "{mcp_config}",
+        "--session",
+        "{agent_session_id}"
+      ],
+      "resume_args": [
+        "--resume"
+      ],
+      "session_strategy": "native_session",
+      "submit_mode": "bracketed_paste_cr",
+      "startup_input_delay_ms": 600,
+      "submit_delay_ms": 120,
+      "submit_fallback_ms": 0,
+      "environment": {
+        "TEAM_AGENT_HOME": "{env:TEAM_AGENT_HOME}"
+      },
+      "model_config": {
+        "mode": "environment",
+        "base_url_env": "TEAM_MODEL_BASE_URL",
+        "api_key_env": "TEAM_MODEL_API_KEY",
+        "model_env": "TEAM_MODEL_NAME",
+        "context_window_env": "TEAM_MODEL_CONTEXT_TOKENS"
+      },
+      "workspace": {
+        "skill_roots": [
+          ".agents/skills",
+          ".team-agent/skills"
+        ],
+        "skill_source_roots": [
+          "{env:TEAM_AGENT_SKILL_ROOT}"
+        ],
+        "mcp_format": "kimi",
+        "mcp_path": ".team-agent/mcp.json"
+      },
+      "capabilities": {
+        "interactive_pty": true,
+        "persistent_session": true,
+        "native_filesystem": true,
+        "native_shell": true,
+        "mcp": true,
+        "skills": true,
+        "structured_page_actions": true,
+        "token_usage": true,
+        "browser_model_override": true
+      },
+      "usage_kind": "standard_jsonl"
+    }
+  ]
+}

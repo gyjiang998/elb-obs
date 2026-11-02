@@ -1,0 +1,117 @@
+{
+  "schema_version": "skill_profile_source/v1",
+  "profile_id": "agent-centric-page-device-selection-2026-10-26",
+  "label_zh": "Agent-Centric 设备选择与采集（推荐）",
+  "description_zh": "沿用平台设备准备与远程诊断，在场景采集中绑定用户选定的连接路径，全程沿用目标设备。",
+  "created_at": "2026-10-26T00:00:00Z",
+  "recommended": true,
+  "parent_profile_id": "agent-centric-page-semantic-code-2026-08-31",
+  "skills": {
+    "agent-runtime-orchestrator": {
+      "version": "2.6.0",
+      "prompt_slot": "agent_runtime",
+      "prompt_mode": "replace",
+      "source": "skills/agent-runtime-orchestrator/2.6.0.md"
+    },
+    "page-agent-control": {
+      "version": "5.4.0",
+      "prompt_slot": "page_agent",
+      "prompt_mode": "replace",
+      "source": "skills/page-agent-control/5.4.0.md"
+    },
+    "page-analysis-artifact-orchestrator": {
+      "version": "3.3.0",
+      "prompt_slot": "page_analysis",
+      "prompt_mode": "replace",
+      "source": "skills/page-analysis-artifact-orchestrator/3.3.0.md"
+    },
+    "code-context-retrieval": {
+      "version": "1.3.0",
+      "prompt_slot": "code_context",
+      "prompt_mode": "replace",
+      "source": "skills/code-context-retrieval/1.3.0.md"
+    },
+    "trace-hotspot-code-investigation": {
+      "version": "1.2.0",
+      "prompt_slot": "hotspot_investigation",
+      "prompt_mode": "replace",
+      "source": "skills/trace-hotspot-code-investigation/1.2.0.md",
+      "label_zh": "Trace 热点代码深挖",
+      "description_zh": "复用语义图导航 caller/callee，再以源码与采样证据选择最小优化核心。"
+    },
+    "agent-native-device-experimentation": {
+      "version": "4.5.1",
+      "prompt_slot": "device_validation",
+      "prompt_mode": "replace",
+      "source": "skills/agent-native-device-experimentation/4.5.1.md"
+    },
+    "application-execution-flow-reconstruction": {
+      "version": "4.0.0",
+      "prompt_slot": "application_flow",
+      "prompt_mode": "replace",
+      "source": "skills/application-execution-flow-reconstruction/4.0.0.md"
+    },
+    "code-knowledge-analysis": {
+      "version": "1.7.0",
+      "prompt_slot": "code_knowledge",
+      "prompt_mode": "replace",
+      "source": "skills/code-knowledge-analysis/1.7.0.md"
+    },
+    "custom-accelerator-api-kb-builder": {
+      "version": "2.0.0",
+      "prompt_slot": "custom_api_kb",
+      "prompt_mode": "replace",
+      "source": "skills/custom-accelerator-api-kb-builder/2.0.0.md"
+    },
+    "hardware-semantic-routing-experiment": {
+      "version": "3.2.0",
+      "prompt_slot": "hardware_route",
+      "prompt_mode": "replace",
+      "source": "skills/hardware-semantic-routing-experiment/3.2.0.md"
+    },
+    "full-optimization-analysis": {
+      "version": "2.2.0",
+      "prompt_slot": "full_analysis",
+      "prompt_mode": "replace",
+      "source": "skills/full-optimization-analysis/2.2.0.md"
+    },
+    "strategy-kb-rag": {
+      "version": "2.0.0",
+      "prompt_slot": "strategy_kb_rag",
+      "prompt_mode": "replace",
+      "source": "skills/strategy-kb-rag/2.0.0.md"
+    },
+    "strategy-hardware-kb": {
+      "version": "3.2.0",
+      "prompt_slot": "strategy_hardware_kb",
+      "prompt_mode": "replace",
+      "source": "skills/strategy-hardware-kb/3.2.0.md"
+    },
+    "strategy-direct-baseline": {
+      "version": "2.0.0",
+      "prompt_slot": "strategy_direct_baseline",
+      "prompt_mode": "replace",
+      "source": "skills/strategy-direct-baseline/2.0.0.md"
+    },
+    "blind-opportunity-analysis": {
+      "version": "2.1.0",
+      "prompt_slot": "blind_reasoning",
+      "prompt_mode": "replace",
+      "source": "skills/blind-opportunity-analysis/2.1.0.md"
+    },
+    "blind-flow-comparison": {
+      "version": "2.0.0",
+      "prompt_slot": "blind_comparison",
+      "prompt_mode": "replace",
+      "source": "skills/blind-flow-comparison/2.0.0.md"
+    },
+    "scenario-step-capture": {
+      "version": "1.4.0",
+      "prompt_slot": "scenario_capture",
+      "prompt_mode": "replace",
+      "source": "skills/scenario-step-capture/1.4.0.md",
+      "label_zh": "场景步骤采集",
+      "description_zh": "汇总候选设备并绑定选定连接路径，复用平台准备、采集与目标现场诊断。"
+    }
+  }
+}

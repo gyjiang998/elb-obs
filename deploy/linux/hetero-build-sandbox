@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+BWRAP_BIN="${HETERO_BWRAP_BIN:-/usr/bin/bwrap}"
+if [ ! -x "$BWRAP_BIN" ]; then
+    printf '%s\n' "bubblewrap executable not found: $BWRAP_BIN" >&2
+    exit 127
+fi
+
+exec "$BWRAP_BIN" \
+    --die-with-parent \
+    --new-session \
+    --unshare-net \
+    --bind / / \
+    -- "$@"

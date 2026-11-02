@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "application-flow-stage-analysis-v1.schema.json",
+  "title": "Application Flow Stage Analysis v1",
+  "description": "Trace-backed stage workload preview for an application-flow scenario. Stage duration is a wall-time envelope; event totals and estimated self time retain their own measurement semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "summary", "stages"],
+  "properties": {
+    "schema_version": { "const": "application_flow_stage_analysis/v1" },
+    "summary": { "$ref": "#/$defs/summary" },
+    "stages": {
+      "type": "array",
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "nodes": {
+      "description": "Hierarchical workload rows. stages remains the compatible stage-only projection.",
+      "type": "array",
+      "maxItems": 512,
+      "items": { "$ref": "#/$defs/analysis_node" }
+    }
+  },
+  "$defs": {
+    "nullable_number": { "type": ["number", "null"] },
+    "nullable_integer": { "type": ["integer", "null"] },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_stages", "timed_stages", "matched_stages", "partial_stages", "unmatched_stages",
+        "scenario_id", "scenario_name", "capture_kind", "trace_analysis_artifact_id", "trace_name",
+        "trace_window_start_ns", "trace_window_end_ns", "trace_window_duration_ms",
+        "total_event_count", "total_event_duration_ms", "top_event_limit_per_stage",
+        "ranking_method", "stage_semantics", "event_semantics"
+      ],
+      "properties": {
+        "total_stages": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "timed_stages": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "matched_stages": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "partial_stages": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "unmatched_stages": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "scenario_id": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "scenario_name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "capture_kind": { "type": "string", "enum": ["raw_htrace", "external_trace_analysis_report"] },
+        "trace_analysis_artifact_id": { "type": "string", "pattern": "^art_[a-f0-9]{24}$" },
+        "trace_name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "trace_window_start_ns": { "$ref": "#/$defs/nullable_integer" },
+        "trace_window_end_ns": { "$ref": "#/$defs/nullable_integer" },
+        "trace_window_duration_ms": { "$ref": "#/$defs/nullable_number" },
+        "total_event_count": { "type": "integer", "minimum": 0 },
+        "total_event_duration_ms": { "type": "number", "minimum": 0 },
+        "top_event_limit_per_stage": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "ranking_method": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "stage_semantics": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "event_semantics": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "total_nodes": { "type": "integer", "minimum": 0, "maximum": 512 },
+        "timed_nodes": { "type": "integer", "minimum": 0, "maximum": 512 },
+        "node_type_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "action": { "type": "integer", "minimum": 0 },
+            "phase": { "type": "integer", "minimum": 0 },
+            "stage": { "type": "integer", "minimum": 0 },
+            "activity": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "order", "start_ns", "end_ns", "start_ms", "end_ms", "duration_ms",
+        "event_count", "total_event_duration_ms", "start_event", "end_event", "top_events",
+        "event_timeline", "match_status", "confidence", "coverage"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,79}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "order": { "type": "integer", "minimum": 1 },
+        "start_ns": { "$ref": "#/$defs/nullable_integer" },
+        "end_ns": { "$ref": "#/$defs/nullable_integer" },
+        "start_ms": { "$ref": "#/$defs/nullable_number" },
+        "end_ms": { "$ref": "#/$defs/nullable_number" },
+        "duration_ms": { "$ref": "#/$defs/nullable_number" },
+        "event_count": { "type": "integer", "minimum": 0 },
+        "total_event_duration_ms": { "type": "number", "minimum": 0 },
+        "start_event": {
+          "oneOf": [{ "$ref": "#/$defs/event" }, { "type": "null" }]
+        },
+        "end_event": {
+          "oneOf": [{ "$ref": "#/$defs/event" }, { "type": "null" }]
+        },
+        "top_events": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "$ref": "#/$defs/event" }
+        },
+        "event_timeline": { "$ref": "#/$defs/event_timeline" },
+        "match_status": { "type": "string", "enum": ["matched", "partial", "unmatched"] },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "raw_trace_stage_window", "raw_trace_node_window", "aligned_event_evidence",
+            "derived_child_envelope", "no_runtime_boundary"
+          ]
+        },
+        "type": { "type": "string", "enum": ["action", "phase", "stage", "activity"] },
+        "parent_id": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,79}$" },
+            { "type": "null" }
+          ]
+        },
+        "boundary_source": {
+          "type": "string",
+          "enum": ["direct_trace", "derived_from_children", "unresolved"]
+        },
+        "boundary_coverage": { "type": "string", "enum": ["full", "partial", "unresolved"] },
+        "start_edge": { "const": "start" },
+        "end_edge": { "const": "end" }
+      }
+    },
+    "analysis_node": {
+      "allOf": [
+        { "$ref": "#/$defs/stage" },
+        {
+          "type": "object",
+          "required": [
+            "type", "parent_id", "boundary_source", "boundary_coverage", "start_edge", "end_edge"
+          ]
+        }
+      ]
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id", "name", "ts_ms", "dur_ms", "process_name", "pid", "thread_name", "tid", "itid",
+        "metrics", "measurement_semantics"
+      ],
+      "properties": {
+        "event_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "ts_ms": { "$ref": "#/$defs/nullable_number" },
+        "dur_ms": { "$ref": "#/$defs/nullable_number" },
+        "process_name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "pid": { "$ref": "#/$defs/nullable_integer" },
+        "thread_name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "tid": { "$ref": "#/$defs/nullable_integer" },
+        "itid": { "$ref": "#/$defs/nullable_integer" },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank", "occurrence_count", "self_time_estimate_total_duration_ms",
+            "inclusive_total_duration_ms", "max_self_time_estimate_duration_ms", "max_span_duration_ms"
+          ],
+          "properties": {
+            "rank": { "type": ["integer", "null"], "minimum": 1 },
+            "occurrence_count": { "type": "integer", "minimum": 0 },
+            "self_time_estimate_total_duration_ms": { "$ref": "#/$defs/nullable_number" },
+            "inclusive_total_duration_ms": { "type": "number", "minimum": 0 },
+            "max_self_time_estimate_duration_ms": { "$ref": "#/$defs/nullable_number" },
+            "max_span_duration_ms": { "type": "number", "minimum": 0 }
+          }
+        },
+        "measurement_semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["duration_kind", "ranking_kind", "cpu_self_time_proven"],
+          "properties": {
+            "duration_kind": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "ranking_kind": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "cpu_self_time_proven": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "event_timeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation", "source_occurrence_count", "returned_occurrence_count", "truncated",
+        "occurrences", "density_buckets", "semantics"
+      ],
+      "properties": {
+        "representation": {
+          "type": "string",
+          "enum": ["observed_occurrences", "binned_density", "representative_occurrences", "unavailable"]
+        },
+        "source_occurrence_count": { "type": "integer", "minimum": 0 },
+        "returned_occurrence_count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "truncated": { "type": "boolean" },
+        "occurrences": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/timeline_occurrence" }
+        },
+        "density_buckets": {
+          "type": "array",
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/density_bucket" }
+        },
+        "semantics": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "timeline_occurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id", "name", "rank", "ts_ms", "dur_ms", "self_time_estimate_duration_ms",
+        "process_name", "thread_name"
+      ],
+      "properties": {
+        "event_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "rank": { "type": ["integer", "null"], "minimum": 1 },
+        "ts_ms": { "type": "number" },
+        "dur_ms": { "type": "number", "minimum": 0 },
+        "self_time_estimate_duration_ms": { "$ref": "#/$defs/nullable_number" },
+        "process_name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "thread_name": { "type": "string", "minLength": 1, "maxLength": 160 }
+      }
+    },
+    "density_bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index", "start_ms", "end_ms", "occurrence_count",
+        "inclusive_total_duration_ms", "self_time_estimate_total_duration_ms"
+      ],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0, "maximum": 127 },
+        "start_ms": { "type": "number" },
+        "end_ms": { "type": "number" },
+        "occurrence_count": { "type": "integer", "minimum": 1 },
+        "inclusive_total_duration_ms": { "type": "number", "minimum": 0 },
+        "self_time_estimate_total_duration_ms": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

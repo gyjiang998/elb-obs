@@ -1,0 +1,258 @@
+{
+  "schema_version": "hardware_api_template_catalog/v1",
+  "catalog_id": "openharmony_curated_hardware_api_templates",
+  "version": "1.1.0",
+  "coverage_policy": {
+    "granularity": "api_semantic_family",
+    "knowledge_record_snapshot": {"gpu": 18, "npu": 146, "dsp": 9, "media": 31, "total": 204},
+    "contract_zh": "每条硬件 API 记录必须映射到一个语义族模板；模板可以是可执行 Harness、共享生命周期加适配器，或明确的系统集成 recipe。只有可执行 Harness 才能直接进入固定 profile 构建，recipe 不得伪称可直接下发。",
+    "coverage_levels": {
+      "executable_harness": "稳定脚手架可直接适配、构建并重新真机验证",
+      "lifecycle_with_adapter": "共享生命周期已提供，仍需为当前算子或格式生成受审查适配器",
+      "integration_recipe": "API 暴露在系统/HDI/provider 集成层，只提供实施与证据模板"
+    }
+  },
+  "selection_policy": {
+    "production_usage": "allowed_after_semantic_match",
+    "evaluation_usage": "exclude_from_template_blind_holdout",
+    "claim_boundary_zh": "模板是经过审查的实现先验，不是当前热点、设备能力、功能正确或性能收益证据。",
+    "required_adaptation_zh": [
+      "将当前热点的输入输出、数据类型、shape/format/stride 和边界条件映射到模板",
+      "替换模板中的示例 kernel 或图算子，并保留 CPU/software oracle",
+      "重新执行 profile 查询、构建、部署、真机比较和端到端基准",
+      "报告实际读取的 template_id、版本、复用部分和修改部分"
+    ]
+  },
+  "templates": [
+    {
+      "template_id": "gpu.vulkan.compute-buffer.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "gpu",
+      "api_family": "vulkan_compute",
+      "api_symbols": ["vkCreateComputePipelines", "vkCmdDispatch", "vkQueueSubmit"],
+      "profile_id": "gpu_vulkan",
+      "exposure_layer": "native_shell_api",
+      "template_role": "family_harness",
+      "coverage_level": "executable_harness",
+      "covered_semantic_families": ["gpu_compute_pipeline", "gpu_image_transfer"],
+      "semantic_match": ["规则的一维/二维数据并行", "明确的连续 buffer 输入输出", "无跨元素写冲突", "任务足以摊销 dispatch 与搬运"],
+      "files": ["gpu-vulkan-compute/host_template.c", "gpu-vulkan-compute/kernel_template.comp"],
+      "file_sha256": {
+        "gpu-vulkan-compute/host_template.c": "e028982037e1601cfa3632d721f5791e984454450636b04b4c21c7bc8e3d4c8d",
+        "gpu-vulkan-compute/kernel_template.comp": "d381d727a27159774aedf4fdb9701c0e620c96a093bb605ca9da8af880127559"
+      },
+      "adaptation_points": ["问题尺寸与 buffer 布局", "CPU oracle", "PushConstants", "GLSL kernel", "容差/字节比较", "benchmark 样本"],
+      "verification": {
+        "level": "device_function_verified",
+        "scope": "Vulkan loader + compute pipeline + SSBO dispatch + CPU byte comparison",
+        "observed_on": "one OpenHarmony device/profile; device identity intentionally omitted from prompt asset",
+        "limitations": ["示例 kernel 是 RGBA brightness，不是通用热点答案", "必须重新验证目标设备和目标数据路径", "host-marshal 成本可能抵消 kernel 收益"]
+      },
+      "knowledge_record_ids": ["gpu_api:vkCreateComputePipelines", "gpu_api:vkCmdDispatch", "gpu_api:vkQueueSubmit"]
+    },
+    {
+      "template_id": "gpu.gles3.fragment-image.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "gpu",
+      "api_family": "egl_gles3_fragment",
+      "api_symbols": ["glTexImage2D", "glUseProgram", "glDrawArrays", "glFramebufferTexture2D"],
+      "profile_id": "gpu_gles3",
+      "exposure_layer": "native_shell_api",
+      "template_role": "family_harness",
+      "coverage_level": "executable_harness",
+      "covered_semantic_families": ["gpu_image_effect", "gpu_image_transfer"],
+      "semantic_match": ["RGBA/图像逐像素变换", "可表达为 fragment shader", "明确纹理格式与尺寸", "可接受或消除 readback"],
+      "files": ["gpu-gles3-fragment/host_template.c"],
+      "file_sha256": {
+        "gpu-gles3-fragment/host_template.c": "725041a97dfe90358bb7f3ea8236ebc0c383120a9bd0d1d38d899e1f638e06ab"
+      },
+      "adaptation_points": ["fragment shader", "纹理尺寸/format", "输入 fixture", "CPU expected", "误差容限"],
+      "verification": {
+        "level": "device_function_verified",
+        "scope": "EGL pbuffer + GLES3 fragment shader + texture/FBO + readback comparison",
+        "observed_on": "one OpenHarmony device/profile; device identity intentionally omitted from prompt asset",
+        "limitations": ["pbuffer 是功能实验承载，不代表业务 Surface 集成", "readback 成本必须单独计算"]
+      },
+      "knowledge_record_ids": ["gpu_api:glTexImage2D", "gpu_api:glUseProgram", "gpu_api:glDrawArrays", "gpu_api:glFramebufferTexture2D"]
+    },
+    {
+      "template_id": "gpu.gles31.compute-ssbo.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "gpu",
+      "api_family": "egl_gles31_compute",
+      "api_symbols": ["glBindBufferBase", "glDispatchCompute", "glMemoryBarrier"],
+      "profile_id": "gpu_gles3",
+      "exposure_layer": "native_shell_api",
+      "template_role": "family_harness",
+      "coverage_level": "executable_harness",
+      "covered_semantic_families": ["gpu_compute_pipeline", "gpu_image_effect", "gpu_image_transfer"],
+      "semantic_match": ["规则 buffer 数据并行", "可用 SSBO 表达输入输出", "无跨 invocation 写冲突", "希望以较少宿主代码验证 GPU compute"],
+      "files": ["gpu-gles31-compute/host_template.c"],
+      "file_sha256": {
+        "gpu-gles31-compute/host_template.c": "6c424f22059a547584d0bf9991e41c65ac3526e841df6987b07d03f0ef91ea49"
+      },
+      "adaptation_points": ["compute shader", "SSBO 元素布局", "uniform", "dispatch 尺寸", "输入 fixture", "CPU oracle", "benchmark 样本"],
+      "verification": {
+        "level": "device_function_verified",
+        "scope": "EGL pbuffer + GLES 3.1 compute shader + SSBO dispatch + CPU value comparison",
+        "observed_on": "one OpenHarmony device/profile; device identity intentionally omitted from prompt asset",
+        "limitations": ["观察设备要求通过 dlopen/dlsym 加载 EGL/GLES，直接调用导出符号曾在首个 EGL 调用处异常退出", "目标设备必须实际创建 GLES 3.1 context", "SSBO size/alignment 与 work-group limits 必须重新查询", "glFinish/readback 是验证路径而非生产数据流"]
+      },
+      "knowledge_record_ids": ["gpu_api:glBindBufferBase", "gpu_api:glDispatchCompute", "gpu_api:glMemoryBarrier"]
+    },
+    {
+      "template_id": "npu.nnrt.graph-lifecycle.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "npu",
+      "api_family": "nnrt_ndk_graph",
+      "api_symbols": ["OH_NNModel_Finish", "OH_NNModel_GetAvailableOperations", "OH_NNCompilation_SetDevice", "OH_NNExecutor_RunSync"],
+      "profile_id": "npu_nnrt",
+      "exposure_layer": "public_ndk",
+      "template_role": "family_harness_with_operator_adapter",
+      "coverage_level": "lifecycle_with_adapter",
+      "covered_semantic_families": ["activation", "convolution", "elementwise_arithmetic", "indexing_data", "logical_compare", "matrix", "normalization", "pooling", "reduction", "sequence", "shape_layout", "unary_math", "vision_postprocess", "unclassified_nnrt_operator"],
+      "semantic_match": ["可形成完整 tensor 子图", "shape/dtype/layout 已知", "算子语义可映射到 OH_NN_OPS_*", "输入规模足以摊销构图编译与搬运"],
+      "files": ["npu-nnrt-graph/host_template.c", "npu-nnrt-graph/operator_adapter_guide.md"],
+      "file_sha256": {
+        "npu-nnrt-graph/host_template.c": "71add0d76049959269e86b5443a377802ded466be6b6208abc01a725f72c9e02",
+        "npu-nnrt-graph/operator_adapter_guide.md": "46809eaf1b9c1caaef902f9cedc2bb98988a6cdb0c91d48ff07feaac0d114089"
+      },
+      "adaptation_points": ["tensor descriptors", "OH_NN_OPS_* 与参数 tensor", "shape/dtype/layout", "输入数据", "CPU expected 与容差"],
+      "verification": {
+        "level": "device_negative_observation",
+        "scope": "device enumeration + accelerator selection + MatMul graph Finish",
+        "observed_on": "one OpenHarmony device/profile",
+        "limitations": ["该样机对示例 MatMul 返回 NOT_SUPPORTED，不能称为成功 NPU 卸载模板", "模板价值在完整 capability/compile/execute/fallback 生命周期", "每个新子图必须重新调用 GetAvailableOperations"]
+      },
+      "knowledge_record_ids": ["npu_api:nnrt_op:OH_NN_OPS_MATMUL"]
+    },
+    {
+      "template_id": "media.avcodec.hardware-capability.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "media",
+      "api_family": "avcodec_ndk_capability",
+      "api_symbols": ["OH_AVCodec_GetCapabilityByCategory", "OH_AVCapability_IsHardware", "OH_AVCapability_GetName"],
+      "profile_id": "media_avcodec",
+      "exposure_layer": "public_ndk",
+      "template_role": "capability_probe",
+      "coverage_level": "executable_harness",
+      "covered_semantic_families": ["media_capability_selection", "media_system_video_decoder_fallback"],
+      "semantic_match": ["视频编解码生命周期", "MIME 与编码/解码方向明确", "需要硬件 capability 与 software fallback 分流"],
+      "files": ["media-avcodec-capability/host_template.c"],
+      "file_sha256": {
+        "media-avcodec-capability/host_template.c": "957d8096d2f7a26cf4dbe720973d0313adfd988bd51ca7fa692428bcd2c3d19e"
+      },
+      "adaptation_points": ["MIME", "encoder/decoder 方向", "后续 Configure/Prepare/Start 生命周期", "bitstream fixture", "software fallback"],
+      "verification": {
+        "level": "source_contract_verified",
+        "scope": "public AVCodec capability API contract",
+        "observed_on": "not yet promoted from a device run",
+        "limitations": ["capability 存在不等于实际硬编解码完成", "必须继续验证 buffer/callback 生命周期与输出内容"]
+      },
+      "knowledge_record_ids": ["media_api:OH_AVCodec_GetCapabilityByCategory"]
+    },
+    {
+      "template_id": "media.avcodec.lifecycle.recipe.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "media",
+      "api_family": "avcodec_ndk_lifecycle",
+      "api_symbols": ["OH_VideoDecoder_Configure", "OH_VideoDecoder_Start", "OH_VideoEncoder_Configure", "OH_VideoEncoder_Start"],
+      "profile_id": "media_avcodec",
+      "exposure_layer": "public_ndk",
+      "template_role": "family_recipe",
+      "coverage_level": "lifecycle_with_adapter",
+      "covered_semantic_families": ["media_decoder_lifecycle", "media_encoder_lifecycle"],
+      "semantic_match": ["视频编码或解码生命周期", "MIME/方向/格式明确", "可生成确定性输入与软件 oracle", "需要 callback 与 buffer 生命周期"],
+      "files": ["media-avcodec-lifecycle/recipe.md"],
+      "file_sha256": {"media-avcodec-lifecycle/recipe.md": "28b5122741be70af4afcad2ba1cd8ca7ac9322600b84d240009b402e409ddd84"},
+      "adaptation_points": ["codec 方向与 MIME", "format/profile", "输入输出 buffer 生命周期", "fixture", "software oracle", "端到端 benchmark"],
+      "verification": {
+        "level": "integration_recipe",
+        "scope": "public AVCodec encoder/decoder lifecycle and buffer callback contract",
+        "observed_on": "not yet promoted from a complete device codec run",
+        "limitations": ["recipe 不是可直接编译源码", "硬件 capability 与实际输出必须分别验证"]
+      },
+      "knowledge_record_ids": []
+    },
+    {
+      "template_id": "media.hcodec.component.recipe.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "media",
+      "api_family": "hcodec_component_hdi",
+      "api_symbols": ["GetComponentCapabilityList", "CreateComponent", "SetCallback"],
+      "profile_id": null,
+      "exposure_layer": "system_hdi_provider",
+      "template_role": "family_recipe",
+      "coverage_level": "integration_recipe",
+      "covered_semantic_families": ["media_hcodec_capability", "media_hcodec_component"],
+      "semantic_match": ["HCodec Component HDI", "系统服务或驱动集成权限可用", "component/role/buffer 合同明确"],
+      "files": ["media-hcodec-component/recipe.md"],
+      "file_sha256": {"media-hcodec-component/recipe.md": "761ef18079976836a0b67a4ffd0663d8c4cf63088bfba8cbc16a6fa2e7b44788"},
+      "adaptation_points": ["component role/name", "codec 参数", "buffer 所有权", "callback", "fixture", "software fallback"],
+      "verification": {
+        "level": "integration_recipe",
+        "scope": "Codec Component HDI integration lifecycle",
+        "observed_on": "no portable application-direct profile",
+        "limitations": ["不得借 public AVCodec profile 伪称 HDI 直调", "需要目标系统权限、服务和驱动面"]
+      },
+      "knowledge_record_ids": []
+    },
+    {
+      "template_id": "media.image-codec.recipe.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "media",
+      "api_family": "image_codec_hdi",
+      "api_symbols": ["DoJpegDecode", "DoJpegEncode", "DoHeifDecode"],
+      "profile_id": null,
+      "exposure_layer": "system_hdi_provider",
+      "template_role": "family_recipe",
+      "coverage_level": "integration_recipe",
+      "covered_semantic_families": ["media_jpeg_hardware_decode", "media_jpeg_hardware_encode", "media_heif_hardware_decode"],
+      "semantic_match": ["JPEG/HEIF 图片码流", "尺寸/像素格式/色彩空间明确", "Image Codec HDI 或系统集成权限可用"],
+      "files": ["media-image-codec/recipe.md"],
+      "file_sha256": {"media-image-codec/recipe.md": "9bb5334d17e5daeb26da768b405f8442f049ddac695328aea6beaaba748b26b9"},
+      "adaptation_points": ["编码或解码方向", "格式与色彩空间", "bitstream fixture", "buffer/stride", "software oracle", "benchmark"],
+      "verification": {
+        "level": "integration_recipe",
+        "scope": "JPEG/HEIF Image Codec HDI integration lifecycle",
+        "observed_on": "no portable application-direct profile",
+        "limitations": ["recipe 不是应用 NDK", "capability、正确输出、硬件路径和收益必须分开验证"]
+      },
+      "knowledge_record_ids": []
+    },
+    {
+      "template_id": "dsp.audio-effect-provider.recipe.v1",
+      "asset_class": "curated_template",
+      "version": "1.0.0",
+      "unit": "dsp",
+      "api_family": "audio_effect_hdi_provider",
+      "api_symbols": ["EffectFactory::CreateController", "IEffectControlVdi::EffectProcess", "IEffectControlVdi::SendCommand"],
+      "profile_id": null,
+      "exposure_layer": "system_hdi_provider",
+      "template_role": "family_recipe",
+      "coverage_level": "integration_recipe",
+      "covered_semantic_families": ["dsp_ap_fallback", "dsp_effect_control", "dsp_effect_process"],
+      "semantic_match": ["稳定 PCM frame 输入输出", "effect chain 语义", "格式/frameCount/实时预算明确", "系统 provider/HDI 集成权限可用"],
+      "files": ["dsp-audio-effect-provider/recipe.md"],
+      "file_sha256": {
+        "dsp-audio-effect-provider/recipe.md": "1e0e659ab8a404d402ebef071c9277d62ff4e977e35ccb92b79e420026508b98"
+      },
+      "adaptation_points": ["平台版本对应的 HDI/VDI 接口", "provider/effect descriptor", "PCM format/frameCount", "AP software chain oracle", "实时延迟与抖动"],
+      "verification": {
+        "level": "integration_recipe",
+        "scope": "system provider/HDI test structure",
+        "observed_on": "no portable application-direct profile",
+        "limitations": ["不得借 native profile 伪称 DSP 卸载", "需要目标系统构建面、provider 和权限"]
+      },
+      "knowledge_record_ids": ["dsp_api:EffectFactory::CreateController", "dsp_api:IEffectControlVdi::EffectProcess"]
+    }
+  ]
+}

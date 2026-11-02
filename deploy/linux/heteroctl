@@ -1,0 +1,2985 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+APP_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd -P)"
+COMMAND="${1:-help}"
+if [[ $# -gt 0 ]]; then
+    shift
+fi
+
+RUNTIME_ROOT="${HETERO_ROOTLESS_RUNTIME_ROOT:-${HETERO_USER_HOME:-${APP_ROOT}/heterogeneous-enable-web-runtime}}"
+SKIP_PYTHON_DEPS=0
+SKIP_WEB_DEPS=0
+SKIP_KIMI=0
+SKIP_BUILD=0
+REFRESH_ENV=0
+REQUESTED_ACCESS_MODE=""
+REQUESTED_DEPLOYMENT_MODE="${HETERO_DEPLOYMENT_MODE:-}"
+DEPLOYMENT_MODE=""
+REQUESTED_WEB_PORT=""
+PREFLIGHT_ARGS=()
+LOG_SERVICE=""
+SDK_SOURCE_ROOT=""
+RUNTIME_LIBRARY_ROOT=""
+REQUESTED_TRACE_STREAMER="${HETERO_TRACE_STREAMER:-}"
+REQUESTED_PYTHON_BIN="${HETERO_PYTHON_BIN:-}"
+REQUESTED_LLVM_BIN_ROOT="${HETERO_LLVM_BIN_ROOT:-}"
+REQUESTED_GLSLANG_BIN="${HETERO_GLSLANG_BIN:-}"
+REQUESTED_OPENHARMONY_SDK_ROOT="${HETERO_OPENHARMONY_SDK_ROOT:-}"
+REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT="${HETERO_OPENHARMONY_NATIVE_SDK_ROOT:-}"
+REQUESTED_PMU_SAMPLER_BUNDLE_ROOT="${HETERO_PMU_SAMPLER_BUNDLE_ROOT:-}"
+REQUESTED_RUNTIME_LIBRARY_ROOT="${HETERO_RUNTIME_LIBRARY_ROOT:-}"
+REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT="${HETERO_BUILD_RUNTIME_LIBRARY_ROOT:-}"
+REQUESTED_HDC_BIN="${HETERO_HDC_BIN:-}"
+REQUESTED_OPENCODE_BIN="${HETERO_OPENCODE_BIN:-}"
+REQUESTED_AGENT_CLI_CONFIG="${HETERO_AGENT_CLI_CONFIG:-}"
+REQUESTED_AGENT_CLI_ADAPTER="${HETERO_AGENT_CLI_ADAPTER:-}"
+REQUESTED_DEFAULT_SOURCE_ROOT="${HETERO_DEFAULT_SOURCE_ROOT:-}"
+REQUESTED_TRACE_FIXTURE_ROOT="${HETERO_TRACE_FIXTURE_ROOT:-}"
+OWNED_ONLY_STOP=0
+DEFAULT_WEB_PORT=4032
+PYTHON_BIN=""
+PYTHON_VERSION=""
+
+usage() {
+    cat <<'EOF'
+Usage: deploy/linux/heteroctl <command> [options]
+
+Commands:
+  init        Create the runtime tree and platform.env without installing dependencies
+  install     Install the selected runtime; worker mode installs only Python/API dependencies
+  start       Start FastAPI, its managed Kimi Server, and Next.js in the background
+  stop        Stop only processes started by this runtime
+  restart     Stop and start the runtime
+  status      Show process ownership and HTTP readiness
+  doctor      Probe the browser bootstrap path and show recent service errors
+  python-check Show the selected Python and managed virtualenv interpreter
+  agent-check Validate the Agent Adapter manifest, default selection and executable
+  preflight   Validate core resources; accepts --require-trace/--require-build/--require-device/--require-pmu
+  sdk         Build assets/openharmony-sdk from an OpenHarmony source tree
+  pmu         Restore the bundled PMU sampler, or rebuild it with an explicitly configured SDK
+  runtime-libs Register one shared AArch64 OpenHarmony runtime-library directory (compatibility/hot update)
+  logs        Show recent logs; optionally pass --service kimi|api|web
+  paths       Print every mutable path used by this deployment
+
+Options:
+  --runtime-root PATH  Runtime directory (default: <repository>/heterogeneous-enable-web-runtime)
+  --remote             Allow browsers on other computers to access the Web UI (default)
+  --local              Restrict the Web UI to this Linux machine
+  --analysis-only      Analysis deployment; skip device resource checks and disable device validation
+  --worker-only        Desktop-first Linux Worker; enable build/trace and disable server device access
+  --with-device-validation Enable device validation and check its resources (default for a new runtime)
+  --web-port PORT      Persist the Web UI port for this runtime (default: 4032)
+  --python-bin PATH    Use and persist an explicit Python 3.11+ interpreter
+  --llvm-bin-root PATH Persist the Linux-host LLVM bin directory used by Build Worker
+  --agent-adapter ID   Persist the default page Agent Adapter
+  --skip-deps          Reuse existing Kimi Code, .venv and node_modules
+  --skip-python-deps   Reuse only the existing Python .venv
+  --skip-web-deps      Reuse only the existing node_modules
+  --skip-kimi          Reuse an existing Kimi Code binary or run without Agent features
+  --skip-build         Install dependencies without creating the production Web build
+  --refresh-env        Regenerate platform.env during install
+  --require-trace      Require TraceStreamer during preflight
+  --require-build      Require compiler, SDK and runtime-library assets during preflight
+  --require-device     Require compiler, SDK and device build assets during preflight
+  --require-pmu        Require a verified PMU sampler bundle during preflight
+  --service NAME       Select one service for logs
+  --source-root PATH   OpenHarmony checkout used by install or sdk to build the compact SDK
+  --library-root PATH  Register shared AArch64 OpenHarmony .so files during start/restart
+  --owned-only         Stop only processes proven by this runtime's PID files
+  -h, --help           Show this help
+
+Preferred resource configuration:
+  Export HETERO_PYTHON_BIN, HETERO_LLVM_BIN_ROOT, HETERO_GLSLANG_BIN, HETERO_TRACE_STREAMER,
+  HETERO_OPENHARMONY_SDK_ROOT, HETERO_OPENHARMONY_NATIVE_SDK_ROOT,
+  HETERO_PMU_SAMPLER_BUNDLE_ROOT or HETERO_RUNTIME_LIBRARY_ROOT before running
+  init/install/start/restart. Non-empty overrides are validated and persisted
+  in this runtime's platform.env; --refresh-env is not required.
+
+Web dependency installation follows the registry URLs committed in package-lock.json.
+Set HETERO_NPM_REGISTRY only when an explicitly managed mirror contains every
+locked package version.
+
+This controller is rootless. It never invokes sudo, systemd, an OS package manager,
+or writes under protected system trees such as /var, /opt, /etc and /usr.
+EOF
+}
+
+normalize_web_port_argument() {
+    local value="$1"
+    local port
+    if [[ ! "$value" =~ ^[0-9]+$ || ${#value} -gt 5 ]]; then
+        echo "--web-port must be an integer from 1 to 65535, not ${value}." >&2
+        return 2
+    fi
+    port=$((10#$value))
+    if (( port < 1 || port > 65535 )); then
+        echo "--web-port must be an integer from 1 to 65535, not ${value}." >&2
+        return 2
+    fi
+    printf '%s\n' "$port"
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --runtime-root)
+            [[ $# -ge 2 ]] || { echo "--runtime-root requires a path" >&2; exit 2; }
+            RUNTIME_ROOT="$2"
+            shift 2
+            ;;
+        --remote|--local)
+            requested_mode="${1#--}"
+            if [[ -n "$REQUESTED_ACCESS_MODE" && "$REQUESTED_ACCESS_MODE" != "$requested_mode" ]]; then
+                echo "--local and --remote cannot be used together." >&2
+                exit 2
+            fi
+            REQUESTED_ACCESS_MODE="$requested_mode"
+            shift
+            ;;
+        --analysis-only|--worker-only|--with-device-validation)
+            selected_mode="device"
+            [[ "$1" != "--analysis-only" ]] || selected_mode="analysis"
+            [[ "$1" != "--worker-only" ]] || selected_mode="worker"
+            REQUESTED_DEPLOYMENT_MODE="$selected_mode"
+            shift
+            ;;
+        --web-port)
+            [[ $# -ge 2 ]] || { echo "--web-port requires a port" >&2; exit 2; }
+            REQUESTED_WEB_PORT="$(normalize_web_port_argument "$2")" || exit 2
+            shift 2
+            ;;
+        --web-port=*)
+            REQUESTED_WEB_PORT="$(normalize_web_port_argument "${1#--web-port=}")" || exit 2
+            shift
+            ;;
+        --python-bin)
+            [[ $# -ge 2 ]] || { echo "--python-bin requires an executable path or command" >&2; exit 2; }
+            REQUESTED_PYTHON_BIN="$2"
+            shift 2
+            ;;
+        --python-bin=*)
+            REQUESTED_PYTHON_BIN="${1#--python-bin=}"
+            shift
+            ;;
+        --llvm-bin-root)
+            [[ $# -ge 2 ]] || { echo "--llvm-bin-root requires a path" >&2; exit 2; }
+            REQUESTED_LLVM_BIN_ROOT="$2"
+            shift 2
+            ;;
+        --llvm-bin-root=*)
+            REQUESTED_LLVM_BIN_ROOT="${1#--llvm-bin-root=}"
+            shift
+            ;;
+        --agent-adapter)
+            [[ $# -ge 2 ]] || { echo "--agent-adapter requires an adapter id" >&2; exit 2; }
+            REQUESTED_AGENT_CLI_ADAPTER="$2"
+            shift 2
+            ;;
+        --agent-adapter=*)
+            REQUESTED_AGENT_CLI_ADAPTER="${1#--agent-adapter=}"
+            shift
+            ;;
+        --skip-deps)
+            SKIP_PYTHON_DEPS=1
+            SKIP_WEB_DEPS=1
+            SKIP_KIMI=1
+            shift
+            ;;
+        --skip-python-deps)
+            SKIP_PYTHON_DEPS=1
+            shift
+            ;;
+        --skip-web-deps)
+            SKIP_WEB_DEPS=1
+            shift
+            ;;
+        --skip-kimi)
+            SKIP_KIMI=1
+            shift
+            ;;
+        --skip-build)
+            SKIP_BUILD=1
+            shift
+            ;;
+        --refresh-env)
+            REFRESH_ENV=1
+            shift
+            ;;
+        --require-trace|--require-build|--require-device|--require-pmu)
+            PREFLIGHT_ARGS+=("$1")
+            shift
+            ;;
+        --service)
+            [[ $# -ge 2 ]] || { echo "--service requires a name" >&2; exit 2; }
+            LOG_SERVICE="$2"
+            shift 2
+            ;;
+        --source-root)
+            [[ $# -ge 2 ]] || { echo "--source-root requires a path" >&2; exit 2; }
+            SDK_SOURCE_ROOT="$2"
+            shift 2
+            ;;
+        --library-root)
+            [[ $# -ge 2 ]] || { echo "--library-root requires a path" >&2; exit 2; }
+            RUNTIME_LIBRARY_ROOT="$2"
+            shift 2
+            ;;
+        --owned-only)
+            OWNED_ONLY_STOP=1
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [[ -n "$RUNTIME_LIBRARY_ROOT" ]]; then
+    REQUESTED_RUNTIME_LIBRARY_ROOT="$RUNTIME_LIBRARY_ROOT"
+fi
+
+case "$RUNTIME_ROOT" in
+    *$'\n'*|*$'\r'*|*'"'*|*'`'*|*'$'*|*'\\'*)
+        echo "Runtime path cannot contain a newline, double quote, backtick, dollar sign or backslash." >&2
+        exit 2
+        ;;
+esac
+
+resolve_python_candidate() {
+    local candidate="$1"
+    local resolved=""
+    case "$candidate" in
+        "~/"*) candidate="${HOME}/${candidate:2}" ;;
+    esac
+    if [[ "$candidate" == */* ]]; then
+        [[ -f "$candidate" && -x "$candidate" ]] || return 1
+        resolved="$candidate"
+    else
+        resolved="$(command -v "$candidate" 2>/dev/null || true)"
+        [[ -n "$resolved" && -x "$resolved" ]] || return 1
+    fi
+    printf '%s\n' "$resolved"
+}
+
+python_version_string() {
+    "$1" -c 'import platform; print(platform.python_version())' 2>/dev/null
+}
+
+python_version_supported() {
+    "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1
+}
+
+python_executable_identity() {
+    "$1" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null
+}
+
+python_base_executable_identity() {
+    "$1" -c 'import os,sys; print(os.path.realpath(getattr(sys, "_base_executable", sys.executable)))' 2>/dev/null
+}
+
+load_persisted_python_request() {
+    [[ -z "$REQUESTED_PYTHON_BIN" ]] || return 0
+    local runtime_candidate="$RUNTIME_ROOT"
+    local environment_candidate=""
+    local persisted=""
+    case "$runtime_candidate" in
+        "~/"*) runtime_candidate="${HOME}/${runtime_candidate:2}" ;;
+    esac
+    environment_candidate="${runtime_candidate%/}/platform.env"
+    [[ -f "$environment_candidate" ]] || return 0
+    persisted="$(
+        unset HETERO_PYTHON_BIN
+        # platform.env is generated locally and contains assignment statements.
+        # shellcheck disable=SC1090
+        source "$environment_candidate"
+        printf '%s' "${HETERO_PYTHON_BIN:-}"
+    )"
+    [[ -z "$persisted" ]] || REQUESTED_PYTHON_BIN="$persisted"
+}
+
+resolve_python_bin() {
+    [[ -n "$PYTHON_BIN" ]] && return 0
+    load_persisted_python_request
+    local candidates=()
+    local candidate resolved version
+    local observed=()
+    if [[ -n "$REQUESTED_PYTHON_BIN" ]]; then
+        candidates+=("$REQUESTED_PYTHON_BIN")
+    else
+        candidates+=(
+            "${APP_ROOT}/.venv/bin/python"
+            python3.11
+            python3.12
+            python3.13
+            python3.14
+            python3
+        )
+    fi
+    for candidate in "${candidates[@]}"; do
+        resolved="$(resolve_python_candidate "$candidate" || true)"
+        [[ -n "$resolved" ]] || continue
+        version="$(python_version_string "$resolved" || true)"
+        observed+=("${resolved}${version:+ (${version})}")
+        if python_version_supported "$resolved"; then
+            PYTHON_BIN="$resolved"
+            PYTHON_VERSION="$version"
+            return 0
+        fi
+    done
+    if [[ -n "$REQUESTED_PYTHON_BIN" ]]; then
+        echo "HETERO_PYTHON_BIN/--python-bin must identify an executable Python 3.11+ interpreter: ${REQUESTED_PYTHON_BIN}" >&2
+    else
+        echo "Python 3.11 or newer was not found." >&2
+    fi
+    if [[ ${#observed[@]} -gt 0 ]]; then
+        echo "Checked: ${observed[*]}" >&2
+    fi
+    echo "Set HETERO_PYTHON_BIN=/absolute/path/to/python3.11 or pass --python-bin PATH." >&2
+    return 1
+}
+
+canonical_path() {
+    resolve_python_bin
+    "$PYTHON_BIN" -c 'import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))' "$1"
+}
+
+reject_system_write_path() {
+    local label="$1"
+    local expanded
+    local resolved
+    resolve_python_bin
+    expanded="$("$PYTHON_BIN" -c 'import os,sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "$2")"
+    resolved="$(canonical_path "$2")"
+    local candidate
+    for candidate in "$expanded" "$resolved"; do
+        case "$candidate" in
+            /|/bin|/bin/*|/boot|/boot/*|/dev|/dev/*|/etc|/etc/*|/lib|/lib/*|/lib64|/lib64/*|/opt|/opt/*|/proc|/proc/*|/root|/root/*|/run|/run/*|/sbin|/sbin/*|/sys|/sys/*|/tmp|/tmp/*|/usr|/usr/*|/var|/var/*|/private/etc|/private/etc/*|/private/tmp|/private/tmp/*|/private/var|/private/var/*)
+                echo "${label} must be a user-owned path, not ${candidate}." >&2
+                exit 2
+                ;;
+        esac
+    done
+    printf '%s\n' "$resolved"
+}
+
+require_runtime_child() {
+    local label="$1"
+    local resolved
+    resolved="$(reject_system_write_path "$label" "$2")"
+    case "$resolved" in
+        "$RUNTIME_ROOT"|"$RUNTIME_ROOT"/*) ;;
+        *)
+            echo "${label} must stay below runtime root ${RUNTIME_ROOT}, not ${resolved}." >&2
+            exit 2
+            ;;
+    esac
+}
+
+validate_planned_paths() {
+    require_runtime_child "Environment file" "$ENV_FILE"
+    require_runtime_child "State directory" "$STATE_DIR"
+    require_runtime_child "Asset directory" "$ASSET_DIR"
+    require_runtime_child "Log directory" "$LOG_DIR"
+    require_runtime_child "PID directory" "$PID_DIR"
+    require_runtime_child "Cache directory" "$CACHE_DIR"
+    require_runtime_child "Temporary directory" "$TMP_DIR"
+}
+
+make_runtime_root() {
+    if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+        echo "Do not run heteroctl as root. Use the account that will run the platform." >&2
+        exit 1
+    fi
+    resolve_python_bin
+    validate_env_scalar "Repository path" "$APP_ROOT"
+    reject_system_write_path "Repository" "$APP_ROOT" >/dev/null
+    RUNTIME_ROOT="$(reject_system_write_path "Runtime root" "$RUNTIME_ROOT")"
+    if [[ "$RUNTIME_ROOT" == "$APP_ROOT" ]]; then
+        echo "Runtime root must be a directory below or outside the repository, not the repository itself." >&2
+        exit 2
+    fi
+    mkdir -p "$RUNTIME_ROOT"
+    [[ -w "$RUNTIME_ROOT" ]] || {
+        echo "Runtime root is not writable by the current user: ${RUNTIME_ROOT}" >&2
+        exit 2
+    }
+    RUNTIME_ROOT="$(cd "$RUNTIME_ROOT" && pwd -P)"
+}
+
+set_paths() {
+    ENV_FILE="${RUNTIME_ROOT}/platform.env"
+    STATE_DIR="${RUNTIME_ROOT}/state"
+    ASSET_DIR="${RUNTIME_ROOT}/assets"
+    LOG_DIR="${RUNTIME_ROOT}/logs"
+    PID_DIR="${RUNTIME_ROOT}/run"
+    CACHE_DIR="${RUNTIME_ROOT}/cache"
+    TMP_DIR="${RUNTIME_ROOT}/tmp"
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || {
+        echo "Missing prerequisite: $1" >&2
+        return 1
+    }
+}
+
+check_node_version() {
+    node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>20||(a===20&&b>=9)?0:1)' || {
+        echo "Node.js 20.9 or newer is required; found $(node --version)." >&2
+        return 1
+    }
+}
+
+check_python_version() {
+    resolve_python_bin
+    echo "Python interpreter: ${PYTHON_BIN} (Python ${PYTHON_VERSION})"
+}
+
+validate_tcp_port() {
+    local label="$1"
+    local value="$2"
+    if [[ ! "$value" =~ ^[0-9]+$ || ${#value} -gt 5 ]]; then
+        echo "${label} must be an integer from 1 to 65535, not ${value}." >&2
+        exit 2
+    fi
+    if (( 10#$value < 1 || 10#$value > 65535 )); then
+        echo "${label} must be an integer from 1 to 65535, not ${value}." >&2
+        exit 2
+    fi
+}
+
+validate_env_scalar() {
+    local label="$1"
+    local value="$2"
+    case "$value" in
+        *$'\n'*|*$'\r'*|*'"'*|*'`'*|*'$'*|*'\\'*)
+            echo "${label} contains characters that cannot be represented safely in platform.env." >&2
+            exit 2
+            ;;
+    esac
+}
+
+validated_llvm_bin_root() {
+    local requested="$1"
+    local resolved
+    [[ -n "$requested" ]] || return 1
+    validate_env_scalar "LLVM bin path" "$requested"
+    resolved="$(canonical_path "$requested")"
+    [[ -d "$resolved" ]] || {
+        echo "LLVM bin root is not a directory: ${resolved}" >&2
+        return 2
+    }
+    local tool
+    for tool in clang clang++ ld.lld; do
+        [[ -x "${resolved}/${tool}" ]] || {
+            echo "LLVM bin root must contain executable ${tool}: ${resolved}/${tool}" >&2
+            return 2
+        }
+    done
+    printf '%s\n' "$resolved"
+}
+
+validated_resource_path() {
+    local label="$1"
+    local requested="$2"
+    local expected="$3"
+    local resolved
+    validate_env_scalar "$label" "$requested"
+    resolved="$(canonical_path "$requested")"
+    case "$expected" in
+        executable)
+            [[ -f "$resolved" && -x "$resolved" ]] || {
+                echo "${label} is not an executable file: ${resolved}" >&2
+                return 2
+            }
+            ;;
+        file)
+            [[ -f "$resolved" ]] || {
+                echo "${label} is not a file: ${resolved}" >&2
+                return 2
+            }
+            ;;
+        directory)
+            [[ -d "$resolved" ]] || {
+                echo "${label} is not a directory: ${resolved}" >&2
+                return 2
+            }
+            ;;
+        *)
+            echo "Unknown resource path type: ${expected}" >&2
+            return 2
+            ;;
+    esac
+    printf '%s\n' "$resolved"
+}
+
+validated_executable_or_command() {
+    local label="$1"
+    local requested="$2"
+    local resolved
+    if [[ "$requested" == */* ]]; then
+        validated_resource_path "$label" "$requested" executable
+        return
+    fi
+    resolved="$(command -v "$requested" 2>/dev/null || true)"
+    [[ -n "$resolved" && -x "$resolved" ]] || {
+        echo "${label} is not an executable path or command on PATH: ${requested}" >&2
+        return 2
+    }
+    canonical_path "$resolved"
+}
+
+normalize_requested_resource_overrides() {
+    resolve_deployment_mode
+    if [[ -n "$REQUESTED_PYTHON_BIN" ]]; then
+        validate_env_scalar "Python interpreter" "$REQUESTED_PYTHON_BIN"
+        resolve_python_bin
+        REQUESTED_PYTHON_BIN="$(python_base_executable_identity "$PYTHON_BIN" || python_executable_identity "$PYTHON_BIN")"
+    fi
+    if [[ -n "$REQUESTED_AGENT_CLI_ADAPTER" && ! "$REQUESTED_AGENT_CLI_ADAPTER" =~ ^[a-z][a-z0-9-]{1,63}$ ]]; then
+        echo "HETERO_AGENT_CLI_ADAPTER must match ^[a-z][a-z0-9-]{1,63}$, not ${REQUESTED_AGENT_CLI_ADAPTER}." >&2
+        exit 2
+    fi
+    if [[ "$DEPLOYMENT_MODE" != "analysis" ]]; then
+        if [[ -n "$REQUESTED_TRACE_STREAMER" ]]; then
+            REQUESTED_TRACE_STREAMER="$(validated_resource_path HETERO_TRACE_STREAMER "$REQUESTED_TRACE_STREAMER" executable)"
+        fi
+        if [[ -n "$REQUESTED_LLVM_BIN_ROOT" ]]; then
+            REQUESTED_LLVM_BIN_ROOT="$(validated_llvm_bin_root "$REQUESTED_LLVM_BIN_ROOT")"
+        fi
+        if [[ -n "$REQUESTED_GLSLANG_BIN" ]]; then
+            REQUESTED_GLSLANG_BIN="$(validated_resource_path HETERO_GLSLANG_BIN "$REQUESTED_GLSLANG_BIN" executable)"
+        fi
+        if [[ -n "$REQUESTED_OPENHARMONY_SDK_ROOT" ]]; then
+            REQUESTED_OPENHARMONY_SDK_ROOT="$(validated_resource_path HETERO_OPENHARMONY_SDK_ROOT "$REQUESTED_OPENHARMONY_SDK_ROOT" directory)"
+        fi
+        if [[ "$DEPLOYMENT_MODE" == "device" && -n "$REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT" ]]; then
+            # Ordinary deployment uses the repository bundle, even if an old SDK was removed.
+            # The explicit PMU build validates compiler/sysroot when it actually uses them.
+            validate_env_scalar HETERO_OPENHARMONY_NATIVE_SDK_ROOT "$REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT"
+            REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT="$(canonical_path "$REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT")"
+        fi
+        if [[ -n "$REQUESTED_RUNTIME_LIBRARY_ROOT" ]]; then
+            REQUESTED_RUNTIME_LIBRARY_ROOT="$(validated_resource_path "Runtime library root" "$REQUESTED_RUNTIME_LIBRARY_ROOT" directory)"
+        fi
+        if [[ -n "$REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT" ]]; then
+            REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT="$(validated_resource_path HETERO_BUILD_RUNTIME_LIBRARY_ROOT "$REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT" directory)"
+        fi
+        if [[ "$DEPLOYMENT_MODE" == "device" && -n "$REQUESTED_HDC_BIN" ]]; then
+            REQUESTED_HDC_BIN="$(validated_resource_path HETERO_HDC_BIN "$REQUESTED_HDC_BIN" executable)"
+        fi
+    fi
+    if [[ -n "$REQUESTED_PMU_SAMPLER_BUNDLE_ROOT" ]]; then
+        validate_env_scalar HETERO_PMU_SAMPLER_BUNDLE_ROOT "$REQUESTED_PMU_SAMPLER_BUNDLE_ROOT"
+        REQUESTED_PMU_SAMPLER_BUNDLE_ROOT="$(reject_system_write_path HETERO_PMU_SAMPLER_BUNDLE_ROOT "$REQUESTED_PMU_SAMPLER_BUNDLE_ROOT")"
+    fi
+    if [[ -n "$REQUESTED_OPENCODE_BIN" ]]; then
+        REQUESTED_OPENCODE_BIN="$(validated_executable_or_command HETERO_OPENCODE_BIN "$REQUESTED_OPENCODE_BIN")"
+    fi
+    if [[ -n "$REQUESTED_AGENT_CLI_CONFIG" ]]; then
+        REQUESTED_AGENT_CLI_CONFIG="$(validated_resource_path HETERO_AGENT_CLI_CONFIG "$REQUESTED_AGENT_CLI_CONFIG" file)"
+    fi
+    if [[ -n "$REQUESTED_DEFAULT_SOURCE_ROOT" ]]; then
+        REQUESTED_DEFAULT_SOURCE_ROOT="$(validated_resource_path HETERO_DEFAULT_SOURCE_ROOT "$REQUESTED_DEFAULT_SOURCE_ROOT" directory)"
+    fi
+    if [[ -n "$REQUESTED_TRACE_FIXTURE_ROOT" ]]; then
+        REQUESTED_TRACE_FIXTURE_ROOT="$(validated_resource_path HETERO_TRACE_FIXTURE_ROOT "$REQUESTED_TRACE_FIXTURE_ROOT" directory)"
+    fi
+}
+
+write_environment() {
+    local kimi_home="${KIMI_CODE_HOME:-${STATE_DIR}/kimi-code}"
+    local kimi_install_root="${HETERO_KIMI_INSTALL_ROOT:-${ASSET_DIR}/kimi-code}"
+    local kimi_bin="${HETERO_KIMI_BIN:-${kimi_install_root}/bin/kimi}"
+    local kimi_token="${HETERO_KIMI_SERVER_TOKEN_FILE:-${kimi_home}/server.token}"
+    local access_mode="${REQUESTED_ACCESS_MODE:-remote}"
+    local web_port="${REQUESTED_WEB_PORT:-${HETERO_WEB_PORT:-${DEFAULT_WEB_PORT}}}"
+    local web_host="0.0.0.0"
+    local trace_streamer="${REQUESTED_TRACE_STREAMER:-${ASSET_DIR}/trace-streamer/trace_streamer_linux}"
+    local llvm_bin_root="${REQUESTED_LLVM_BIN_ROOT:-${ASSET_DIR}/llvm/bin}"
+    local glslang_bin="${REQUESTED_GLSLANG_BIN:-${ASSET_DIR}/glslang/bin/glslang}"
+    local sdk_root="${REQUESTED_OPENHARMONY_SDK_ROOT:-${ASSET_DIR}/openharmony-sdk}"
+    local native_sdk_root="${REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT:-}"
+    local pmu_bundle_root="${REQUESTED_PMU_SAMPLER_BUNDLE_ROOT:-${ASSET_DIR}/pmu-sampler}"
+    local opencode_bin="${REQUESTED_OPENCODE_BIN:-opencode}"
+    local agent_cli_adapter="${REQUESTED_AGENT_CLI_ADAPTER:-kimi}"
+    local agent_engine="kimi_server"
+    local temporary_env="${ENV_FILE}.tmp.$$"
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        agent_engine="legacy"
+    fi
+    if [[ "$access_mode" == "local" ]]; then
+        web_host="127.0.0.1"
+    fi
+    validate_env_scalar "Python interpreter path" "$PYTHON_BIN"
+    validate_env_scalar "Kimi executable path" "$kimi_bin"
+    validate_env_scalar "Kimi token path" "$kimi_token"
+    validate_env_scalar "TraceStreamer path" "$trace_streamer"
+    validate_env_scalar "LLVM bin path" "$llvm_bin_root"
+    validate_env_scalar "glslang path" "$glslang_bin"
+    validate_env_scalar "OpenHarmony SDK path" "$sdk_root"
+    validate_env_scalar "OpenHarmony native SDK path" "$native_sdk_root"
+    validate_env_scalar "PMU sampler bundle path" "$pmu_bundle_root"
+    validate_tcp_port "Web port" "$web_port"
+    umask 077
+    trap 'rm -f "${temporary_env}"' RETURN
+    cat >"$temporary_env" <<EOF
+# Generated by deploy/linux/heteroctl. Mutable platform files stay below the runtime root.
+HETERO_USER_HOME="${RUNTIME_ROOT}"
+HETERO_ROOTLESS_RUNTIME_ROOT="${RUNTIME_ROOT}"
+HETERO_REPO_ROOT="${APP_ROOT}"
+HETERO_STATE_ROOT="${STATE_DIR}"
+HETERO_RUNTIME_ASSET_ROOT="${ASSET_DIR}"
+HETERO_CACHE_ROOT="${CACHE_DIR}"
+HETERO_DEPLOYMENT_MODE="${DEPLOYMENT_MODE}"
+HETERO_PYTHON_BIN="${REQUESTED_PYTHON_BIN}"
+HETERO_TRACE_STREAMER="${trace_streamer}"
+HETERO_LLVM_BIN_ROOT="${llvm_bin_root}"
+HETERO_GLSLANG_BIN="${glslang_bin}"
+HETERO_OPENHARMONY_SDK_ROOT="${sdk_root}"
+HETERO_OPENHARMONY_NATIVE_SDK_ROOT="${native_sdk_root}"
+HETERO_PMU_SAMPLER_BUNDLE_ROOT="${pmu_bundle_root}"
+HETERO_RUNTIME_LIBRARY_ROOT="${REQUESTED_RUNTIME_LIBRARY_ROOT}"
+HETERO_BUILD_RUNTIME_LIBRARY_ROOT="${REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT}"
+HETERO_HDC_BIN="${REQUESTED_HDC_BIN}"
+HETERO_DEFAULT_SOURCE_ROOT="${REQUESTED_DEFAULT_SOURCE_ROOT}"
+HETERO_TRACE_FIXTURE_ROOT="${REQUESTED_TRACE_FIXTURE_ROOT}"
+HETERO_AGENT_ENGINE="${agent_engine}"
+HETERO_AGENT_CLI_ADAPTER="${agent_cli_adapter}"
+HETERO_OPENCODE_BIN="${opencode_bin}"
+HETERO_AGENT_CLI_CONFIG="${REQUESTED_AGENT_CLI_CONFIG}"
+HETERO_KIMI_SERVER_URL=http://127.0.0.1:58627
+HETERO_KIMI_SERVER_TOKEN_FILE="${kimi_token}"
+HETERO_KIMI_BIN="${kimi_bin}"
+HETERO_KIMI_AUTO_START=1
+HETERO_KIMI_THINKING=medium
+HETERO_KIMI_REQUEST_TIMEOUT_SECONDS=1800
+HETERO_KIMI_STRUCTURED_IDLE_TIMEOUT_SECONDS=120
+HETERO_STARTUP_TIMEOUT_SECONDS=120
+HETERO_STARTUP_HEARTBEAT_SECONDS=5
+HETERO_STARTUP_POLL_SECONDS=1
+KIMI_CODE_HOME="${kimi_home}"
+KIMI_DISABLE_TELEMETRY=1
+
+HETERO_PLATFORM_INTERNAL_URL=http://127.0.0.1:8006
+HETERO_WORKBENCH_URL=http://127.0.0.1:${web_port}
+HETERO_NEXT_API_PROXY_TARGET=http://127.0.0.1:8006
+HETERO_ACCESS_MODE=${access_mode}
+HETERO_API_HOST=127.0.0.1
+HETERO_API_PORT=8006
+HETERO_API_KEEP_ALIVE_SECONDS=75
+HETERO_API_GRACEFUL_SHUTDOWN_SECONDS=6
+HETERO_ASYNC_POLL_MAX_HOLD_MILLISECONDS=250
+HETERO_COMPATIBILITY_SSE_MAX_SECONDS=5
+HETERO_WEB_HOST=${web_host}
+HETERO_WEB_PORT=${web_port}
+NEXT_TELEMETRY_DISABLED=1
+TMPDIR="${TMP_DIR}"
+XDG_CACHE_HOME="${CACHE_DIR}/xdg"
+PIP_CACHE_DIR="${CACHE_DIR}/pip"
+NPM_CONFIG_CACHE="${CACHE_DIR}/npm"
+
+# Rootless mode does not claim an administrator-attested network sandbox.
+HETERO_BUILD_REQUIRE_NETWORK_SANDBOX=0
+HETERO_BUILD_SANDBOX_PREFIX=""
+HETERO_BUILD_SANDBOX_NETWORK_ISOLATED=0
+EOF
+    chmod 600 "$temporary_env"
+    mv "$temporary_env" "$ENV_FILE"
+    trap - RETURN
+}
+
+update_environment_access_mode() {
+    local access_mode="$1"
+    local web_host="0.0.0.0"
+    if [[ "$access_mode" == "local" ]]; then
+        web_host="127.0.0.1"
+    fi
+    "$PYTHON_BIN" - "$ENV_FILE" "$access_mode" "$web_host" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+values = {
+    "HETERO_ACCESS_MODE": sys.argv[2],
+    "HETERO_WEB_HOST": sys.argv[3],
+}
+seen: set[str] = set()
+updated: list[str] = []
+for line in path.read_text(encoding="utf-8").splitlines():
+    key, separator, _ = line.partition("=")
+    if separator and key in values:
+        updated.append(f"{key}={values[key]}")
+        seen.add(key)
+    else:
+        updated.append(line)
+for key, value in values.items():
+    if key not in seen:
+        updated.append(f"{key}={value}")
+temporary = path.with_name(f"{path.name}.tmp.{os.getpid()}")
+temporary.write_text("\n".join(updated) + "\n", encoding="utf-8")
+os.chmod(temporary, 0o600)
+os.replace(temporary, path)
+PY
+}
+
+update_environment_web_port() {
+    local web_port="$1"
+    validate_tcp_port "Web port" "$web_port"
+    "$PYTHON_BIN" - "$ENV_FILE" "$web_port" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+port = sys.argv[2]
+values = {
+    "HETERO_WEB_PORT": port,
+    "HETERO_WORKBENCH_URL": f"http://127.0.0.1:{port}",
+}
+seen: set[str] = set()
+updated: list[str] = []
+for line in path.read_text(encoding="utf-8").splitlines():
+    key, separator, _ = line.partition("=")
+    if separator and key in values:
+        updated.append(f"{key}={values[key]}")
+        seen.add(key)
+    else:
+        updated.append(line)
+for key, value in values.items():
+    if key not in seen:
+        updated.append(f"{key}={value}")
+temporary = path.with_name(f"{path.name}.tmp.{os.getpid()}")
+temporary.write_text("\n".join(updated) + "\n", encoding="utf-8")
+os.chmod(temporary, 0o600)
+os.replace(temporary, path)
+PY
+}
+
+persist_requested_resource_overrides() {
+    local selected_agent_engine=""
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        selected_agent_engine="legacy"
+    elif [[ -n "$REQUESTED_DEPLOYMENT_MODE" ]]; then
+        selected_agent_engine="${HETERO_AGENT_ENGINE:-kimi_server}"
+    fi
+    local keys=(
+        HETERO_DEPLOYMENT_MODE
+        HETERO_AGENT_ENGINE
+        HETERO_PYTHON_BIN
+        HETERO_TRACE_STREAMER
+        HETERO_LLVM_BIN_ROOT
+        HETERO_GLSLANG_BIN
+        HETERO_OPENHARMONY_SDK_ROOT
+        HETERO_OPENHARMONY_NATIVE_SDK_ROOT
+        HETERO_PMU_SAMPLER_BUNDLE_ROOT
+        HETERO_RUNTIME_LIBRARY_ROOT
+        HETERO_BUILD_RUNTIME_LIBRARY_ROOT
+        HETERO_HDC_BIN
+        HETERO_OPENCODE_BIN
+        HETERO_AGENT_CLI_CONFIG
+        HETERO_AGENT_CLI_ADAPTER
+        HETERO_DEFAULT_SOURCE_ROOT
+        HETERO_TRACE_FIXTURE_ROOT
+    )
+    local values=(
+        "$DEPLOYMENT_MODE"
+        "$selected_agent_engine"
+        "$REQUESTED_PYTHON_BIN"
+        "$REQUESTED_TRACE_STREAMER"
+        "$REQUESTED_LLVM_BIN_ROOT"
+        "$REQUESTED_GLSLANG_BIN"
+        "$REQUESTED_OPENHARMONY_SDK_ROOT"
+        "$REQUESTED_OPENHARMONY_NATIVE_SDK_ROOT"
+        "$REQUESTED_PMU_SAMPLER_BUNDLE_ROOT"
+        "$REQUESTED_RUNTIME_LIBRARY_ROOT"
+        "$REQUESTED_BUILD_RUNTIME_LIBRARY_ROOT"
+        "$REQUESTED_HDC_BIN"
+        "$REQUESTED_OPENCODE_BIN"
+        "$REQUESTED_AGENT_CLI_CONFIG"
+        "$REQUESTED_AGENT_CLI_ADAPTER"
+        "$REQUESTED_DEFAULT_SOURCE_ROOT"
+        "$REQUESTED_TRACE_FIXTURE_ROOT"
+    )
+    local arguments=()
+    local index
+    for ((index = 0; index < ${#keys[@]}; index++)); do
+        [[ -n "${values[$index]}" ]] || continue
+        validate_env_scalar "${keys[$index]}" "${values[$index]}"
+        arguments+=("${keys[$index]}" "${values[$index]}")
+    done
+    [[ ${#arguments[@]} -gt 0 ]] || return 0
+    "$PYTHON_BIN" - "$ENV_FILE" "${arguments[@]}" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+arguments = sys.argv[2:]
+values = dict(zip(arguments[0::2], arguments[1::2], strict=True))
+seen: set[str] = set()
+changed: list[str] = []
+updated: list[str] = []
+for line in path.read_text(encoding="utf-8").splitlines():
+    key, separator, current = line.partition("=")
+    if separator and key in values:
+        normalized = current.strip()
+        if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in {'"', "'"}:
+            normalized = normalized[1:-1]
+        if normalized != values[key]:
+            changed.append(key)
+        updated.append(f'{key}="{values[key]}"')
+        seen.add(key)
+    else:
+        updated.append(line)
+for key, value in values.items():
+    if key not in seen:
+        updated.append(f'{key}="{value}"')
+        changed.append(key)
+if not changed:
+    raise SystemExit(0)
+temporary = path.with_name(f"{path.name}.tmp.{os.getpid()}")
+temporary.write_text("\n".join(updated) + "\n", encoding="utf-8")
+os.chmod(temporary, 0o600)
+os.replace(temporary, path)
+print(",".join(dict.fromkeys(changed)))
+PY
+}
+
+apply_access_mode() {
+    local access_mode="${REQUESTED_ACCESS_MODE:-${HETERO_ACCESS_MODE:-remote}}"
+    case "$access_mode" in
+        remote)
+            HETERO_WEB_HOST="0.0.0.0"
+            ;;
+        local)
+            HETERO_WEB_HOST="127.0.0.1"
+            ;;
+        *)
+            echo "Invalid HETERO_ACCESS_MODE in ${ENV_FILE}: ${access_mode}" >&2
+            exit 2
+            ;;
+    esac
+    HETERO_ACCESS_MODE="$access_mode"
+    HETERO_WEB_PORT="${HETERO_WEB_PORT:-${DEFAULT_WEB_PORT}}"
+    validate_tcp_port "HETERO_WEB_PORT" "$HETERO_WEB_PORT"
+    if [[ "$HETERO_WEB_PORT" == "${HETERO_API_PORT:-8006}" ]]; then
+        echo "HETERO_WEB_PORT and HETERO_API_PORT cannot both use ${HETERO_WEB_PORT}." >&2
+        exit 2
+    fi
+    # Browser API calls use the Next.js same-origin proxy. Keep the API and
+    # model server private even when the Web UI is available on the LAN.
+    HETERO_API_HOST="127.0.0.1"
+    HETERO_WORKBENCH_URL="http://127.0.0.1:${HETERO_WEB_PORT}"
+    HETERO_NEXT_API_PROXY_TARGET="http://127.0.0.1:${HETERO_API_PORT:-8006}"
+    export HETERO_ACCESS_MODE HETERO_WEB_HOST HETERO_WEB_PORT HETERO_API_HOST HETERO_WORKBENCH_URL HETERO_NEXT_API_PROXY_TARGET
+}
+
+resolve_deployment_mode() {
+    [[ -z "$DEPLOYMENT_MODE" ]] || return 0
+    local saved_mode=""
+    if [[ -z "$REQUESTED_DEPLOYMENT_MODE" && -f "${ENV_FILE:-}" ]]; then
+        saved_mode="$(
+            unset HETERO_DEPLOYMENT_MODE
+            source "$ENV_FILE"
+            printf '%s' "${HETERO_DEPLOYMENT_MODE:-}"
+        )"
+    fi
+    DEPLOYMENT_MODE="${REQUESTED_DEPLOYMENT_MODE:-${saved_mode:-device}}"
+    case "$DEPLOYMENT_MODE" in
+        device|worker|analysis) ;;
+        *) echo "HETERO_DEPLOYMENT_MODE must be device, worker or analysis: ${DEPLOYMENT_MODE}" >&2; return 2 ;;
+    esac
+}
+
+load_environment() {
+    [[ -f "$ENV_FILE" ]] || {
+        echo "Runtime is not installed: ${ENV_FILE} is missing." >&2
+        echo "Run: deploy/linux/heteroctl install --runtime-root \"${RUNTIME_ROOT}\"" >&2
+        exit 1
+    }
+    set -a
+    # platform.env is generated locally and contains only assignment statements.
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    set +a
+    resolve_deployment_mode
+    HETERO_DEPLOYMENT_MODE="$DEPLOYMENT_MODE"
+    export HETERO_DEPLOYMENT_MODE
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        HETERO_AGENT_ENGINE="legacy"
+    fi
+    HETERO_STATE_ROOT="${HETERO_STATE_ROOT:-${STATE_DIR}}"
+    HETERO_RUNTIME_ASSET_ROOT="${HETERO_RUNTIME_ASSET_ROOT:-${ASSET_DIR}}"
+    HETERO_OPENHARMONY_NATIVE_SDK_ROOT="${HETERO_OPENHARMONY_NATIVE_SDK_ROOT:-}"
+    HETERO_PMU_SAMPLER_BUNDLE_ROOT="${HETERO_PMU_SAMPLER_BUNDLE_ROOT:-${HETERO_RUNTIME_ASSET_ROOT}/pmu-sampler}"
+    HETERO_CACHE_ROOT="${HETERO_CACHE_ROOT:-${CACHE_DIR}}"
+    HETERO_PYTHON_BIN="${HETERO_PYTHON_BIN:-${PYTHON_BIN}}"
+    TMPDIR="${TMPDIR:-${TMP_DIR}}"
+    XDG_CACHE_HOME="${XDG_CACHE_HOME:-${CACHE_DIR}/xdg}"
+    PIP_CACHE_DIR="${PIP_CACHE_DIR:-${CACHE_DIR}/pip}"
+    NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE:-${CACHE_DIR}/npm}"
+    KIMI_CODE_HOME="${KIMI_CODE_HOME:-${STATE_DIR}/kimi-code}"
+    HETERO_KIMI_BIN="${HETERO_KIMI_BIN:-${ASSET_DIR}/kimi-code/bin/kimi}"
+    HETERO_KIMI_SERVER_TOKEN_FILE="${HETERO_KIMI_SERVER_TOKEN_FILE:-${KIMI_CODE_HOME}/server.token}"
+    HETERO_KIMI_SERVER_URL="${HETERO_KIMI_SERVER_URL:-http://127.0.0.1:58627}"
+    KIMI_DISABLE_TELEMETRY="${KIMI_DISABLE_TELEMETRY:-1}"
+    NEXT_TELEMETRY_DISABLED="${NEXT_TELEMETRY_DISABLED:-1}"
+    apply_access_mode
+    export HETERO_STATE_ROOT HETERO_RUNTIME_ASSET_ROOT HETERO_CACHE_ROOT HETERO_PYTHON_BIN HETERO_AGENT_ENGINE
+    export HETERO_OPENHARMONY_NATIVE_SDK_ROOT HETERO_PMU_SAMPLER_BUNDLE_ROOT
+    export TMPDIR XDG_CACHE_HOME PIP_CACHE_DIR NPM_CONFIG_CACHE
+    export KIMI_CODE_HOME KIMI_DISABLE_TELEMETRY
+    export HETERO_KIMI_BIN HETERO_KIMI_SERVER_TOKEN_FILE HETERO_KIMI_SERVER_URL
+    export NEXT_TELEMETRY_DISABLED
+}
+
+validate_environment_paths() {
+    require_runtime_child "HETERO_STATE_ROOT" "${HETERO_STATE_ROOT}"
+    require_runtime_child "HETERO_RUNTIME_ASSET_ROOT" "${HETERO_RUNTIME_ASSET_ROOT}"
+    require_runtime_child "HETERO_CACHE_ROOT" "${HETERO_CACHE_ROOT}"
+    require_runtime_child "TMPDIR" "${TMPDIR}"
+    require_runtime_child "XDG_CACHE_HOME" "${XDG_CACHE_HOME}"
+    require_runtime_child "PIP_CACHE_DIR" "${PIP_CACHE_DIR}"
+    require_runtime_child "NPM_CONFIG_CACHE" "${NPM_CONFIG_CACHE}"
+}
+
+service_signature() {
+    case "$1" in
+        kimi) printf '%s\n' "${HETERO_KIMI_BIN:-/.kimi-code/bin/kimi}" ;;
+        api) printf '%s\n' "backend.app:app" ;;
+        web) printf '%s\n' "tools/serve-platform.mjs" ;;
+        *) return 1 ;;
+    esac
+}
+
+process_start_time() {
+    local pid="$1"
+    local stat_line remainder
+    [[ -r "/proc/${pid}/stat" ]] || return 1
+    stat_line="$(<"/proc/${pid}/stat")"
+    remainder="${stat_line##*) }"
+    local fields=()
+    read -r -a fields <<<"$remainder"
+    [[ ${#fields[@]} -gt 19 ]] || return 1
+    printf '%s\n' "${fields[19]}"
+}
+
+pid_record() {
+    local name="$1"
+    local pid_file="${PID_DIR}/${name}.pid"
+    [[ -f "$pid_file" ]] || return 1
+    read -r PID_RECORD_PID PID_RECORD_START <"$pid_file" || return 1
+    [[ "$PID_RECORD_PID" =~ ^[0-9]+$ && "$PID_RECORD_START" =~ ^[0-9]+$ ]]
+}
+
+pid_process_alive() {
+    local name="$1"
+    pid_record "$name" || return 1
+    kill -0 "$PID_RECORD_PID" 2>/dev/null
+}
+
+pid_alive() {
+    local name="$1"
+    pid_record "$name" || return 1
+    kill -0 "$PID_RECORD_PID" 2>/dev/null || return 1
+    [[ "$(process_start_time "$PID_RECORD_PID" 2>/dev/null || true)" == "$PID_RECORD_START" ]] || return 1
+    local command_line signature
+    command_line="$(tr '\0' ' ' <"/proc/${PID_RECORD_PID}/cmdline" 2>/dev/null || true)"
+    signature="$(service_signature "$name")"
+    [[ -n "$command_line" && "$command_line" == *"$signature"* ]]
+}
+
+active_app_runtime_processes() {
+    # PID files are scoped to one runtime root, while .next, node_modules and
+    # .venv are scoped to the repository. Detect an older deployment that uses
+    # the same application tree even when it was started with another runtime.
+    local proc_root="${HETERO_PROC_ROOT:-/proc}"
+    [[ -d "$proc_root" ]] || return 0
+    local process_dir
+    local pid
+    local cwd
+    local command_line
+    for process_dir in "$proc_root"/[0-9]*; do
+        [[ -d "$process_dir" ]] || continue
+        pid="${process_dir##*/}"
+        [[ "$pid" != "$$" && "$pid" != "${BASHPID:-$$}" ]] || continue
+        cwd="$(cd "${process_dir}/cwd" 2>/dev/null && pwd -P || true)"
+        [[ "$cwd" == "$APP_ROOT" ]] || continue
+        command_line="$(tr '\0' ' ' <"${process_dir}/cmdline" 2>/dev/null || true)"
+        case "$command_line" in
+            *"deploy/linux/heteroctl install"*|*"tools/serve-platform.mjs"*|*"node_modules/.bin/next"*|*"next/dist/bin/next"*|*"next-server"*|*"backend.app:app"*|*"npm ci"*|*"npm run build"*|*"next build"*|*"pip install"*)
+                printf '%s %s\n' "$pid" "${command_line:0:240}"
+                ;;
+        esac
+    done
+}
+
+start_owned_process() {
+    local name="$1"
+    shift
+    if pid_alive "$name"; then
+        echo "${name}: already running (pid ${PID_RECORD_PID})"
+        return 0
+    fi
+    rm -f "${PID_DIR}/${name}.pid"
+    (
+        cd "$APP_ROOT"
+        nohup "$@" >>"${LOG_DIR}/${name}.log" 2>&1 </dev/null &
+        local child_pid="$!"
+        local child_start=""
+        for _ in {1..20}; do
+            child_start="$(process_start_time "$child_pid" 2>/dev/null || true)"
+            [[ -n "$child_start" ]] && break
+            sleep 0.05
+        done
+        if [[ -z "$child_start" ]]; then
+            kill "$child_pid" 2>/dev/null || true
+            echo "${name}: could not establish Linux process ownership" >&2
+            exit 1
+        fi
+        printf '%s %s\n' "$child_pid" "$child_start" >"${PID_DIR}/${name}.pid"
+    )
+    local pid _start
+    read -r pid _start <"${PID_DIR}/${name}.pid"
+    echo "${name}: started (pid ${pid})"
+}
+
+stop_owned_process() {
+    local name="$1"
+    local pid_file="${PID_DIR}/${name}.pid"
+    if ! pid_alive "$name"; then
+        if pid_process_alive "$name"; then
+            echo "${name}: refusing to stop pid ${PID_RECORD_PID}; PID ownership no longer matches this runtime" >&2
+        fi
+        rm -f "$pid_file"
+        echo "${name}: not owned by this runtime"
+        return 0
+    fi
+    local pid="$PID_RECORD_PID"
+    kill "$pid" 2>/dev/null || true
+    local graceful_checks=40
+    [[ "$name" == "api" ]] && graceful_checks=100
+    for ((check_index = 0; check_index < graceful_checks; check_index += 1)); do
+        if ! kill -0 "$pid" 2>/dev/null; then
+            rm -f "$pid_file"
+            echo "${name}: stopped"
+            return 0
+        fi
+        sleep 0.1
+    done
+    if pid_alive "$name"; then
+        kill -KILL "$pid" 2>/dev/null || true
+    fi
+    rm -f "$pid_file"
+    echo "${name}: stopped after timeout"
+}
+
+cleanup_stale_agent_cli_processes() {
+    local python_bin="${APP_ROOT}/.venv/bin/python"
+    [[ -x "$python_bin" ]] || return 0
+    "$python_bin" -m backend.tools.cleanup_stale_agent_cli \
+        --state-root "${HETERO_STATE_ROOT}" --app-root "${APP_ROOT}" --terminate || {
+        echo "agent-cli cleanup: some platform-owned process groups could not be reclaimed" >&2
+        return 1
+    }
+}
+
+listener_pids_for_port() {
+    local port="$1"
+    "$PYTHON_BIN" - "$port" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+port = int(sys.argv[1])
+uid = os.getuid()
+proc_root = Path(os.environ.get("HETERO_PROC_ROOT", "/proc"))
+socket_inodes: set[str] = set()
+for table in (proc_root / "net" / "tcp", proc_root / "net" / "tcp6"):
+    try:
+        lines = table.read_text(encoding="ascii").splitlines()[1:]
+    except OSError:
+        continue
+    for line in lines:
+        fields = line.split()
+        if len(fields) < 10 or fields[3] != "0A":
+            continue
+        try:
+            local_port = int(fields[1].rsplit(":", 1)[1], 16)
+            socket_uid = int(fields[7])
+        except (IndexError, ValueError):
+            continue
+        if local_port == port and socket_uid == uid:
+            socket_inodes.add(fields[9])
+
+if not socket_inodes:
+    raise SystemExit(0)
+
+pids: set[int] = set()
+for process_dir in proc_root.glob("[0-9]*"):
+    try:
+        pid = int(process_dir.name)
+        os.kill(pid, 0)
+        if process_dir.stat().st_uid != uid:
+            continue
+        for descriptor in (process_dir / "fd").iterdir():
+            try:
+                target = os.readlink(descriptor)
+            except OSError:
+                continue
+            if target.startswith("socket:[") and target[8:-1] in socket_inodes:
+                pids.add(pid)
+                break
+    except (OSError, ValueError):
+        continue
+
+for pid in sorted(pids):
+    print(pid)
+PY
+}
+
+stop_reserved_port_listeners() {
+    local service="$1"
+    local port="$2"
+    local listener_pids=""
+    local remaining_pids=""
+    local pid
+    local cwd
+    local command_line
+    local proc_root="${HETERO_PROC_ROOT:-/proc}"
+    local pids=()
+    listener_pids="$(listener_pids_for_port "$port")"
+    if [[ -z "$listener_pids" ]]; then
+        case "$(listener_scope_for_port "$port")" in
+            none|unknown)
+                echo "${service}: reserved port ${port} is free"
+                return 0
+                ;;
+            *)
+                echo "${service}: port ${port} remains occupied, but no current-user listener PID is accessible." >&2
+                return 1
+                ;;
+        esac
+    fi
+    while IFS= read -r pid; do
+        [[ "$pid" =~ ^[0-9]+$ ]] && pids+=("$pid")
+    done <<<"$listener_pids"
+    for pid in "${pids[@]}"; do
+        cwd="$(cd "${proc_root}/${pid}/cwd" 2>/dev/null && pwd -P || true)"
+        if [[ -r "${proc_root}/${pid}/cmdline" ]]; then
+            command_line="$(tr '\0' ' ' <"${proc_root}/${pid}/cmdline" 2>/dev/null || true)"
+        else
+            command_line="unknown"
+        fi
+        echo "${service}: stopping reserved port ${port} listener pid=${pid} cwd=${cwd:-unknown} command=${command_line:0:240}"
+    done
+    kill -TERM "${pids[@]}" 2>/dev/null || true
+    for _ in {1..30}; do
+        remaining_pids="$(listener_pids_for_port "$port")"
+        if [[ -z "$remaining_pids" ]]; then
+            echo "${service}: reserved port ${port} released"
+            return 0
+        fi
+        sleep 0.1
+    done
+    pids=()
+    while IFS= read -r pid; do
+        [[ "$pid" =~ ^[0-9]+$ ]] && pids+=("$pid")
+    done <<<"$remaining_pids"
+    if [[ ${#pids[@]} -gt 0 ]]; then
+        echo "${service}: forcing ${#pids[@]} listener process(es) off reserved port ${port}" >&2
+        kill -KILL "${pids[@]}" 2>/dev/null || true
+    fi
+    for _ in {1..10}; do
+        [[ -z "$(listener_pids_for_port "$port")" ]] && {
+            echo "${service}: reserved port ${port} released after force stop"
+            return 0
+        }
+        sleep 0.1
+    done
+    echo "${service}: failed to release reserved port ${port}" >&2
+    return 1
+}
+
+kimi_ready() {
+    [[ -f "${HETERO_KIMI_SERVER_TOKEN_FILE}" ]] || return 1
+    local token
+    token="$(cat "${HETERO_KIMI_SERVER_TOKEN_FILE}")"
+    [[ -n "$token" ]] || return 1
+    curl --noproxy '*' --max-time 2 -fsS -H "Authorization: Bearer ${token}" \
+        "${HETERO_KIMI_SERVER_URL}/api/v1/meta" >/dev/null 2>&1
+}
+
+api_ready() {
+    curl --noproxy '*' --connect-timeout 1 --max-time 2 -fsS "http://127.0.0.1:${HETERO_API_PORT:-8006}/v1/live" >/dev/null 2>&1
+}
+
+web_http_ready() {
+    curl --noproxy '*' --connect-timeout 1 --max-time 2 -fsS "http://127.0.0.1:${HETERO_WEB_PORT:-4032}" >/dev/null 2>&1
+}
+
+extract_next_static_asset_paths() {
+    "$PYTHON_BIN" - "$1" <<'PY'
+import sys
+from html.parser import HTMLParser
+from urllib.parse import urlsplit
+
+
+class AssetParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.assets = set()
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        value = values.get("src") if tag == "script" else values.get("href") if tag == "link" else None
+        if not value:
+            return
+        parsed = urlsplit(value)
+        if not parsed.path.startswith("/_next/static/"):
+            return
+        suffix = f"?{parsed.query}" if parsed.query else ""
+        self.assets.add(f"{parsed.path}{suffix}")
+
+
+parser = AssetParser()
+with open(sys.argv[1], encoding="utf-8") as stream:
+    parser.feed(stream.read())
+for asset in sorted(parser.assets):
+    print(asset)
+PY
+}
+
+next_static_asset_ready() {
+    local url="$1"
+    local asset_path="$2"
+    local metadata
+    local status
+    local content_type
+    metadata="$(curl --noproxy '*' --connect-timeout 1 --max-time 5 -sS \
+        -o /dev/null -w $'%{http_code}\t%{content_type}' "${url}${asset_path}" 2>/dev/null || true)"
+    IFS=$'\t' read -r status content_type <<<"$metadata"
+    [[ "$status" =~ ^2[0-9][0-9]$ ]] || return 1
+    case "${asset_path%%\?*}" in
+        *.js) [[ "$content_type" == *javascript* ]] ;;
+        *.css) [[ "$content_type" == text/css* ]] ;;
+        *) return 0 ;;
+    esac
+}
+
+web_static_assets_ready() {
+    local base="http://127.0.0.1:${HETERO_WEB_PORT:-4032}"
+    local html_file="${TMP_DIR}/web-ready-root.${BASHPID:-$$}.html"
+    local asset_file="${TMP_DIR}/web-ready-assets.${BASHPID:-$$}.txt"
+    local asset_path
+    local ready=0
+    if curl --noproxy '*' --connect-timeout 1 --max-time 5 -fsS "${base}/" -o "$html_file" &&
+        extract_next_static_asset_paths "$html_file" >"$asset_file" &&
+        [[ -s "$asset_file" ]]; then
+        ready=1
+        while IFS= read -r asset_path; do
+            [[ -n "$asset_path" ]] || continue
+            if ! next_static_asset_ready "$base" "$asset_path"; then
+                ready=0
+                break
+            fi
+        done <"$asset_file"
+    fi
+    rm -f "$html_file" "$asset_file"
+    [[ "$ready" -eq 1 ]]
+}
+
+web_api_proxy_ready() {
+    curl --noproxy '*' --connect-timeout 1 --max-time 3 -fsS "http://127.0.0.1:${HETERO_WEB_PORT:-4032}/v1/live" >/dev/null 2>&1
+}
+
+web_bootstrap_ready() {
+    local base="http://127.0.0.1:${HETERO_WEB_PORT:-4032}"
+    local probe_timeout="${HETERO_BOOTSTRAP_PROBE_TIMEOUT_SECONDS:-5}"
+    [[ "$probe_timeout" =~ ^[1-9][0-9]*$ ]] || probe_timeout=5
+    curl --noproxy '*' --connect-timeout 1 --max-time "$probe_timeout" -fsS "${base}/v1/overview" >/dev/null 2>&1 &&
+        curl --noproxy '*' --connect-timeout 1 --max-time "$probe_timeout" -fsS "${base}/v1/page-actions" >/dev/null 2>&1 &&
+        curl --noproxy '*' --connect-timeout 1 --max-time "$probe_timeout" -fsS "${base}/v1/agent-cli/adapters" >/dev/null 2>&1 &&
+        curl --noproxy '*' --connect-timeout 1 --max-time "$probe_timeout" -fsS -H "Content-Type: application/json" \
+            --data '{"query":"","include_unverified":false,"include_cases":false}' \
+            "${base}/v1/optimization-kb/search" >/dev/null 2>&1 &&
+        curl --noproxy '*' --connect-timeout 1 --max-time "$probe_timeout" -fsS -H "Content-Type: application/json" \
+            --data '{"query":"","include_unverified":true,"include_cases":false}' \
+            "${base}/v1/hardware-kb/search" >/dev/null 2>&1
+}
+
+stale_web_build_source() {
+    local build_id="${APP_ROOT}/.next/BUILD_ID"
+    [[ -f "$build_id" ]] || return 0
+    find \
+        "${APP_ROOT}/app" \
+        "${APP_ROOT}/next.config.ts" \
+        "${APP_ROOT}/package.json" \
+        "${APP_ROOT}/package-lock.json" \
+        -type f -newer "$build_id" -print -quit 2>/dev/null || true
+}
+
+listener_scope_for_port() {
+    local port="$1"
+    local port_hex
+    local proc_net_root="${HETERO_PROC_NET_ROOT:-/proc/net}"
+    local proc_files=()
+    [[ "$port" =~ ^[0-9]+$ ]] || { printf '%s\n' unknown; return; }
+    printf -v port_hex '%04X' "$port"
+    [[ -r "${proc_net_root}/tcp" ]] && proc_files+=("${proc_net_root}/tcp")
+    [[ -r "${proc_net_root}/tcp6" ]] && proc_files+=("${proc_net_root}/tcp6")
+    if [[ ${#proc_files[@]} -eq 0 ]]; then
+        printf '%s\n' unknown
+        return
+    fi
+    awk -v expected_port="$port_hex" '
+        FNR > 1 && $4 == "0A" {
+            split($2, endpoint, ":")
+            if (endpoint[2] != expected_port) {
+                next
+            }
+            address = endpoint[1]
+            if (address == "0100007F" || address == "00000000000000000000000001000000") {
+                local_listener = 1
+            } else {
+                remote_listener = 1
+            }
+        }
+        END {
+            if (remote_listener) {
+                print "remote"
+            } else if (local_listener) {
+                print "local"
+            } else {
+                print "none"
+            }
+        }
+    ' "${proc_files[@]}"
+}
+
+web_listener_scope() {
+    listener_scope_for_port "${HETERO_WEB_PORT:-4032}"
+}
+
+api_listener_scope() {
+    listener_scope_for_port "${HETERO_API_PORT:-8006}"
+}
+
+web_listener_matches_access_mode() {
+    local scope
+    scope="$(web_listener_scope)"
+    [[ "$scope" == "$HETERO_ACCESS_MODE" ]]
+}
+
+web_ready() {
+    web_http_ready && web_listener_matches_access_mode && web_static_assets_ready
+}
+
+prepare_web_listener() {
+    local scope
+    scope="$(web_listener_scope)"
+    case "$scope" in
+        none)
+            return 0
+            ;;
+        unknown)
+            if ! web_http_ready; then
+                return 0
+            fi
+            if pid_alive web; then
+                return 0
+            fi
+            echo "Port ${HETERO_WEB_PORT:-4032} serves HTTP but its listener ownership is unknown; refusing to reuse it." >&2
+            return 1
+            ;;
+    esac
+    if pid_alive web; then
+        if [[ "$scope" != "$HETERO_ACCESS_MODE" ]]; then
+            echo "web: restarting owned ${scope} listener for ${HETERO_ACCESS_MODE} access"
+            stop_owned_process web
+            return 0
+        fi
+        if ! web_http_ready || ! web_static_assets_ready; then
+            echo "web: restarting an unhealthy owned listener (document or static assets unavailable)"
+            stop_owned_process web
+        fi
+        return 0
+    fi
+    echo "Port ${HETERO_WEB_PORT:-4032} is occupied by an unowned ${scope} listener; refusing to reuse an older or unrelated Web process." >&2
+    echo "Inspect it with: ss -tlnp | grep ':${HETERO_WEB_PORT:-4032}'" >&2
+    echo "Stop the owning deployment or choose another HETERO_WEB_PORT, then retry." >&2
+    return 1
+}
+
+prepare_api_listener() {
+    local scope
+    scope="$(api_listener_scope)"
+    case "$scope" in
+        none)
+            return 0
+            ;;
+        unknown)
+            if ! api_ready; then
+                return 0
+            fi
+            if pid_alive api; then
+                return 0
+            fi
+            echo "Port ${HETERO_API_PORT:-8006} serves the API but its listener ownership is unknown; refusing to reuse it." >&2
+            return 1
+            ;;
+    esac
+    if pid_alive api; then
+        if [[ "$scope" != "local" ]] || ! api_ready; then
+            echo "api: restarting an unhealthy or non-local owned listener"
+            stop_owned_process api
+        fi
+        return 0
+    fi
+    echo "Port ${HETERO_API_PORT:-8006} is occupied by an unowned ${scope} listener; refusing to reuse an older or unrelated API process." >&2
+    echo "Inspect it with: ss -tlnp | grep ':${HETERO_API_PORT:-8006}'" >&2
+    return 1
+}
+
+remote_web_host() {
+    local candidate
+    if command -v hostname >/dev/null 2>&1; then
+        for candidate in $(hostname -I 2>/dev/null || true); do
+            case "$candidate" in
+                127.*|*:*|"") ;;
+                *) printf '%s\n' "$candidate"; return ;;
+            esac
+        done
+    fi
+    printf '%s\n' '<linux-server-ip>'
+}
+
+workbench_url() {
+    if [[ "$HETERO_ACCESS_MODE" == "remote" ]]; then
+        printf 'http://%s:%s\n' "$(remote_web_host)" "${HETERO_WEB_PORT:-4032}"
+    else
+        printf 'http://127.0.0.1:%s\n' "${HETERO_WEB_PORT:-4032}"
+    fi
+}
+
+startup_positive_integer() {
+    local value="$1"
+    local fallback="$2"
+    if [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+        printf '%s\n' "$value"
+    else
+        printf '%s\n' "$fallback"
+    fi
+}
+
+latest_service_log_line() {
+    local service="$1"
+    local log_file="${LOG_DIR}/${service}.log"
+    [[ -s "$log_file" ]] || return 0
+    tail -n 30 "$log_file" 2>/dev/null | awk 'NF { line=$0 } END { if (line != "") print line }' | cut -c 1-300
+}
+
+show_startup_log_tail() {
+    local service="$1"
+    local log_file="${LOG_DIR}/${service}.log"
+    if [[ ! -s "$log_file" ]]; then
+        echo "${service}: no startup log was written at ${log_file}" >&2
+        return 0
+    fi
+    echo "${service}: recent startup log (${log_file}):" >&2
+    tail -n 40 "$log_file" >&2
+}
+
+wait_ready() {
+    local name="$1"
+    local check="$2"
+    shift 2
+    local owners=("$@")
+    local timeout heartbeat poll
+    timeout="$(startup_positive_integer "${HETERO_STARTUP_TIMEOUT_SECONDS:-120}" 120)"
+    heartbeat="$(startup_positive_integer "${HETERO_STARTUP_HEARTBEAT_SECONDS:-5}" 5)"
+    poll="$(startup_positive_integer "${HETERO_STARTUP_POLL_SECONDS:-1}" 1)"
+    local started="$SECONDS"
+    local elapsed=0
+    local next_heartbeat="$heartbeat"
+    local owner latest_log
+
+    echo "${name}: waiting for readiness (timeout ${timeout}s)"
+    while (( elapsed < timeout )); do
+        if "$check"; then
+            elapsed=$((SECONDS - started))
+            echo "${name}: ready (${elapsed}s)"
+            return 0
+        fi
+        if [[ ${#owners[@]} -gt 0 ]]; then
+            for owner in "${owners[@]}"; do
+                if ! pid_alive "$owner"; then
+                    echo "${name}: ${owner} process exited before readiness" >&2
+                    show_startup_log_tail "$owner"
+                    return 1
+                fi
+            done
+        fi
+        elapsed=$((SECONDS - started))
+        if (( elapsed >= next_heartbeat )); then
+            latest_log=""
+            if [[ ${#owners[@]} -gt 0 ]]; then
+                latest_log="$(latest_service_log_line "${owners[0]}")"
+            fi
+            if [[ -n "$latest_log" ]]; then
+                echo "${name}: still starting (${elapsed}s/${timeout}s); latest log: ${latest_log}"
+            else
+                echo "${name}: still starting (${elapsed}s/${timeout}s); log: ${LOG_DIR}/${owners[0]:-$name}.log"
+            fi
+            next_heartbeat=$((elapsed + heartbeat))
+        fi
+        sleep "$poll"
+        elapsed=$((SECONDS - started))
+    done
+
+    echo "${name}: readiness timeout after ${elapsed}s" >&2
+    if [[ ${#owners[@]} -gt 0 ]]; then
+        for owner in "${owners[@]}"; do
+            show_startup_log_tail "$owner"
+        done
+    else
+        show_startup_log_tail "$name"
+    fi
+    return 1
+}
+
+initialize_runtime() {
+    make_runtime_root
+    set_paths
+    validate_planned_paths
+    mkdir -p "$STATE_DIR" "$ASSET_DIR" "$LOG_DIR" "$PID_DIR" \
+        "$CACHE_DIR/pip" "$CACHE_DIR/npm" "$CACHE_DIR/xdg" "$TMP_DIR"
+
+    normalize_requested_resource_overrides
+
+    if [[ ! -f "$ENV_FILE" || "$REFRESH_ENV" -eq 1 ]]; then
+        write_environment
+        echo "Generated ${ENV_FILE}"
+    else
+        local environment_updated=0
+        if [[ -n "$REQUESTED_ACCESS_MODE" ]]; then
+            update_environment_access_mode "$REQUESTED_ACCESS_MODE"
+            echo "Updated access mode in ${ENV_FILE}: ${REQUESTED_ACCESS_MODE}"
+            environment_updated=1
+        fi
+        if [[ -n "$REQUESTED_WEB_PORT" ]]; then
+            update_environment_web_port "$REQUESTED_WEB_PORT"
+            echo "Updated Web port in ${ENV_FILE}: ${REQUESTED_WEB_PORT}"
+            environment_updated=1
+        fi
+        local resource_changes=""
+        resource_changes="$(persist_requested_resource_overrides)"
+        if [[ -n "$resource_changes" ]]; then
+            echo "Updated resource environment in ${ENV_FILE}: ${resource_changes}"
+            environment_updated=1
+        fi
+        if [[ "$environment_updated" -eq 0 ]]; then
+            echo "Preserved existing ${ENV_FILE}; use --refresh-env to regenerate it."
+        fi
+    fi
+}
+
+validate_agent_cli_configuration() {
+    local allow_missing_kimi="${1:-0}"
+    local python_bin="${APP_ROOT}/.venv/bin/python"
+    local manifest="${HETERO_AGENT_CLI_CONFIG:-}"
+    local default_adapter="${HETERO_AGENT_CLI_ADAPTER:-kimi}"
+    local kimi_bin="${HETERO_KIMI_BIN:-${ASSET_DIR}/kimi-code/bin/kimi}"
+    local arguments=(
+        -m backend.tools.validate_agent_cli_adapters
+        --default-adapter "$default_adapter"
+        --kimi-bin "$kimi_bin"
+    )
+    [[ -x "$python_bin" ]] || python_bin="$PYTHON_BIN"
+    [[ -n "$manifest" ]] && arguments+=(--manifest "$manifest")
+    [[ "$allow_missing_kimi" -eq 1 ]] && arguments+=(--allow-missing-kimi)
+    (
+        cd "$APP_ROOT"
+        "$python_bin" "${arguments[@]}"
+    )
+}
+
+agent_check_runtime() {
+    make_runtime_root
+    set_paths
+    normalize_requested_resource_overrides
+    local requested_manifest="$REQUESTED_AGENT_CLI_CONFIG"
+    local requested_adapter="$REQUESTED_AGENT_CLI_ADAPTER"
+    if [[ -f "$ENV_FILE" ]]; then
+        load_environment
+    else
+        HETERO_KIMI_BIN="${ASSET_DIR}/kimi-code/bin/kimi"
+        HETERO_AGENT_CLI_CONFIG=""
+        HETERO_AGENT_CLI_ADAPTER="kimi"
+    fi
+    [[ -n "$requested_manifest" ]] && HETERO_AGENT_CLI_CONFIG="$requested_manifest"
+    [[ -n "$requested_adapter" ]] && HETERO_AGENT_CLI_ADAPTER="$requested_adapter"
+    export HETERO_AGENT_CLI_CONFIG HETERO_AGENT_CLI_ADAPTER HETERO_KIMI_BIN
+    validate_agent_cli_configuration
+}
+
+render_cli_command() {
+    local rendered=""
+    local argument=""
+    local quoted=""
+    for argument in "$@"; do
+        printf -v quoted '%q' "$argument"
+        rendered="${rendered}${rendered:+ }${quoted}"
+    done
+    printf '%s\n' "$rendered"
+}
+
+record_install_operation() {
+    local label="$1"
+    local cli_command="${2:-}"
+    local operation_file="${HETERO_INSTALL_OPERATION_FILE:-}"
+    [[ -n "$operation_file" ]] || return 0
+    printf '%s\t%s\t%s\n' "$(date +%s)" "$label" "$cli_command" >"$operation_file"
+}
+
+begin_install_operation() {
+    local label="$1"
+    shift
+    local cli_command=""
+    local working_directory=""
+    cli_command="$(render_cli_command "$@")"
+    record_install_operation "$label" "$cli_command"
+    echo "    操作：${label}"
+    if working_directory="$(pwd -P 2>&1)"; then
+        echo "        CWD: ${working_directory}"
+    else
+        echo "        CWD: 无法读取（${working_directory}）" >&2
+    fi
+    echo "        CLI: ${cli_command}"
+}
+
+finish_install_operation() {
+    record_install_operation \
+        "${HETERO_INSTALL_STAGE_LABEL:-安装阶段收尾}" \
+        "${HETERO_INSTALL_STAGE_COMMAND:-}"
+}
+
+run_install_operation() {
+    local label="$1"
+    shift
+    local status=0
+    begin_install_operation "$label" "$@"
+    if "$@"; then
+        status=0
+    else
+        status="$?"
+    fi
+    if [[ "$status" -eq 0 ]]; then
+        finish_install_operation
+    fi
+    return "$status"
+}
+
+run_install_operation_capture() {
+    local label="$1"
+    local output_file="$2"
+    shift 2
+    local status=0
+    begin_install_operation "$label" "$@"
+    if "$@" >"$output_file"; then
+        status=0
+    else
+        status="$?"
+    fi
+    if [[ "$status" -eq 0 ]]; then
+        finish_install_operation
+    fi
+    return "$status"
+}
+
+run_install_stage() {
+    local position="$1"
+    local label="$2"
+    shift 2
+    local slow_operation_seconds="${HETERO_INSTALL_SLOW_OPERATION_SECONDS:-60}"
+    local heartbeat_seconds="${HETERO_INSTALL_HEARTBEAT_SECONDS:-60}"
+    local monitor_poll_seconds="${HETERO_INSTALL_MONITOR_POLL_SECONDS:-5}"
+    [[ "$slow_operation_seconds" =~ ^[1-9][0-9]*$ ]] || slow_operation_seconds=60
+    [[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || heartbeat_seconds=60
+    [[ "$monitor_poll_seconds" =~ ^[1-9][0-9]*$ ]] || monitor_poll_seconds=5
+    local started_at
+    local command_pid
+    local monitor_pid
+    local operation_file="${TMP_DIR}/install-operation-$$-${position//\//_}.status"
+    local stage_command=""
+    local status=0
+    local failed_operation_started=""
+    local failed_operation_label=""
+    local failed_operation_command=""
+    stage_command="$(render_cli_command "$@")"
+    started_at="$(date +%s)"
+    echo
+    echo "==> [${position}] ${label}，开始于 $(date '+%Y-%m-%d %H:%M:%S')"
+    export HETERO_INSTALL_OPERATION_FILE="$operation_file"
+    export HETERO_INSTALL_STAGE_LABEL="$label"
+    export HETERO_INSTALL_STAGE_COMMAND="$stage_command"
+    record_install_operation "$label" "$stage_command"
+    (
+        cd "$APP_ROOT"
+        "$@"
+    ) &
+    command_pid="$!"
+    (
+        local operation_started=""
+        local operation_label=""
+        local operation_command=""
+        local operation_elapsed=0
+        local operation_key=""
+        local last_report_key=""
+        local last_report_at=0
+        local now=0
+        while kill -0 "$command_pid" 2>/dev/null; do
+            sleep "$monitor_poll_seconds"
+            kill -0 "$command_pid" 2>/dev/null || break
+            operation_started=""
+            operation_label=""
+            operation_command=""
+            if [[ -r "$operation_file" ]]; then
+                IFS=$'\t' read -r operation_started operation_label operation_command <"$operation_file" || true
+            fi
+            [[ "$operation_started" =~ ^[0-9]+$ ]] || continue
+            [[ -n "$operation_label" ]] || operation_label="$label"
+            now="$(date +%s)"
+            operation_elapsed=$(( now - operation_started ))
+            operation_key="${operation_started}:${operation_label}"
+            if (( operation_elapsed >= slow_operation_seconds )) &&
+                { [[ "$operation_key" != "$last_report_key" ]] || (( now - last_report_at >= heartbeat_seconds )); }; then
+                echo "    [${position}] 当前操作：${operation_label}；已执行 ${operation_elapsed} 秒，仍在运行 (pid ${command_pid})"
+                if [[ -n "$operation_command" ]]; then
+                    echo "        CLI: ${operation_command}"
+                fi
+                last_report_key="$operation_key"
+                last_report_at="$now"
+            fi
+        done
+    ) &
+    monitor_pid="$!"
+    wait "$command_pid" || status="$?"
+    kill "$monitor_pid" 2>/dev/null || true
+    wait "$monitor_pid" 2>/dev/null || true
+    if [[ "$status" -ne 0 && -r "$operation_file" ]]; then
+        IFS=$'\t' read -r failed_operation_started failed_operation_label failed_operation_command <"$operation_file" || true
+    fi
+    rm -f "$operation_file"
+    unset HETERO_INSTALL_OPERATION_FILE HETERO_INSTALL_STAGE_LABEL HETERO_INSTALL_STAGE_COMMAND
+    if [[ "$status" -ne 0 ]]; then
+        echo "<== [${position}] ${label}失败，退出码 ${status}，用时 $(( $(date +%s) - started_at )) 秒" >&2
+        if [[ -n "$failed_operation_label" ]]; then
+            echo "    失败操作：${failed_operation_label}" >&2
+        fi
+        if [[ -n "$failed_operation_command" ]]; then
+            echo "    CLI: ${failed_operation_command}" >&2
+        fi
+        return "$status"
+    fi
+    echo "<== [${position}] ${label}完成，用时 $(( $(date +%s) - started_at )) 秒"
+}
+
+skip_install_stage() {
+    echo
+    echo "==> [$1] $2：已跳过（$3）"
+}
+
+ensure_virtualenv_pip() {
+    local python_bin="${APP_ROOT}/.venv/bin/python"
+    if "$python_bin" -m pip --version >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "    Python virtual environment 中未发现 pip，正在使用 ensurepip 引导。"
+    if ! run_install_operation "引导 Python virtual environment 的 pip（ensurepip）" \
+        "$python_bin" -m ensurepip --upgrade; then
+        echo "当前解释器无法为 virtual environment 提供 pip：${PYTHON_BIN}" >&2
+        echo "请为当前 Python 安装完整的 venv/ensurepip 组件，或改用包含 ensurepip 的 Python 3.11+。" >&2
+        echo "可先验证：${PYTHON_BIN} -m ensurepip --version" >&2
+        echo "Debian/Ubuntu 通常需要与 Python 版本匹配的 python3-venv（例如 python3.11-venv）。" >&2
+        echo "修复 Python 后直接重新执行 heteroctl install；无需删除 runtime。" >&2
+        return 1
+    fi
+
+    if ! "$python_bin" -m pip --version >/dev/null 2>&1; then
+        echo "ensurepip 已返回成功，但 ${python_bin} 仍无法加载 pip；请删除仓库内 .venv 后重新安装。" >&2
+        return 1
+    fi
+}
+
+restore_virtualenv_backup() {
+    local venv_root="$1"
+    local backup_root="$2"
+    [[ -n "$backup_root" && -e "$backup_root" ]] || return 0
+    rm -rf -- "$venv_root"
+    mv "$backup_root" "$venv_root"
+    echo "    新 virtual environment 创建失败，已恢复原有 ${venv_root}。" >&2
+}
+
+install_python_dependencies() {
+    local venv_root="${APP_ROOT}/.venv"
+    local venv_python="${venv_root}/bin/python"
+    local backup_root=""
+    local recreate_reason=""
+    local current_version=""
+    local current_base=""
+    local selected_base=""
+
+    resolve_python_bin
+    if [[ -e "$venv_root" ]]; then
+        if [[ ! -x "$venv_python" ]]; then
+            recreate_reason="现有 .venv 不包含可执行的 bin/python"
+        elif ! python_version_supported "$venv_python"; then
+            current_version="$(python_version_string "$venv_python" || true)"
+            recreate_reason="现有 .venv 使用 Python ${current_version:-unknown}，不满足 Python 3.11+"
+        elif [[ -n "$REQUESTED_PYTHON_BIN" ]]; then
+            current_base="$(python_base_executable_identity "$venv_python" || true)"
+            selected_base="$(python_executable_identity "$PYTHON_BIN" || true)"
+            if [[ -z "$current_base" || -z "$selected_base" || "$current_base" != "$selected_base" ]]; then
+                recreate_reason="现有 .venv 的基础解释器为 ${current_base:-unknown}，与显式指定的 ${selected_base:-$PYTHON_BIN} 不同"
+            fi
+        fi
+    fi
+
+    if [[ -n "$recreate_reason" ]]; then
+        backup_root="${APP_ROOT}/.venv-python-backup.$$"
+        echo "    ${recreate_reason}；将使用 ${PYTHON_BIN} 重建。"
+        mv "$venv_root" "$backup_root"
+    fi
+
+    if [[ ! -x "$venv_python" ]]; then
+        echo "    创建 Python virtual environment: ${venv_root}"
+        echo "    基础解释器: ${PYTHON_BIN} (Python ${PYTHON_VERSION})"
+        if ! run_install_operation "创建 Python virtual environment" \
+            "$PYTHON_BIN" -m venv "$venv_root"; then
+            restore_virtualenv_backup "$venv_root" "$backup_root"
+            return 1
+        fi
+    fi
+    if ! ensure_virtualenv_pip; then
+        restore_virtualenv_backup "$venv_root" "$backup_root"
+        return 1
+    fi
+    if ! run_install_operation "安装 Python 依赖（pip install）" \
+        env PIP_CACHE_DIR="$CACHE_DIR/pip" \
+        "$venv_python" -m pip install \
+            --disable-pip-version-check --timeout 60 --retries 2 \
+            -r "${APP_ROOT}/backend/requirements.txt"; then
+        restore_virtualenv_backup "$venv_root" "$backup_root"
+        return 1
+    fi
+    [[ -z "$backup_root" ]] || rm -rf -- "$backup_root"
+    current_version="$(python_version_string "$venv_python")"
+    current_base="$(python_base_executable_identity "$venv_python")"
+    echo "    Python virtual environment: ${venv_python} (Python ${current_version}, base ${current_base})"
+}
+
+validate_managed_virtualenv() {
+    local venv_python="${APP_ROOT}/.venv/bin/python"
+    local current_version=""
+    local current_base=""
+    local selected_base=""
+    [[ -x "$venv_python" ]] || {
+        echo "Python venv is missing; run install first." >&2
+        return 1
+    }
+    current_version="$(python_version_string "$venv_python" || true)"
+    python_version_supported "$venv_python" || {
+        echo "Managed Python venv uses unsupported Python ${current_version:-unknown}: ${venv_python}" >&2
+        echo "Run heteroctl install with HETERO_PYTHON_BIN or --python-bin pointing to Python 3.11+." >&2
+        return 1
+    }
+    if [[ -n "$REQUESTED_PYTHON_BIN" ]]; then
+        current_base="$(python_base_executable_identity "$venv_python" || true)"
+        selected_base="$(python_executable_identity "$PYTHON_BIN" || true)"
+        if [[ -z "$current_base" || -z "$selected_base" || "$current_base" != "$selected_base" ]]; then
+            echo "Managed Python venv still uses ${current_base:-unknown}, not the explicitly selected ${selected_base:-$PYTHON_BIN}." >&2
+            echo "Run heteroctl install without --skip-python-deps to rebuild it." >&2
+            return 1
+        fi
+    fi
+}
+
+python_check_runtime() {
+    make_runtime_root
+    set_paths
+    check_python_version
+    if [[ -x "${APP_ROOT}/.venv/bin/python" ]]; then
+        local venv_version venv_base
+        venv_version="$(python_version_string "${APP_ROOT}/.venv/bin/python" || true)"
+        venv_base="$(python_base_executable_identity "${APP_ROOT}/.venv/bin/python" || true)"
+        echo "Managed virtualenv: ${APP_ROOT}/.venv/bin/python (Python ${venv_version:-unknown}, base ${venv_base:-unknown})"
+        validate_managed_virtualenv
+    else
+        echo "Managed virtualenv: not created; the next install will use ${PYTHON_BIN}."
+    fi
+}
+
+patch_kimi_installer_curl_insecure() {
+    local installer_path="$1"
+    "$PYTHON_BIN" - "$installer_path" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+curl_token = re.compile(
+    r"(?<![A-Za-z0-9_./-])curl(?!\s+(?:--insecure\b|-\w*k\w*\b))(?=\s)"
+)
+patched_lines: list[str] = []
+replacement_count = 0
+
+for line in text.splitlines(keepends=True):
+    if line.lstrip().startswith("#"):
+        patched_lines.append(line)
+        continue
+
+    patched_line, line_replacements = curl_token.subn("curl -k", line)
+    patched_lines.append(patched_line)
+    replacement_count += line_replacements
+
+path.write_text("".join(patched_lines), encoding="utf-8")
+print(f"    Patched {replacement_count} curl command(s) in {path} to use -k")
+PY
+}
+
+install_kimi_code() {
+    local requested_version="${HETERO_KIMI_VERSION:-latest}"
+    local version=""
+    local target=""
+    local manifest_url=""
+    local install_root=""
+    local expected_managed_bin=""
+    local temporary_root="${TMP_DIR}/kimi-code-install.$$"
+    local latest_path="${temporary_root}/latest"
+    local installer_path="${temporary_root}/install.sh"
+    local version_output_path="${temporary_root}/installed-version.txt"
+    local manifest_path="${temporary_root}/manifest.json"
+    local filename=""
+    local checksum=""
+    local installed_version=""
+    local verify_status=0
+
+    [[ "$requested_version" == "latest" || "$requested_version" =~ ^[A-Za-z0-9._-]+$ ]] || {
+        echo "Invalid HETERO_KIMI_VERSION: ${requested_version}" >&2
+        return 2
+    }
+    case "$(uname -s):$(uname -m)" in
+        Linux:x86_64|Linux:amd64) target="linux-x64" ;;
+        Linux:aarch64|Linux:arm64) target="linux-arm64" ;;
+        Darwin:x86_64|Darwin:amd64) target="darwin-x64" ;;
+        Darwin:arm64|Darwin:aarch64) target="darwin-arm64" ;;
+        *)
+            echo "Kimi Code automatic install does not support $(uname -s) $(uname -m). Use --skip-kimi and configure HETERO_KIMI_BIN." >&2
+            return 1
+            ;;
+    esac
+    install_root="$(dirname "$(dirname "${HETERO_KIMI_BIN}")")"
+    case "$(canonical_path "$install_root")" in
+        "${RUNTIME_ROOT}"/*) ;;
+        *)
+            if [[ -x "${HETERO_KIMI_BIN}" ]]; then
+                echo "    Reusing externally managed Kimi Code: ${HETERO_KIMI_BIN}"
+                return 0
+            fi
+            echo "Automatic Kimi installation is restricted to runtime root ${RUNTIME_ROOT}; configured binary is ${HETERO_KIMI_BIN}." >&2
+            echo "Use --refresh-env for the managed layout, install that external binary yourself, or pass --skip-kimi." >&2
+            return 1
+            ;;
+    esac
+    expected_managed_bin="${install_root}/bin/kimi"
+    if [[ "$(canonical_path "${HETERO_KIMI_BIN}")" != "$(canonical_path "$expected_managed_bin")" ]]; then
+        echo "Official Kimi installer writes ${expected_managed_bin}, but HETERO_KIMI_BIN is ${HETERO_KIMI_BIN}." >&2
+        echo "Use the managed bin/kimi layout, or pass --skip-kimi for an externally managed executable." >&2
+        return 1
+    fi
+    rm -rf "$temporary_root"
+    mkdir -p "$temporary_root"
+    trap 'rm -rf "${temporary_root}"' RETURN
+    if [[ "$requested_version" == "latest" ]]; then
+        run_install_operation "查询 Kimi Code 官方最新版本" \
+            curl -k --proto '=https' --tlsv1.2 --fail --location --retry 2 \
+                --connect-timeout 20 --max-time 120 --silent --show-error \
+                --output "$latest_path" "https://code.kimi.com/kimi-code/latest"
+        version="$(tr -d '[:space:]' <"$latest_path")"
+        [[ "$version" =~ ^[A-Za-z0-9._-]+$ ]] || {
+            echo "Kimi Code latest endpoint returned an invalid version: ${version:-<empty>}" >&2
+            return 1
+        }
+        echo "    Kimi Code official latest version: ${version}"
+    else
+        version="$requested_version"
+        echo "    Using explicitly pinned Kimi Code version: ${version}"
+    fi
+    if [[ -x "${HETERO_KIMI_BIN}" ]]; then
+        if [[ -f "${install_root}/VERSION" ]]; then
+            installed_version="$(tr -d '[:space:]' <"${install_root}/VERSION")"
+        else
+            run_install_operation_capture \
+                "检查现有 Kimi Code 版本" "$version_output_path" \
+                "${HETERO_KIMI_BIN}" --version || true
+            installed_version="$(head -n 1 "$version_output_path" 2>/dev/null | tr -d '[:space:]' || true)"
+        fi
+        if [[ "$installed_version" == *"${version}"* ]]; then
+            echo "    Kimi Code ${version} is already installed at ${HETERO_KIMI_BIN}"
+            return 0
+        fi
+        echo "    Updating Kimi Code from ${installed_version:-unknown} to ${version}"
+    fi
+
+    run_install_operation "下载 Kimi Code 官方安装器" \
+        curl -k -fsSL --proto '=https' --tlsv1.2 --retry 2 \
+            --connect-timeout 20 --max-time 120 \
+            --output "$installer_path" "https://code.kimi.com/kimi-code/install.sh"
+    run_install_operation "为 Kimi Code 官方安装器启用 curl -k" \
+        patch_kimi_installer_curl_insecure "$installer_path"
+    if [[ "$requested_version" == "latest" ]]; then
+        run_install_operation "执行 Kimi Code 官方最新版安装器" \
+            env KIMI_INSTALL_DIR="$install_root" KIMI_NO_MODIFY_PATH=1 \
+                bash "$installer_path"
+    else
+        run_install_operation "执行 Kimi Code 官方指定版本安装器" \
+            env KIMI_INSTALL_DIR="$install_root" KIMI_NO_MODIFY_PATH=1 KIMI_VERSION="$version" \
+                bash "$installer_path"
+    fi
+    [[ -x "${HETERO_KIMI_BIN}" ]] || {
+        echo "Official Kimi installer completed without creating ${HETERO_KIMI_BIN}." >&2
+        return 1
+    }
+    run_install_operation_capture \
+        "读取新安装的 Kimi Code 版本" "$version_output_path" \
+        "${HETERO_KIMI_BIN}" --version
+    installed_version="$(head -n 1 "$version_output_path" | tr -d '[:space:]')"
+    [[ "$installed_version" =~ ^[A-Za-z0-9._-]+$ ]] || {
+        echo "Installed Kimi Code returned an invalid version: ${installed_version:-<empty>}" >&2
+        return 1
+    }
+    if [[ "$requested_version" != "latest" && "$installed_version" != *"${version}"* ]]; then
+        echo "Official Kimi installer returned ${installed_version}, expected ${version}." >&2
+        return 1
+    fi
+    version="$installed_version"
+
+    manifest_url="https://code.kimi.com/kimi-code/binaries/${version}/manifest.json"
+    run_install_operation "下载 Kimi Code ${version} 校验清单" \
+        curl -k -fsSL --proto '=https' --tlsv1.2 --retry 2 \
+            --connect-timeout 20 --max-time 120 \
+            --output "$manifest_path" "$manifest_url"
+    read -r filename checksum < <("$PYTHON_BIN" - "$manifest_path" "$target" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+entry = manifest.get("platforms", {}).get(sys.argv[2], {})
+filename = entry.get("filename", "")
+checksum = entry.get("checksum", "")
+if not isinstance(filename, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", filename):
+    raise SystemExit("manifest contains an unsafe Kimi binary filename")
+if not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum):
+    raise SystemExit("manifest contains an invalid Kimi binary checksum")
+print(filename, checksum)
+PY
+    )
+    begin_install_operation \
+        "独立校验已安装 Kimi Code 的 SHA-256" \
+        "$PYTHON_BIN" - "${HETERO_KIMI_BIN}" "$checksum"
+    if "$PYTHON_BIN" - "${HETERO_KIMI_BIN}" "$checksum" <<'PY'
+import hashlib
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+expected = sys.argv[2]
+actual = hashlib.sha256(path.read_bytes()).hexdigest()
+if actual != expected:
+    raise SystemExit(f"Kimi binary checksum mismatch: expected {expected}, got {actual}")
+PY
+    then
+        verify_status=0
+    else
+        verify_status="$?"
+    fi
+    finish_install_operation
+    [[ "$verify_status" -eq 0 ]] || return "$verify_status"
+    mkdir -p "${KIMI_CODE_HOME}"
+    printf '%s\n' "$version" >"${install_root}/VERSION"
+    echo "    Installed and independently verified Kimi Code ${version}: ${HETERO_KIMI_BIN}"
+    rm -rf "$temporary_root"
+    trap - RETURN
+}
+
+install_web_dependencies() {
+    local npm_status=0
+    local latest_log=""
+    local configured_npm_registry=""
+    local install_npm_registry="${HETERO_NPM_REGISTRY:-https://registry.npmjs.org/}"
+    local replace_registry_host="never"
+    if [[ -n "${HETERO_NPM_REGISTRY:-}" ]]; then
+        replace_registry_host="always"
+    fi
+    (
+        cd "$APP_ROOT"
+        [[ -f package.json ]] || { echo "Web dependency manifest is missing: ${APP_ROOT}/package.json" >&2; exit 1; }
+        [[ -f package-lock.json ]] || { echo "npm ci lockfile is missing: ${APP_ROOT}/package-lock.json" >&2; exit 1; }
+        run_install_operation "安装 Web 前端依赖（npm ci）" \
+            env npm_config_cache="$CACHE_DIR/npm" \
+            npm_config_fetch_retries=2 \
+            npm_config_fetch_retry_mintimeout=10000 \
+            npm_config_fetch_retry_maxtimeout=60000 \
+            npm_config_fetch_timeout=120000 \
+                npm ci --no-audit --no-fund --foreground-scripts --loglevel=http --timing \
+                    --registry="$install_npm_registry" \
+                    --replace-registry-host="$replace_registry_host"
+    ) || npm_status="$?"
+    if [[ "$npm_status" -ne 0 ]]; then
+        configured_npm_registry="$(npm config get registry 2>/dev/null || true)"
+        echo "    Web 前端依赖安装诊断：" >&2
+        echo "      repository=${APP_ROOT}" >&2
+        echo "      node=$(command -v node 2>/dev/null || echo unavailable) $({ node --version 2>/dev/null || true; } | head -n 1)" >&2
+        echo "      npm=$(command -v npm 2>/dev/null || echo unavailable) $({ npm --version 2>/dev/null || true; } | head -n 1)" >&2
+        echo "      cache=${CACHE_DIR}/npm" >&2
+        echo "      install_registry=${install_npm_registry}" >&2
+        echo "      replace_registry_host=${replace_registry_host}" >&2
+        [[ -n "$configured_npm_registry" ]] && echo "      user_configured_registry=${configured_npm_registry}" >&2
+        latest_log="$(find "$CACHE_DIR/npm/_logs" -type f -name '*debug-0.log' -print 2>/dev/null | sort | tail -n 1 || true)"
+        if [[ -n "$latest_log" ]]; then
+            echo "    npm 调试日志：${latest_log}" >&2
+            tail -n 120 "$latest_log" >&2 || true
+            if grep -Eiq '(^|[^0-9])(E404|404)([^0-9]|$)' "$latest_log"; then
+                echo "    检测到 registry 404：请核对日志中的实际下载主机；默认安装应为 registry.npmjs.org。" >&2
+            fi
+        else
+            echo "    npm 未生成 debug log；失败发生在 npm 初始化、工作目录或清单检查阶段。" >&2
+        fi
+        return "$npm_status"
+    fi
+}
+
+build_production_web() {
+    local build_root="${APP_ROOT}/.next"
+    local backup_root="${APP_ROOT}/.next-production-backup.$$"
+    local build_status=0
+    local validator_args=(
+        -m backend.tools.validate_next_build
+        --build-dir "$build_root"
+        --write-asset-index
+    )
+    [[ ! -e "$backup_root" ]] || {
+        echo "Temporary production build backup already exists: ${backup_root}" >&2
+        return 1
+    }
+    if [[ -e "$build_root" ]]; then
+        mv "$build_root" "$backup_root"
+    fi
+
+    if (
+        cd "$APP_ROOT"
+        run_install_operation "执行 Next.js 生产构建（npm run build）" \
+            env npm_config_cache="$CACHE_DIR/npm" npm run build
+    ); then
+        build_status=0
+    else
+        build_status=$?
+    fi
+    if [[ "$build_status" -eq 0 ]]; then
+        [[ -e "$backup_root" ]] && validator_args+=(--retain-from "$backup_root")
+        if run_install_operation "校验 Next.js manifest 与静态资源完整性" \
+            "${APP_ROOT}/.venv/bin/python" "${validator_args[@]}"; then
+            build_status=0
+        else
+            build_status=$?
+        fi
+    fi
+
+    if [[ "$build_status" -ne 0 ]]; then
+        echo "Production Web build failed validation; restoring the previous complete build." >&2
+        rm -rf "$build_root"
+        if [[ -e "$backup_root" ]]; then
+            mv "$backup_root" "$build_root"
+        fi
+        return "$build_status"
+    fi
+    rm -rf "$backup_root"
+}
+
+verify_agent_tool_policy() {
+    local output_file="${TMP_DIR}/agent-tool-policy.$$.json"
+    local api="http://127.0.0.1:${HETERO_API_PORT:-8006}"
+    local status="000"
+    local summary=""
+    status="$(curl --noproxy '*' --max-time 15 -sS -o "$output_file" -w '%{http_code}' \
+        "${api}/v1/agent-engine/health" 2>/dev/null || true)"
+    if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+        echo "Kimi tool-policy check failed: HTTP ${status}." >&2
+        [[ -s "$output_file" ]] && { head -c 1200 "$output_file" >&2; echo >&2; }
+        rm -f "$output_file"
+        return 1
+    fi
+    if ! summary="$("${APP_ROOT}/.venv/bin/python" - "$output_file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as stream:
+    root = json.load(stream)
+engine = root.get("engine") if isinstance(root, dict) else {}
+engine = engine if isinstance(engine, dict) else {}
+policy = engine.get("tool_policy") if isinstance(engine.get("tool_policy"), dict) else {}
+disabled = set(policy.get("disabled_tools") or [])
+native = set(policy.get("native_backend_tools") or [])
+required_native = {"Bash", "Read", "Edit", "Glob", "Grep"}
+valid = (
+    policy.get("backend_control") == "kimi_native_tools"
+    and policy.get("native_tool_mode") == "all_available_except_disabled"
+    and disabled == {"FetchURL", "WebSearch"}
+    and required_native.issubset(native)
+    and not disabled.intersection(required_native)
+    and policy.get("web_search_enabled") is False
+    and policy.get("web_fetch_enabled") is False
+)
+print(
+    "backend=all-native-tools-except-disabled; "
+    f"enabled={','.join(sorted(required_native))}; "
+    f"disabled={','.join(sorted(disabled))}"
+)
+raise SystemExit(0 if valid else 1)
+PY
+)"; then
+        echo "Kimi tool-policy check failed: ${summary}" >&2
+        rm -f "$output_file"
+        return 1
+    fi
+    rm -f "$output_file"
+    echo "kimi-tool-policy: ready (${summary})"
+}
+
+run_deployment_preflight() {
+    (
+        cd "$APP_ROOT"
+        run_install_operation "执行部署预检" \
+            "${APP_ROOT}/.venv/bin/python" -m backend.tools.deployment_preflight --env-file "$ENV_FILE" "$@"
+    )
+}
+
+check_deployment_resources() {
+    (
+        cd "$APP_ROOT"
+        "${APP_ROOT}/.venv/bin/python" -m backend.tools.deployment_preflight --env-file "$ENV_FILE" --resources-only "$@"
+    )
+}
+
+provision_sdk_bundle() {
+    [[ -n "$SDK_SOURCE_ROOT" ]] || {
+        echo "OpenHarmony SDK provisioning requires --source-root PATH" >&2
+        return 2
+    }
+    [[ -d "$SDK_SOURCE_ROOT" ]] || {
+        echo "OpenHarmony source root is not a directory: $SDK_SOURCE_ROOT" >&2
+        return 2
+    }
+    validate_managed_virtualenv || return 1
+    (
+        cd "$APP_ROOT"
+        run_install_operation "从 OpenHarmony 源码生成紧凑 SDK（含 musl）" \
+            "${APP_ROOT}/.venv/bin/python" -m backend.tools.provision_openharmony_sdk_bundle \
+                --source-root "$SDK_SOURCE_ROOT" \
+                --runtime-root "$HETERO_RUNTIME_ASSET_ROOT"
+    )
+}
+
+provision_pmu_sampler_bundle() {
+    validate_managed_virtualenv || return 1
+    if [[ "${1:-auto}" == "explicit" && -n "${HETERO_OPENHARMONY_NATIVE_SDK_ROOT:-}" ]]; then
+        (
+            cd "$APP_ROOT"
+            run_install_operation "交叉编译并校验固定 PMU 采集器" \
+                "${APP_ROOT}/.venv/bin/python" -m tools.scenario_capture.build_pmu_sampler \
+                    --native-sdk "$HETERO_OPENHARMONY_NATIVE_SDK_ROOT" \
+                    --output "$HETERO_PMU_SAMPLER_BUNDLE_ROOT"
+        )
+        return $?
+    fi
+    (
+        cd "$APP_ROOT"
+        run_install_operation "校验并准备仓库自带 PMU 采集器" \
+            "${APP_ROOT}/.venv/bin/python" -m tools.scenario_capture.provision_pmu_sampler \
+                --output "$HETERO_PMU_SAMPLER_BUNDLE_ROOT"
+    )
+}
+
+prepare_optional_pmu_sampler() {
+    if [[ "$DEPLOYMENT_MODE" != "device" ]]; then
+        return 0
+    fi
+    if provision_pmu_sampler_bundle; then
+        return 0
+    fi
+    echo "PMU 采集器自动准备失败；平台核心安装/启动继续，Trace/HiLog 可用性独立检查。请查看上方校验错误并确认仓库预置资产完整，恢复后重新 start 即可重试。" >&2
+    echo "  ${APP_ROOT}/deploy/linux/heteroctl pmu --runtime-root \"${RUNTIME_ROOT}\"" >&2
+    return 0
+}
+
+provision_pmu_sampler() {
+    initialize_runtime
+    load_environment
+    validate_environment_paths
+    provision_pmu_sampler_bundle explicit
+}
+
+install_runtime() {
+    resolve_python_bin
+    check_python_version
+    initialize_runtime
+    load_environment
+    validate_environment_paths
+    if [[ "$DEPLOYMENT_MODE" != "worker" ]]; then
+        require_command node
+        require_command npm
+        require_command curl
+        check_node_version
+    fi
+    local running_services=()
+    local active_repository_processes=()
+    local service
+    for service in web api kimi; do
+        if pid_alive "$service"; then
+            running_services+=("${service}(pid=${PID_RECORD_PID})")
+        fi
+    done
+    if [[ ${#running_services[@]} -gt 0 ]]; then
+        echo "Install refused while this runtime is active: ${running_services[*]}." >&2
+        echo "Stop it first so .next, node_modules and .venv cannot be replaced underneath running processes:" >&2
+        echo "  ${APP_ROOT}/deploy/linux/heteroctl stop --runtime-root \"${RUNTIME_ROOT}\"" >&2
+        exit 1
+    fi
+    while IFS= read -r active_process; do
+        [[ -n "$active_process" ]] && active_repository_processes+=("$active_process")
+    done < <(active_app_runtime_processes)
+    if [[ ${#active_repository_processes[@]} -gt 0 ]]; then
+        echo "Install refused because the repository is still used by active platform/build processes:" >&2
+        printf '  %s\n' "${active_repository_processes[@]}" >&2
+        echo "Stop the older deployment, including deployments that use another runtime root, before installing." >&2
+        exit 1
+    fi
+    export TMPDIR="$TMP_DIR"
+    export NEXT_TELEMETRY_DISABLED=1
+
+    if [[ "$SKIP_PYTHON_DEPS" -eq 0 ]]; then
+        run_install_stage "1/5" "Python 环境与依赖" install_python_dependencies
+    else
+        validate_managed_virtualenv || {
+            echo "--skip-python-deps requires a compatible existing .venv." >&2
+            exit 1
+        }
+        skip_install_stage "1/5" "Python 环境与依赖" "--skip-python-deps"
+    fi
+    if [[ -n "$SDK_SOURCE_ROOT" && "$DEPLOYMENT_MODE" != "analysis" ]]; then
+        run_install_stage "1a/5" "OpenHarmony 紧凑 SDK 与 musl 头文件" provision_sdk_bundle
+    fi
+    prepare_optional_pmu_sampler
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        local configured_runtime_library_root="${REQUESTED_RUNTIME_LIBRARY_ROOT:-${HETERO_RUNTIME_LIBRARY_ROOT:-}}"
+        if [[ -n "$configured_runtime_library_root" ]]; then
+            register_runtime_library_source "$configured_runtime_library_root"
+        fi
+        run_install_stage "2/2" "Worker 资源预检" run_deployment_preflight
+        echo
+        echo "Rootless Worker installation ready."
+        echo "Deployment mode: ${DEPLOYMENT_MODE}"
+        echo "Runtime: ${RUNTIME_ROOT}"
+        echo "Start:   ${APP_ROOT}/deploy/linux/heteroctl start --runtime-root \"${RUNTIME_ROOT}\""
+        return 0
+    fi
+    if [[ "$SKIP_KIMI" -eq 0 ]]; then
+        run_install_stage "2/5" "Kimi Code Agent Engine" install_kimi_code
+    else
+        skip_install_stage "2/5" "Kimi Code Agent Engine" "--skip-kimi"
+    fi
+    run_install_stage "2a/5" "Agent Adapter 配置预检" validate_agent_cli_configuration 1
+    if [[ "$SKIP_WEB_DEPS" -eq 0 ]]; then
+        run_install_stage "3/5" "Web 前端依赖" install_web_dependencies
+    else
+        [[ -x "${APP_ROOT}/node_modules/.bin/next" ]] || { echo "--skip-web-deps requires node_modules" >&2; exit 1; }
+        skip_install_stage "3/5" "Web 前端依赖" "--skip-web-deps"
+    fi
+
+    if [[ "$SKIP_BUILD" -eq 0 ]]; then
+        run_install_stage "4/5" "Next.js 生产构建" build_production_web
+        run_install_stage "5/5" "部署预检" run_deployment_preflight
+    else
+        skip_install_stage "4/5" "Next.js 生产构建" "--skip-build"
+        skip_install_stage "5/5" "部署预检" "--skip-build"
+        check_deployment_resources
+        echo "Skipped the production Web build; run install again without --skip-build before start."
+    fi
+
+    if [[ ! -x "${HETERO_KIMI_BIN}" ]]; then
+        echo "Kimi Code is not installed at ${HETERO_KIMI_BIN}. Core UI/API can run, but Agent features remain unavailable."
+    fi
+    echo
+    echo "Rootless installation ready."
+    echo "Deployment mode: ${DEPLOYMENT_MODE}"
+    echo "Runtime: ${RUNTIME_ROOT}"
+    echo "Start:   ${APP_ROOT}/deploy/linux/heteroctl start --runtime-root \"${RUNTIME_ROOT}\""
+}
+
+start_runtime() {
+    make_runtime_root
+    set_paths
+    validate_planned_paths
+    mkdir -p "$LOG_DIR" "$PID_DIR" "$CACHE_DIR/pip" "$CACHE_DIR/npm" "$CACHE_DIR/xdg" "$TMP_DIR"
+    local restart_api_for_resources=0
+    normalize_requested_resource_overrides
+    if [[ -n "$REQUESTED_ACCESS_MODE" && -f "$ENV_FILE" ]]; then
+        update_environment_access_mode "$REQUESTED_ACCESS_MODE"
+    fi
+    if [[ -n "$REQUESTED_WEB_PORT" && -f "$ENV_FILE" ]]; then
+        update_environment_web_port "$REQUESTED_WEB_PORT"
+    fi
+    if [[ -f "$ENV_FILE" ]]; then
+        local resource_changes=""
+        resource_changes="$(persist_requested_resource_overrides)"
+        if [[ -n "$resource_changes" ]]; then
+            restart_api_for_resources=1
+            echo "Updated resource environment in ${ENV_FILE}: ${resource_changes}"
+        fi
+    fi
+    load_environment
+    validate_environment_paths
+    require_command curl
+    validate_managed_virtualenv
+    prepare_optional_pmu_sampler
+    local configured_runtime_library_root="${REQUESTED_RUNTIME_LIBRARY_ROOT:-${HETERO_RUNTIME_LIBRARY_ROOT:-}}"
+    if [[ -n "$configured_runtime_library_root" && "$DEPLOYMENT_MODE" != "analysis" ]]; then
+        register_runtime_library_source "$configured_runtime_library_root"
+    fi
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        # Worker startup advertises both analysis and fixed-profile build
+        # capabilities. Recheck the complete core + resource contract so an
+        # incomplete/stale repository cannot start as a falsely healthy API.
+        run_deployment_preflight --require-trace --require-build
+        if [[ "$restart_api_for_resources" -eq 1 ]] && pid_alive api; then
+            echo "api: restarting to apply resource environment"
+            stop_owned_process api
+        fi
+        stop_owned_process web
+        cleanup_stale_agent_cli_processes
+        stop_owned_process kimi
+        prepare_api_listener
+        if pid_alive api && api_ready; then
+            echo "api: ready (owned pid ${PID_RECORD_PID})"
+        else
+            local worker_api_keep_alive_seconds
+            local worker_api_graceful_shutdown_seconds
+            worker_api_keep_alive_seconds="$(startup_positive_integer "${HETERO_API_KEEP_ALIVE_SECONDS:-75}" 75)"
+            worker_api_graceful_shutdown_seconds="$(startup_positive_integer "${HETERO_API_GRACEFUL_SHUTDOWN_SECONDS:-6}" 6)"
+            start_owned_process api "${APP_ROOT}/.venv/bin/python" -m uvicorn backend.app:app \
+                --host "${HETERO_API_HOST:-127.0.0.1}" --port "${HETERO_API_PORT:-8006}" --workers 1 \
+                --timeout-keep-alive "$worker_api_keep_alive_seconds" \
+                --timeout-graceful-shutdown "$worker_api_graceful_shutdown_seconds"
+            wait_ready api api_ready api
+        fi
+        echo
+        echo "Worker API: http://127.0.0.1:${HETERO_API_PORT:-8006} (SSH-local access)"
+        echo "Worker mode does not start Web, Kimi or server-side device services."
+        return 0
+    fi
+    validate_agent_cli_configuration 1
+    require_command node
+    [[ -x "${APP_ROOT}/node_modules/.bin/next" ]] || { echo "Next.js is missing; run install." >&2; exit 1; }
+    [[ -f "${APP_ROOT}/.next/BUILD_ID" ]] || { echo "Production Web build is missing; run install." >&2; exit 1; }
+    check_deployment_resources
+    "${APP_ROOT}/.venv/bin/python" -m backend.tools.validate_next_build --build-dir "${APP_ROOT}/.next" || {
+        echo "Production Web build is incomplete; rebuild it before start:" >&2
+        echo "  ${APP_ROOT}/deploy/linux/heteroctl install --skip-deps --runtime-root \"${RUNTIME_ROOT}\"" >&2
+        exit 1
+    }
+    local stale_source
+    stale_source="$(stale_web_build_source)"
+    if [[ -n "$stale_source" ]]; then
+        echo "Production Web build is stale; newer source detected: ${stale_source}" >&2
+        echo "Rebuild without reinstalling dependencies: ${APP_ROOT}/deploy/linux/heteroctl install --skip-deps --runtime-root \"${RUNTIME_ROOT}\"" >&2
+        exit 1
+    fi
+    if [[ "$restart_api_for_resources" -eq 1 ]] && pid_alive api; then
+        echo "api: restarting to apply resource environment"
+        stop_owned_process api
+    fi
+    prepare_web_listener
+    prepare_api_listener
+
+    if pid_alive api && api_ready; then
+        echo "api: ready (owned pid ${PID_RECORD_PID})"
+    else
+        # An API that was force-killed cannot execute its FastAPI shutdown
+        # hook. Reclaim only process groups whose cwd proves that they belong
+        # to this runtime's projected Agent workspaces.
+        cleanup_stale_agent_cli_processes
+        local api_keep_alive_seconds
+        local api_graceful_shutdown_seconds
+        api_keep_alive_seconds="$(startup_positive_integer "${HETERO_API_KEEP_ALIVE_SECONDS:-75}" 75)"
+        api_graceful_shutdown_seconds="$(startup_positive_integer "${HETERO_API_GRACEFUL_SHUTDOWN_SECONDS:-6}" 6)"
+        start_owned_process api "${APP_ROOT}/.venv/bin/python" -m uvicorn backend.app:app \
+            --host "${HETERO_API_HOST:-127.0.0.1}" --port "${HETERO_API_PORT:-8006}" --workers 1 \
+            --timeout-keep-alive "$api_keep_alive_seconds" \
+            --timeout-graceful-shutdown "$api_graceful_shutdown_seconds"
+        wait_ready api api_ready api
+    fi
+    if [[ -x "${HETERO_KIMI_BIN}" ]]; then
+        wait_ready kimi kimi_ready api
+        verify_agent_tool_policy
+        echo "kimi: backend-managed Agent Engine service is ready; backend model configuration is used unless the Web UI supplies an override"
+    else
+        echo "kimi: unavailable (${HETERO_KIMI_BIN} not found)"
+    fi
+
+    if pid_alive web && web_ready; then
+        echo "web: ready (owned pid ${PID_RECORD_PID})"
+    else
+        start_owned_process web node "${APP_ROOT}/tools/serve-platform.mjs" \
+            --hostname "${HETERO_WEB_HOST:-127.0.0.1}" --port "${HETERO_WEB_PORT:-4032}"
+        if ! wait_ready web web_ready web; then
+            web_static_assets_diagnostic "http://127.0.0.1:${HETERO_WEB_PORT:-4032}" || true
+            return 1
+        fi
+    fi
+    wait_ready web-api-proxy web_api_proxy_ready web api
+    if ! wait_ready browser-bootstrap web_bootstrap_ready web api; then
+        echo "Browser bootstrap failed; inspect both ${LOG_DIR}/web.log and ${LOG_DIR}/api.log." >&2
+        return 1
+    fi
+
+    echo
+    if [[ "$HETERO_ACCESS_MODE" == "remote" ]]; then
+        echo "Access mode: remote"
+        echo "Workbench: $(workbench_url)"
+        echo "Expected network boundary: only the Web UI is exposed. Browser /v1 requests are proxied internally; FastAPI and Kimi intentionally remain on 127.0.0.1."
+    else
+        echo "Access mode: local"
+        echo "Workbench: http://127.0.0.1:${HETERO_WEB_PORT:-4032}"
+    fi
+}
+
+stop_runtime() {
+    make_runtime_root
+    set_paths
+    validate_planned_paths
+    mkdir -p "$PID_DIR"
+    load_environment
+    validate_environment_paths
+    stop_owned_process web
+    stop_owned_process api
+    cleanup_stale_agent_cli_processes
+    stop_owned_process kimi
+    if [[ "$OWNED_ONLY_STOP" -eq 0 ]]; then
+        local stop_failed=0
+        stop_reserved_port_listeners api "${HETERO_API_PORT:-8006}" || stop_failed=1
+        if [[ "$DEPLOYMENT_MODE" != "worker" ]]; then
+            stop_reserved_port_listeners web "${HETERO_WEB_PORT:-4032}" || stop_failed=1
+            stop_reserved_port_listeners kimi "${HETERO_KIMI_SERVER_PORT:-58627}" || stop_failed=1
+        fi
+        cleanup_stale_agent_cli_processes || stop_failed=1
+        return "$stop_failed"
+    fi
+}
+
+status_line() {
+    local name="$1"
+    local check="$2"
+    local ownership="not-owned"
+    if pid_alive "$name"; then
+        ownership="owned pid=${PID_RECORD_PID}"
+    fi
+    if "$check"; then
+        echo "${name}: ready (${ownership})"
+    else
+        echo "${name}: unavailable (${ownership})"
+    fi
+}
+
+resource_path_status_line() {
+    local name="$1"
+    local path="$2"
+    local expected="$3"
+    local ready=0
+    case "$expected" in
+        executable) [[ -n "$path" && -f "$path" && -x "$path" ]] && ready=1 ;;
+        directory) [[ -n "$path" && -d "$path" ]] && ready=1 ;;
+    esac
+    if [[ "$ready" -eq 1 ]]; then
+        echo "${name}: ready (${path})"
+    else
+        echo "${name}: unavailable (${path:-not-configured})"
+    fi
+}
+
+status_runtime() {
+    make_runtime_root
+    set_paths
+    load_environment
+    validate_environment_paths
+    require_command curl
+    echo "deployment-mode: ${DEPLOYMENT_MODE}"
+    if [[ -x "${APP_ROOT}/.venv/bin/python" ]]; then
+        echo "python-runtime: Python $(python_version_string "${APP_ROOT}/.venv/bin/python") ($(python_base_executable_identity "${APP_ROOT}/.venv/bin/python"))"
+    else
+        echo "python-runtime: unavailable (${APP_ROOT}/.venv/bin/python)"
+    fi
+    status_line api api_ready
+    if [[ "$DEPLOYMENT_MODE" == "worker" ]]; then
+        echo "kimi: disabled (worker deployment)"
+        echo "web: disabled (worker deployment)"
+    else
+        status_line kimi kimi_ready
+        status_line web web_ready
+        status_line web-api-proxy web_api_proxy_ready
+        status_line browser-bootstrap web_bootstrap_ready
+    fi
+    if [[ "$DEPLOYMENT_MODE" == "analysis" ]]; then
+        echo "device-validation: disabled (analysis deployment; resource checks skipped)"
+    else
+        [[ "$DEPLOYMENT_MODE" != "worker" ]] || echo "device-validation: disabled (worker deployment; Desktop owns HDC/PMU/Bridge)"
+        local llvm_root="${HETERO_LLVM_BIN_ROOT:-}"
+        if [[ -n "$llvm_root" && -x "${llvm_root}/clang" && -x "${llvm_root}/clang++" && -x "${llvm_root}/ld.lld" ]]; then
+            echo "llvm-toolchain: ready (${llvm_root})"
+        else
+            echo "llvm-toolchain: unavailable (${llvm_root:-not-configured})"
+        fi
+        resource_path_status_line glslang "${HETERO_GLSLANG_BIN:-}" executable
+        resource_path_status_line trace-streamer "${HETERO_TRACE_STREAMER:-}" executable
+        resource_path_status_line openharmony-sdk "${HETERO_OPENHARMONY_SDK_ROOT:-}" directory
+        if [[ -n "${HETERO_RUNTIME_LIBRARY_ROOT:-${HETERO_BUILD_RUNTIME_LIBRARY_ROOT:-}}" ]]; then
+            resource_path_status_line runtime-libraries "${HETERO_RUNTIME_LIBRARY_ROOT:-${HETERO_BUILD_RUNTIME_LIBRARY_ROOT:-}}" directory
+        fi
+        if [[ "$DEPLOYMENT_MODE" == "device" && -n "${HETERO_HDC_BIN:-}" ]]; then
+            resource_path_status_line hdc "${HETERO_HDC_BIN}" executable
+        fi
+    fi
+    echo "web-listener: $(web_listener_scope) (expected ${HETERO_ACCESS_MODE})"
+    if [[ "$HETERO_ACCESS_MODE" == "remote" ]]; then
+        echo "access: remote ($(workbench_url))"
+    else
+        echo "access: local (http://127.0.0.1:${HETERO_WEB_PORT:-4032})"
+    fi
+}
+
+http_diagnostic_probe() {
+    local label="$1"
+    local method="$2"
+    local url="$3"
+    local body="${4:-}"
+    local output_file="${TMP_DIR}/doctor-${label//[^A-Za-z0-9_.-]/_}.$$.txt"
+    local status="000"
+    if [[ "$method" == "POST" ]]; then
+        status="$(curl --noproxy '*' --max-time 15 -sS -o "$output_file" -w '%{http_code}' \
+            -H "Content-Type: application/json" --data "$body" "$url" 2>/dev/null || true)"
+    else
+        status="$(curl --noproxy '*' --max-time 15 -sS -o "$output_file" -w '%{http_code}' "$url" 2>/dev/null || true)"
+    fi
+    if [[ "$status" =~ ^2[0-9][0-9]$ ]]; then
+        echo "[OK] ${label}: HTTP ${status}"
+        rm -f "$output_file"
+        return 0
+    fi
+    echo "[FAIL] ${label}: HTTP ${status}"
+    if [[ -s "$output_file" ]]; then
+        head -c 1200 "$output_file"
+        echo
+    fi
+    rm -f "$output_file"
+    return 1
+}
+
+agent_engine_diagnostic() {
+    local web="$1"
+    local output_file="${TMP_DIR}/doctor-agent-engine.$$.json"
+    local status="000"
+    local summary=""
+    local parse_status=0
+    status="$(curl --noproxy '*' --max-time 15 -sS -o "$output_file" -w '%{http_code}' \
+        "${web}/v1/agent-engine/health" 2>/dev/null || true)"
+    if [[ ! "$status" =~ ^2[0-9][0-9]$ ]]; then
+        echo "[FAIL] agent-engine-via-web: HTTP ${status}"
+        [[ -s "$output_file" ]] && { head -c 1200 "$output_file"; echo; }
+        rm -f "$output_file"
+        return 1
+    fi
+    if summary="$("${APP_ROOT}/.venv/bin/python" - "$output_file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as stream:
+    root = json.load(stream)
+engine = root.get("engine") if isinstance(root, dict) else {}
+engine = engine if isinstance(engine, dict) else {}
+status = str(engine.get("status") or "unknown")
+service = str(engine.get("service_status") or "unknown")
+model = str(engine.get("model_status") or "unknown")
+credential = str(engine.get("credential_mode") or "none")
+error = engine.get("error") if isinstance(engine.get("error"), dict) else {}
+error_code = str(error.get("code") or "")
+policy = engine.get("tool_policy") if isinstance(engine.get("tool_policy"), dict) else {}
+disabled = set(policy.get("disabled_tools") or [])
+native = set(policy.get("native_backend_tools") or [])
+required_native = {"Bash", "Read", "Edit", "Glob", "Grep"}
+policy_ready = (
+    policy.get("backend_control") == "kimi_native_tools"
+    and disabled == {"FetchURL", "WebSearch"}
+    and required_native.issubset(native)
+    and policy.get("web_search_enabled") is False
+    and policy.get("web_fetch_enabled") is False
+)
+print(
+    f"service={service}, model={model}, credential={credential}, status={status}, "
+    f"tool_policy={'ready' if policy_ready else 'invalid'}"
+    + (f", error={error_code}" if error_code else "")
+)
+if service != "ready":
+    raise SystemExit(1)
+if not policy_ready:
+    raise SystemExit(1)
+if model != "ready":
+    raise SystemExit(3)
+PY
+)"; then
+        parse_status=0
+    else
+        parse_status=$?
+    fi
+    rm -f "$output_file"
+    if [[ "$parse_status" -eq 0 ]]; then
+        echo "[OK] agent-engine-via-web: ${summary}"
+        return 0
+    fi
+    if [[ "$parse_status" -eq 3 ]]; then
+        echo "[WARN] agent-engine-via-web: ${summary}; configure a backend model or save one in the Web UI"
+        return 0
+    fi
+    echo "[FAIL] agent-engine-via-web: ${summary}"
+    return 1
+}
+
+web_static_assets_diagnostic() {
+    local web="$1"
+    local html_file="${TMP_DIR}/doctor-web-root.$$.html"
+    local asset_file="${TMP_DIR}/doctor-web-assets.$$.txt"
+    local asset_path
+    local status
+    local content_type
+    local metadata
+    local asset_valid
+    local count=0
+    local failed=0
+    if ! curl --noproxy '*' --max-time 15 -fsS "${web}/" -o "$html_file"; then
+        echo "[FAIL] next-static-assets: unable to read the current HTML document"
+        rm -f "$html_file" "$asset_file"
+        return 1
+    fi
+    extract_next_static_asset_paths "$html_file" >"$asset_file" || true
+    if [[ ! -s "$asset_file" ]]; then
+        echo "[FAIL] next-static-assets: current HTML contains no Next.js static asset references"
+        rm -f "$html_file" "$asset_file"
+        return 1
+    fi
+    while IFS= read -r asset_path; do
+        [[ -n "$asset_path" ]] || continue
+        count=$((count + 1))
+        metadata="$(curl --noproxy '*' --max-time 15 -sS -o /dev/null \
+            -w $'%{http_code}\t%{content_type}' "${web}${asset_path}" 2>/dev/null || true)"
+        IFS=$'\t' read -r status content_type <<<"$metadata"
+        asset_valid=1
+        [[ "$status" =~ ^2[0-9][0-9]$ ]] || asset_valid=0
+        case "${asset_path%%\?*}" in
+            *.js) [[ "$content_type" == *javascript* ]] || asset_valid=0 ;;
+            *.css) [[ "$content_type" == text/css* ]] || asset_valid=0 ;;
+        esac
+        if [[ "$asset_valid" -ne 1 ]]; then
+            echo "[FAIL] next-static-asset: HTTP ${status:-000} content-type=${content_type:-missing} ${asset_path}"
+            failed=1
+        fi
+    done <"$asset_file"
+    rm -f "$html_file" "$asset_file"
+    if [[ "$failed" -ne 0 ]]; then
+        return 1
+    fi
+    echo "[OK] next-static-assets: ${count} current HTML assets"
+}
+
+doctor_runtime() {
+    make_runtime_root
+    set_paths
+    load_environment
+    validate_environment_paths
+    validate_agent_cli_configuration 1
+    require_command curl
+    mkdir -p "$TMP_DIR" "$LOG_DIR"
+    local web="http://127.0.0.1:${HETERO_WEB_PORT:-4032}"
+    local api="http://127.0.0.1:${HETERO_API_PORT:-8006}"
+    local failed=0
+    http_diagnostic_probe "web-root" GET "${web}/" || failed=1
+    web_static_assets_diagnostic "$web" || failed=1
+    http_diagnostic_probe "api-health-direct" GET "${api}/v1/health" || failed=1
+    http_diagnostic_probe "api-health-via-web" GET "${web}/v1/health" || failed=1
+    http_diagnostic_probe "platform-version-via-web" GET "${web}/v1/platform-version" || failed=1
+    agent_engine_diagnostic "$web" || failed=1
+    http_diagnostic_probe "agent-adapters-direct" GET "${api}/v1/agent-cli/adapters" || failed=1
+    http_diagnostic_probe "agent-adapters-via-web" GET "${web}/v1/agent-cli/adapters" || failed=1
+    http_diagnostic_probe "overview-via-web" GET "${web}/v1/overview" || failed=1
+    http_diagnostic_probe "page-actions-via-web" GET "${web}/v1/page-actions" || failed=1
+    http_diagnostic_probe "optimization-kb-via-web" POST "${web}/v1/optimization-kb/search" \
+        '{"query":"","include_unverified":false,"include_cases":false}' || failed=1
+    http_diagnostic_probe "hardware-kb-via-web" POST "${web}/v1/hardware-kb/search" \
+        '{"query":"","include_unverified":true,"include_cases":false}' || failed=1
+    if [[ "$failed" -ne 0 ]]; then
+        echo
+        echo "Recent Web errors:"
+        [[ -f "${LOG_DIR}/web.log" ]] && tail -n 120 "${LOG_DIR}/web.log" || echo "(no web.log)"
+        echo
+        echo "Recent API errors:"
+        [[ -f "${LOG_DIR}/api.log" ]] && tail -n 120 "${LOG_DIR}/api.log" || echo "(no api.log)"
+        return 1
+    fi
+    echo "Browser bootstrap diagnostics passed."
+}
+
+preflight_runtime() {
+    make_runtime_root
+    set_paths
+    load_environment
+    validate_environment_paths
+    if [[ "$DEPLOYMENT_MODE" != "worker" ]]; then
+        validate_agent_cli_configuration 1
+    fi
+    validate_managed_virtualenv
+    if [[ ${#PREFLIGHT_ARGS[@]} -eq 0 ]]; then
+        (
+            cd "$APP_ROOT"
+            "${APP_ROOT}/.venv/bin/python" -m backend.tools.deployment_preflight \
+                --env-file "$ENV_FILE"
+        )
+    else
+        (
+            cd "$APP_ROOT"
+            "${APP_ROOT}/.venv/bin/python" -m backend.tools.deployment_preflight \
+                --env-file "$ENV_FILE" "${PREFLIGHT_ARGS[@]}"
+        )
+    fi
+}
+
+provision_sdk() {
+    make_runtime_root
+    set_paths
+    load_environment
+    validate_environment_paths
+    provision_sdk_bundle
+}
+
+register_runtime_library_source() {
+    local selected_library_root="$1"
+    [[ -d "$selected_library_root" ]] || {
+        echo "Runtime library root is not a directory: $selected_library_root" >&2
+        return 2
+    }
+    local python_bin="${APP_ROOT}/.venv/bin/python"
+    if [[ ! -x "$python_bin" ]]; then
+        resolve_python_bin
+        python_bin="$PYTHON_BIN"
+    fi
+    (
+        cd "$APP_ROOT"
+        "$python_bin" -m backend.tools.configure_runtime_library_source \
+            --library-root "$selected_library_root" \
+            --state-root "$HETERO_STATE_ROOT"
+    )
+}
+
+configure_runtime_libraries() {
+    local selected_library_root="${RUNTIME_LIBRARY_ROOT:-${REQUESTED_RUNTIME_LIBRARY_ROOT:-$SDK_SOURCE_ROOT}}"
+    [[ -n "$selected_library_root" ]] || {
+        echo "Runtime library registration requires --library-root PATH" >&2
+        return 2
+    }
+    initialize_runtime
+    load_environment
+    validate_environment_paths
+    register_runtime_library_source "$selected_library_root"
+}
+
+show_paths() {
+    make_runtime_root
+    set_paths
+    echo "repository=${APP_ROOT}"
+    echo "user_root=${RUNTIME_ROOT}"
+    echo "runtime_root=${RUNTIME_ROOT}"
+    echo "state=${STATE_DIR}"
+    echo "assets=${ASSET_DIR}"
+    echo "logs=${LOG_DIR}"
+    echo "run=${PID_DIR}"
+    echo "cache=${CACHE_DIR}"
+    echo "tmp=${TMP_DIR}"
+    echo "env=${ENV_FILE}"
+}
+
+show_logs() {
+    make_runtime_root
+    set_paths
+    local services=(kimi api web)
+    if [[ -n "$LOG_SERVICE" ]]; then
+        case "$LOG_SERVICE" in
+            kimi|api|web) services=("$LOG_SERVICE") ;;
+            *) echo "Unknown service: ${LOG_SERVICE}" >&2; exit 2 ;;
+        esac
+    fi
+    for service in "${services[@]}"; do
+        echo "===== ${service}.log ====="
+        if [[ "$service" == "kimi" && -f "${STATE_DIR}/kimi-engine/logs/kimi-server.log" ]]; then
+            tail -n 100 "${STATE_DIR}/kimi-engine/logs/kimi-server.log"
+        elif [[ -f "${LOG_DIR}/${service}.log" ]]; then
+            tail -n 100 "${LOG_DIR}/${service}.log"
+        else
+            echo "(no log)"
+        fi
+    done
+}
+
+case "$COMMAND" in
+    init) initialize_runtime; show_paths ;;
+    install) install_runtime ;;
+    start) start_runtime ;;
+    stop) stop_runtime ;;
+    restart) stop_runtime; start_runtime ;;
+    status) status_runtime ;;
+    doctor) doctor_runtime ;;
+    python-check) python_check_runtime ;;
+    agent-check) agent_check_runtime ;;
+    preflight) preflight_runtime ;;
+    sdk) provision_sdk ;;
+    pmu) provision_pmu_sampler ;;
+    runtime-libs) configure_runtime_libraries ;;
+    logs) show_logs ;;
+    paths) show_paths ;;
+    help|-h|--help) usage ;;
+    *)
+        echo "Unknown command: ${COMMAND}" >&2
+        usage >&2
+        exit 2
+        ;;
+esac

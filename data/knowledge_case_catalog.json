@@ -1,0 +1,914 @@
+{
+  "artifact_type": "knowledge_case_catalog",
+  "case_count": 30,
+  "cases": [
+    {
+      "algorithm_hypothesis": "image_blur",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_image_blur_hpae_001",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 360,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_filter_cache_manager.cpp",
+          "sha256": "18870d9336aa3925ce324c3109ae8946dfd3249d99494291a5917fb4e7b7325f"
+        }
+      ],
+      "target_hypothesis": "GPU_OR_AAE",
+      "title": "HPAE blur cache path"
+    },
+    {
+      "algorithm_hypothesis": "image_blur",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_image_blur_hpae_fallback_002",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 411,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_filter_cache_manager.cpp",
+          "sha256": "18870d9336aa3925ce324c3109ae8946dfd3249d99494291a5917fb4e7b7325f"
+        }
+      ],
+      "target_hypothesis": "GPU_OR_AAE",
+      "title": "HPAE filter fallback path"
+    },
+    {
+      "algorithm_hypothesis": "image_resize",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_image_resize_detail_003",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 237,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp",
+          "sha256": "4c6757c162c0e7e482b384a604dee4bcdf3c409b2eb1d480cb17f88a643d04d1"
+        }
+      ],
+      "target_hypothesis": "AAE_ARSR_OR_GPU",
+      "title": "detail enhancer resize path"
+    },
+    {
+      "algorithm_hypothesis": "jpeg_decode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_jpeg_hw_decode_004",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1619,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp",
+          "sha256": "1dedff252137d35cde46e1b4ca2d4b853788a99ad756423ccc9874073d55ad4f"
+        }
+      ],
+      "target_hypothesis": "JPEG_HW_DECODER",
+      "title": "JPEG hardware decode dispatch"
+    },
+    {
+      "algorithm_hypothesis": "jpeg_encode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_jpeg_hw_encode_005",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1842,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+          "sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c"
+        }
+      ],
+      "target_hypothesis": "JPEG_HW_ENCODER",
+      "title": "JPEG encoder path"
+    },
+    {
+      "algorithm_hypothesis": "heif_decode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_heif_hw_decode_006",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 502,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp",
+          "sha256": "71e7e77512d3dda4af01cbac57acc3cfe315417791e742d266c54b791c2cd113"
+        }
+      ],
+      "target_hypothesis": "IMAGE_HW_DECODER",
+      "title": "HEIF decoder path"
+    },
+    {
+      "algorithm_hypothesis": "image_alpha_apply",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_heif_alpha_apply_007",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 518,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp",
+          "sha256": "71e7e77512d3dda4af01cbac57acc3cfe315417791e742d266c54b791c2cd113"
+        }
+      ],
+      "target_hypothesis": "IMAGE_ACCELERATOR",
+      "title": "HEIF alpha processing"
+    },
+    {
+      "algorithm_hypothesis": "pixel_map_postprocess",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_pixelmap_gl_shader_008",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/egl_image/src/pixel_map_gl_shader.cpp",
+          "sha256": "fd6dd59892af8de2180020f4abaf9371e043bdc096112944e50a41cf2094be77"
+        }
+      ],
+      "target_hypothesis": "GPU_SHADER",
+      "title": "PixelMap GL shader"
+    },
+    {
+      "algorithm_hypothesis": "pixel_map_postprocess",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_pixelmap_gl_program_009",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/egl_image/src/pixel_map_gl_post_proc_program.cpp",
+          "sha256": "78678ccf024af4851e0f870a694c7083739562f1ee5a5c1c491cdada0a6203f0"
+        }
+      ],
+      "target_hypothesis": "GPU_SHADER",
+      "title": "PixelMap GL post-processing program"
+    },
+    {
+      "algorithm_hypothesis": "pixel_map_postprocess",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_pixelmap_gl_context_010",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/egl_image/src/pixel_map_gl_context.cpp",
+          "sha256": "cbbc815f1dd6a4fa1cc896cbeab4658bfd78b4d7ec59b8d369e09faafd374f32"
+        }
+      ],
+      "target_hypothesis": "GPU_SHADER",
+      "title": "PixelMap GL context"
+    },
+    {
+      "algorithm_hypothesis": "image_surface_interop",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_pixelmap_surface_bridge_011",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/egl_image/src/pixel_map_from_surface.cpp",
+          "sha256": "66b1d7d6d77b85e57dd1fec2ae9ef77950eaac66559ba5e70f0e3abe3cde91fa"
+        }
+      ],
+      "target_hypothesis": "GPU_TEXTURE",
+      "title": "surface to PixelMap bridge"
+    },
+    {
+      "algorithm_hypothesis": "webp_decode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_webp_decode_012",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/formatagentplugin/src/webp_format_agent.cpp",
+          "sha256": "1c961a9c5c218c02646e8ad4f8683b2c424c7a038c02eb8a15cb4244df339e77"
+        }
+      ],
+      "target_hypothesis": "IMAGE_CODEC_ACCELERATOR",
+      "title": "WebP decoder dispatch"
+    },
+    {
+      "algorithm_hypothesis": "webp_encode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_webp_encode_013",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+          "sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c"
+        }
+      ],
+      "target_hypothesis": "IMAGE_CODEC_ACCELERATOR",
+      "title": "WebP encoder dispatch"
+    },
+    {
+      "algorithm_hypothesis": "png_decode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_png_decode_014",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/formatagentplugin/src/png_format_agent.cpp",
+          "sha256": "bbc08e38e76a67480b3c4ac5e503a925805d68af6c436630c839ee98826aae9c"
+        }
+      ],
+      "target_hypothesis": "IMAGE_CODEC_ACCELERATOR",
+      "title": "PNG format agent"
+    },
+    {
+      "algorithm_hypothesis": "image_format_probe",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_webp_format_probe_015",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/formatagentplugin/src/webp_format_agent.cpp",
+          "sha256": "1c961a9c5c218c02646e8ad4f8683b2c424c7a038c02eb8a15cb4244df339e77"
+        }
+      ],
+      "target_hypothesis": "CPU_SIMD",
+      "title": "WebP format probe"
+    },
+    {
+      "algorithm_hypothesis": "svg_rasterize",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_svg_rasterize_016",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 413,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libsvgplugin/src/svg_decoder.cpp",
+          "sha256": "57276ceb9affd59cb0abde3b63ad5b7f075d2780f55f43706c24d1219075469d"
+        }
+      ],
+      "target_hypothesis": "GPU_SHADER",
+      "title": "SVG rasterization path"
+    },
+    {
+      "algorithm_hypothesis": "raw_decode",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_raw_decode_017",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/formatagentplugin/src/raw_format_agent.cpp",
+          "sha256": "46478d92eec9d80462a18be39f3a3241bdbd99af0df02a180d899fef4dd16c3d"
+        }
+      ],
+      "target_hypothesis": "IMAGE_CODEC_ACCELERATOR",
+      "title": "RAW decoder dispatch"
+    },
+    {
+      "algorithm_hypothesis": "image_stream_copy",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_raw_stream_copy_018",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 56,
+          "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/librawplugin/src/raw_stream.cpp",
+          "sha256": "d074b51da33ede247eedbbb8db0f00c3da329d0414b9e9a94e3ee74244750733"
+        }
+      ],
+      "target_hypothesis": "CPU_SIMD",
+      "title": "RAW stream copy"
+    },
+    {
+      "algorithm_hypothesis": "nn_model_compile",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_nn_model_compile_019",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/inner_model.cpp",
+          "sha256": "8e4c3fa5fe516d932c27736c060535ef24aaab58056d93133552256282a4fe49"
+        }
+      ],
+      "target_hypothesis": "NPU",
+      "title": "NN model compile path"
+    },
+    {
+      "algorithm_hypothesis": "nn_inference",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_nn_inference_sync_020",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 48,
+          "path": "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/executor.h",
+          "sha256": "5bae1abbf7f896e607fd28e0276273ecf4e31170775ee48f79fc97f9ff5464b1"
+        }
+      ],
+      "target_hypothesis": "NPU",
+      "title": "NN synchronous execution API"
+    },
+    {
+      "algorithm_hypothesis": "nn_inference",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_nn_inference_async_021",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 52,
+          "path": "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/executor.h",
+          "sha256": "5bae1abbf7f896e607fd28e0276273ecf4e31170775ee48f79fc97f9ff5464b1"
+        }
+      ],
+      "target_hypothesis": "NPU",
+      "title": "NN asynchronous execution API"
+    },
+    {
+      "algorithm_hypothesis": "nn_model_schedule",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_nn_model_schedule_022",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 64,
+          "path": "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/nnrt_client.cpp",
+          "sha256": "846fd741cf9d225f5a5dee65bee0d5c1a04109ed6380986edd95cfaf49253f56"
+        }
+      ],
+      "target_hypothesis": "NPU",
+      "title": "NN runtime client scheduling"
+    },
+    {
+      "algorithm_hypothesis": "tensor_prepare",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_nn_tensor_prepare_023",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/nn_tensor.cpp",
+          "sha256": "241f7da94881b25fa4399c0c734f21a081b6e283af2fbfcedd3b7ec472f8401d"
+        }
+      ],
+      "target_hypothesis": "NPU",
+      "title": "NN tensor setup"
+    },
+    {
+      "algorithm_hypothesis": "gpu_task_synchronization",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_vulkan_task_wait_024",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 189,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_ffrt_pattern_manager.cpp",
+          "sha256": "6f7b67ced903c5b3f9fd338c11a11446d014f02e33719e130f19d38fa18ab337"
+        }
+      ],
+      "target_hypothesis": "GPU_VULKAN",
+      "title": "Vulkan task wait"
+    },
+    {
+      "algorithm_hypothesis": "gpu_task_synchronization",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_vulkan_task_notify_025",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 205,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_ffrt_pattern_manager.cpp",
+          "sha256": "6f7b67ced903c5b3f9fd338c11a11446d014f02e33719e130f19d38fa18ab337"
+        }
+      ],
+      "target_hypothesis": "GPU_VULKAN",
+      "title": "Vulkan task notification"
+    },
+    {
+      "algorithm_hypothesis": "graphics_backend_init",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_vulkan_backend_init_026",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 88,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/engine/rs_base_render_engine.cpp",
+          "sha256": "27711bf948739f41ca8db9910720ef781a584b5c09d65465ccac0d74487edf40"
+        }
+      ],
+      "target_hypothesis": "GPU_VULKAN",
+      "title": "render engine Vulkan initialization"
+    },
+    {
+      "algorithm_hypothesis": "graphics_context_create",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_egl_share_context_027",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 111,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/common/rs_background_thread.cpp",
+          "sha256": "3210d748f2e2a2455a7d523d918c1dd61cf557b90cfd07ca0607a7a8f767e4b1"
+        }
+      ],
+      "target_hypothesis": "GPU_EGL",
+      "title": "background EGL context setup"
+    },
+    {
+      "algorithm_hypothesis": "surface_composition",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_surface_self_draw_028",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1298,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.cpp",
+          "sha256": "78be466b7d19bacaeeba01991a92b011e0047b51dba5b27d6f9f802677311d9c"
+        }
+      ],
+      "target_hypothesis": "GPU_COMPOSITOR",
+      "title": "surface composition draw path"
+    },
+    {
+      "algorithm_hypothesis": "frame_render",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_render_frame_029",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/pipeline/render_thread/rs_uni_render_thread.cpp",
+          "sha256": "8883ce859e6418ee7e91ef3bafbdd048dbb513b3e1f8e7d68a9b86c60b6709d4"
+        }
+      ],
+      "target_hypothesis": "GPU_COMPOSITOR",
+      "title": "uni render thread"
+    },
+    {
+      "algorithm_hypothesis": "image_filter",
+      "assumptions": [
+        "The source location is a discovery lead, not a measured hotspot.",
+        "The target hypothesis is not a confirmed hardware availability claim."
+      ],
+      "case_id": "case_filter_effect_030",
+      "case_kind": "source_discovered",
+      "lifecycle": "candidate",
+      "missing_evidence": [
+        "target hardware capability and device constraints",
+        "revision-pinned workload benchmark including transfer and synchronization cost",
+        "correctness, fallback, and failure-path validation"
+      ],
+      "promotion_links": [],
+      "provenance": {
+        "confidence": "candidate",
+        "origin": "openharmony_workspace"
+      },
+      "schema_version": "1.0",
+      "source_evidence": [
+        {
+          "line": 1,
+          "path": "openharmony/foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/ui_effect/src/filter_napi.cpp",
+          "sha256": "3377406b5134e28292f68d2a7a1ab16cecdbf31302247f40157ad48d535f04f4"
+        }
+      ],
+      "target_hypothesis": "GPU_SHADER",
+      "title": "UI filter effect API"
+    }
+  ],
+  "catalog_id": "openharmony_workspace_source_discovery_30",
+  "catalog_version": "0.1.1",
+  "content_sha256": "cca9103e8a7d710e1371ce06b798f77d4326cb26d161e587f6774c622f734bac",
+  "producer": {
+    "name": "case-catalog-builder",
+    "version": "1.1.0"
+  },
+  "schema_version": "1.0"
+}

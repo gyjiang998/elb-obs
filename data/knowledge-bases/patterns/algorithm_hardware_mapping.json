@@ -1,0 +1,146 @@
+[
+  {
+    "mapping_id": "map_jpeg_decode_to_jpeg_hw_decoder",
+    "category": "algorithm_to_heterogeneous_mapping",
+    "algorithm": "jpeg_decode",
+    "name": "JPEG decode to hardware decoder",
+    "target_unit": "JPEG_HW_DECODER",
+    "hardware_id": "JPEG_HW_DECODER",
+    "alternative_units": [
+      "ISP_CODEC",
+      "NPU"
+    ],
+    "cost_model_id": "codec_decode_cost",
+    "weights": {
+      "domain_keywords": 4.0,
+      "operations": 3.0,
+      "memory_patterns": 2.0,
+      "data_types": 1.5,
+      "loop_nesting": 1.0
+    },
+    "threshold": 0.45,
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1620",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:177"
+      ],
+      "file_sha256": {
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp": "f67b487976a9b744c9305d82c2dcdcf031a56791a96815ed60b75d3e8a8ed7c9",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp": "9e54ab68bd3eb18b632eee431aaa69654608561e5a9a36c8272b4ee8f165ee08"
+      }
+    }
+  },
+  {
+    "mapping_id": "map_image_blur_to_gpu_shader",
+    "category": "algorithm_to_heterogeneous_mapping",
+    "algorithm": "image_blur",
+    "name": "2D blur to GPU shader",
+    "target_unit": "GPU_SHADER",
+    "hardware_id": "GPU_SHADER",
+    "alternative_units": [
+      "Hianimation",
+      "AAE"
+    ],
+    "cost_model_id": "gpu_image_filter_cost",
+    "capability_constraints": {
+      "max_radius": 50
+    },
+    "weights": {
+      "domain_keywords": 3.0,
+      "operations": 3.0,
+      "memory_patterns": 2.5,
+      "data_types": 1.5,
+      "loop_nesting": 1.5
+    },
+    "threshold": 0.5,
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "mapping_id": "map_image_resize_to_aae_arsr",
+    "category": "algorithm_to_heterogeneous_mapping",
+    "algorithm": "image_resize",
+    "name": "Image resize to AAE ARSR",
+    "target_unit": "AAE_ARSR",
+    "hardware_id": "AAE_ARSR",
+    "alternative_units": [
+      "GPU_SHADER",
+      "NPU"
+    ],
+    "cost_model_id": "gpu_image_filter_cost",
+    "weights": {
+      "domain_keywords": 3.5,
+      "operations": 2.5,
+      "memory_patterns": 2.0,
+      "data_types": 1.5,
+      "loop_nesting": 1.0
+    },
+    "threshold": 0.5,
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:237"
+      ],
+      "file_sha256": {
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp": "c97fe5c632a4667ed680a774f72c73f5b40ecf8c1d4f491fddd728268d886f5d"
+      }
+    }
+  },
+  {
+    "mapping_id": "map_matrix_multiply_to_npu",
+    "category": "algorithm_to_heterogeneous_mapping",
+    "algorithm": "matrix_multiply",
+    "name": "GEMM to NPU",
+    "target_unit": "NPU",
+    "hardware_id": "NPU",
+    "alternative_units": [
+      "GPU_COMPUTE",
+      "DSP"
+    ],
+    "cost_model_id": "npu_tensor_cost",
+    "weights": {
+      "domain_keywords": 3.0,
+      "operations": 3.0,
+      "memory_patterns": 2.5,
+      "data_types": 1.5,
+      "loop_nesting": 2.0
+    },
+    "threshold": 0.55,
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "mapping_id": "map_softmax_to_npu",
+    "category": "algorithm_to_heterogeneous_mapping",
+    "algorithm": "softmax",
+    "name": "Softmax to NPU",
+    "target_unit": "NPU",
+    "hardware_id": "NPU",
+    "alternative_units": [
+      "GPU_COMPUTE"
+    ],
+    "cost_model_id": "npu_tensor_cost",
+    "weights": {
+      "domain_keywords": 3.5,
+      "operations": 3.0,
+      "memory_patterns": 1.5,
+      "data_types": 1.5,
+      "loop_nesting": 1.0
+    },
+    "threshold": 0.5,
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  }
+]

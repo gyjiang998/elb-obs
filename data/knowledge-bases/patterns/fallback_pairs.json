@@ -1,0 +1,118 @@
+[
+  {
+    "pair_id": "jpeg_sw_hw_decode_pair",
+    "category": "fallback_pair",
+    "algorithm": "jpeg_decode",
+    "target_unit": "JPEG_HW_DECODER",
+    "cpu_impl": "ExtDecoder::Decode software decode continuation",
+    "fallback_impl": "ExtDecoder::Decode software decode continuation",
+    "fallback_execution_domain": "software",
+    "hw_impl": "JpegHardwareDecoder::Decode",
+    "dispatcher": "ExtDecoder::Decode",
+    "dispatcher_type": "capability_guard_with_status_fallback",
+    "dispatch_conditions": [
+      {
+        "kind": "initialization",
+        "expression": "!initJpegErr_"
+      },
+      {
+        "kind": "allocator",
+        "expression": "IsAllocatorTypeSupportHwDecode(context)"
+      },
+      {
+        "kind": "capability",
+        "expression": "IsSupportHardwareDecode()"
+      }
+    ],
+    "fallback_conditions": [
+      {
+        "kind": "hardware_path_not_successful",
+        "expression": "DoHardWareDecode(context) != SUCCESS"
+      }
+    ],
+    "failure_reasons": [
+      "hardware_decoder_initialization_failed",
+      "allocator_type_not_supported",
+      "hardware_capability_rejected",
+      "hardware_decode_failed"
+    ],
+    "fallback_guarantee": "required",
+    "evidence": {
+      "origin": "manual_review",
+      "confidence": "confirmed",
+      "source_range": {
+        "file": "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp",
+        "start_line": 1619,
+        "end_line": 1626
+      }
+    },
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1597",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1619",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:177"
+      ],
+      "file_sha256": {
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp": "f67b487976a9b744c9305d82c2dcdcf031a56791a96815ed60b75d3e8a8ed7c9",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp": "9e54ab68bd3eb18b632eee431aaa69654608561e5a9a36c8272b4ee8f165ee08"
+      }
+    }
+  },
+  {
+    "pair_id": "image_resize_aae_pair",
+    "category": "fallback_pair",
+    "algorithm": "image_resize",
+    "target_unit": "AAE_ARSR",
+    "cpu_impl": "RSImageDetailEnhancerThread::ScaleByHDSampler",
+    "fallback_impl": "RSImageDetailEnhancerThread::ScaleByHDSampler",
+    "fallback_execution_domain": "unknown",
+    "hw_impl": "RSImageDetailEnhancerThread::ScaleByAAE",
+    "dispatcher": "RSImageDetailEnhancerThread::ExecuteTaskAsync",
+    "dispatcher_type": "capability_guard_with_status_fallback",
+    "dispatch_conditions": [
+      {
+        "kind": "upscale",
+        "expression": "srcWidth < dstWidth && srcHeight < dstHeight"
+      },
+      {
+        "kind": "input",
+        "expression": "dstSurfaceBuffer != nullptr && newCanvas != nullptr"
+      }
+    ],
+    "fallback_conditions": [
+      {
+        "kind": "null_result",
+        "expression": "ScaleByAAE(dstSurfaceBuffer, image, newCanvas) == nullptr"
+      }
+    ],
+    "failure_reasons": [
+      "surface_buffer_invalid",
+      "canvas_invalid",
+      "aae_scale_failed",
+      "aae_not_selected_for_non_upscale"
+    ],
+    "fallback_guarantee": "required",
+    "evidence": {
+      "origin": "manual_review",
+      "confidence": "confirmed",
+      "source_range": {
+        "file": "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp",
+        "start_line": 237,
+        "end_line": 242
+      }
+    },
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:145",
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:237"
+      ],
+      "file_sha256": {
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp": "c97fe5c632a4667ed680a774f72c73f5b40ecf8c1d4f491fddd728268d886f5d"
+      }
+    }
+  }
+]

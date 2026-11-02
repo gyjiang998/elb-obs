@@ -1,0 +1,642 @@
+{
+  "accelerator_unit": "dsp",
+  "artifact_type": "accelerator_api_knowledge_base",
+  "content_sha256": "f0907f3e0a9aa02c85d7b73a90229ea1b803d8b42eecb1044ebe530263eaeb06",
+  "evidence_boundary": {
+    "performance": "not_provided until an end-to-end benchmark is attached",
+    "source_interface": "confirmed from versioned workspace files",
+    "target_device": "evidence_required via the unit-specific runtime protocol"
+  },
+  "input_provenance": [
+    {
+      "path": "docs_ffrt/tools/optimization_kb/optimization_knowledge_base.json",
+      "sha256": "221bf3b58a92b1fdd7906dee44301b026c8756bc58b25af7602b8c73c83a2903"
+    },
+    {
+      "path": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/effect_factory.h",
+      "sha256": "0e0661b0de3644a93f058030adcaa608a3668a3f6d14f5bf746c8ea522bb472b"
+    },
+    {
+      "path": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/ieffect_control_vdi.h",
+      "sha256": "4a243fa4ead98fbe6090cd589479c3149b4dbdb90e8384ffb6e538c8d0e1bd30"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain.cpp",
+      "sha256": "934ce6ea251b6c9d32467114ea8f9c481c15539a8c20964a776203ca8b267cc8"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp",
+      "sha256": "1426bf065acff752769a3b3e4e826dd32b31c998ad2cbbd1a8afdfbf34af8d8d"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/multimedia/player_framework/avplayer.h",
+      "sha256": "913fcb64bcdbcd2f734e62beb5194072a25e75df2403f708ddd360ca05f96314"
+    }
+  ],
+  "kb_id": "openharmony_dsp_api_knowledge",
+  "kb_version": "1.0.0",
+  "records": [
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "AudioEffectChain",
+          "AudioEffectHandle::process",
+          "PCM buffer",
+          "runtime provider/dispatcher"
+        ],
+        "expected_data_forms": [
+          "float PCM buffer",
+          "frame length",
+          "effect process info"
+        ],
+        "operator_aliases": [
+          "applyeffectchain",
+          "audioeffectchain",
+          "effect_handle",
+          "pcm"
+        ],
+        "standalone_offload_note": "该路径只证明分发与回退语义；必须继续解析 runtime provider 后才可得到可匹配的 CPU 计算核心。"
+      },
+      "detailed_description_zh": "这是 DSP/HDI 不可用时的系统回退分发路径。源码事实确认 buffer、frameLen 和 process callback，但具体 CPU 算法由运行时 provider 决定，不能直接作为函数级 AST 样本。",
+      "name_zh": "AP 音频效果链回退",
+      "one_line_abstract_zh": "在 AP 上按 runtime-selected effect handle 执行音频效果链。",
+      "record_id": "dsp_api:AudioEffectChain::ApplyEffectChain",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "HDI/DSP 不可用时在应用处理器上按 runtime-selected effect provider 执行 effect chain。",
+        "id": "dsp_ap_fallback",
+        "label_zh": "AP 音频效果回退链"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "void AudioEffectChain::ApplyEffectChain(float *bufIn, float *bufOut, uint32_t frameLen, AudioEffectProcInfo procInfo)\n{\n    Trace trace(\"AudioEffectChain::ApplyEffectChain\");\n    size_t inTotlen = frameLen * ioBufferConfig_.inputCfg.channels * sizeof(float);",
+        "exposure": "system_source_integration",
+        "library": "audio framework internal integration",
+        "source_file": "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain.cpp",
+        "source_line": 361,
+        "source_sha256": "934ce6ea251b6c9d32467114ea8f9c481c15539a8c20964a776203ca8b267cc8",
+        "source_symbol": "AudioEffectChain::ApplyEffectChain",
+        "system_capability": "system audio service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "AudioEffectChain::ApplyEffectChain"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audioeffecthdiparam",
+          "dsp_effect",
+          "sendcommand",
+          "sethdicommand"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "该源码入口是当前 strict DSP pair 的明确 offload 控制路径：复制 effect 参数、构造 reply 长度并发送 HDI_SET_PATAM。它是系统实现，不是应用侧公开 DSP API。",
+      "name_zh": "系统 Audio Effect HDI 命令下发",
+      "one_line_abstract_zh": "将系统 Audio Effect 参数写入 HDI controller 的 SendCommand。",
+      "record_id": "dsp_api:AudioEffectHdiParam::SetHdiCommand",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "int32_t AudioEffectHdiParam::SetHdiCommand(IEffectControl *hdiControl, int8_t *effectHdiInput)\n{\n    int32_t ret = memcpy_s(static_cast<void *>(input_), sizeof(input_),\n        static_cast<void *>(effectHdiInput), sizeof(input_));",
+        "exposure": "system_source_integration",
+        "library": "audio framework internal integration",
+        "source_file": "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp",
+        "source_line": 87,
+        "source_sha256": "1426bf065acff752769a3b3e4e826dd32b31c998ad2cbbd1a8afdfbf34af8d8d",
+        "source_symbol": "AudioEffectHdiParam::SetHdiCommand",
+        "system_capability": "system audio service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "AudioEffectHdiParam::SetHdiCommand"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "createcontroller",
+          "effect_factory",
+          "hdi_provider"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "controller 创建必须与 effect 信息和 provider 匹配；它是 HDI 生命周期证据，不是把 CPU 音频循环自动迁移到 DSP 的操作。",
+      "name_zh": "Audio Effect controller 创建",
+      "one_line_abstract_zh": "由 Audio Effect factory 创建一个 effect controller。",
+      "record_id": "dsp_api:EffectFactory::CreateController",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    int32_t (*CreateController)(struct EffectFactory *self, const struct EffectInfoVdi *info,\n                                struct IEffectControlVdi **handle);\n    /**\n     *",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/effect_factory.h",
+        "source_line": 62,
+        "source_sha256": "0e0661b0de3644a93f058030adcaa608a3668a3f6d14f5bf746c8ea522bb472b",
+        "source_symbol": "CreateController",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "EffectFactory::CreateController"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "destroycontroller",
+          "effect_factory",
+          "hdi_provider"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "controller 生命周期必须与实时音频流停止、参数释放和 fallback 切换协调；它本身不代表 DSP 数据面优化。",
+      "name_zh": "Audio Effect controller 销毁",
+      "one_line_abstract_zh": "释放由 Audio Effect factory 创建的 controller。",
+      "record_id": "dsp_api:EffectFactory::DestroyController",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    int32_t (*DestroyController)(struct EffectFactory *self, struct IEffectControlVdi *handle);\n\n    /**\n     * @brief Get the effect descriptor by effectId.",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/effect_factory.h",
+        "source_line": 76,
+        "source_sha256": "0e0661b0de3644a93f058030adcaa608a3668a3f6d14f5bf746c8ea522bb472b",
+        "source_symbol": "DestroyController",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "EffectFactory::DestroyController"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "PCM/sample/frame buffer",
+          "按帧或按采样遍历",
+          "效果参数、滤波、混音或空间化语义",
+          "输入输出音频 buffer"
+        ],
+        "expected_data_forms": [
+          "frameCount",
+          "S16/S32/F32 等 sample format",
+          "interleaved 或按 provider 定义的 buffer"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "effectprocess",
+          "framecount",
+          "pcm"
+        ],
+        "standalone_offload_note": "必须确认具体 effect provider、采样率/声道/格式、实时延迟与 bypass/fallback；AP effect chain 不是具体 DSP 算法证明。"
+      },
+      "detailed_description_zh": "这是 DSP/HDI 数据面接口：输入输出均为带 frameCount、datatag、rawData 的 AudioEffectBufferVdi。它处在驱动/系统集成层，普通业务代码不可仅凭该符号直接调用。",
+      "name_zh": "Audio Effect HDI 音频处理",
+      "one_line_abstract_zh": "通过 HDI effect controller 对输入 PCM buffer 执行 effect processing。",
+      "record_id": "dsp_api:IEffectControlVdi::EffectProcess",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "对按帧 PCM 音频 buffer 执行效果处理或反向处理，HDI provider 可能在 DSP 等专用音频路径实现。",
+        "id": "dsp_effect_process",
+        "label_zh": "DSP 音频效果处理"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "struct IEffectControlVdi {\n    int32_t (*EffectProcess)(struct IEffectControlVdi *self, const struct AudioEffectBufferVdi *input,\n        struct AudioEffectBufferVdi *output);\n    int32_t (*SendCommand)(struct IEffectControlVdi *self,  enum EffectCommandTableIndexVdi cmdId,\n        const int8_t *cmdData, uint32_t cmdDataLen, int8_t *replyData, uint32_t *replyDataLen);",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/ieffect_control_vdi.h",
+        "source_line": 30,
+        "source_sha256": "4a243fa4ead98fbe6090cd589479c3149b4dbdb90e8384ffb6e538c8d0e1bd30",
+        "source_symbol": "EffectProcess",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "IEffectControlVdi::EffectProcess"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "PCM/sample/frame buffer",
+          "按帧或按采样遍历",
+          "效果参数、滤波、混音或空间化语义",
+          "输入输出音频 buffer"
+        ],
+        "expected_data_forms": [
+          "frameCount",
+          "S16/S32/F32 等 sample format",
+          "interleaved 或按 provider 定义的 buffer"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "effectreverse",
+          "pcm",
+          "reverse_effect"
+        ],
+        "standalone_offload_note": "必须确认具体 effect provider、采样率/声道/格式、实时延迟与 bypass/fallback；AP effect chain 不是具体 DSP 算法证明。"
+      },
+      "detailed_description_zh": "该接口同样以 AudioEffectBufferVdi 传递按帧音频数据；是否有 DSP provider、reverse 语义和格式支持需在实际 HDI 上验证。",
+      "name_zh": "Audio Effect HDI 反向处理",
+      "one_line_abstract_zh": "通过 HDI effect controller 执行 effect reverse 数据处理。",
+      "record_id": "dsp_api:IEffectControlVdi::EffectReverse",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "对按帧 PCM 音频 buffer 执行效果处理或反向处理，HDI provider 可能在 DSP 等专用音频路径实现。",
+        "id": "dsp_effect_process",
+        "label_zh": "DSP 音频效果处理"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "int32_t (*GetEffectDescriptor)(struct IEffectControlVdi *self, struct EffectControllerDescriptorVdi *desc);\n    int32_t (*EffectReverse)(struct IEffectControlVdi *self, const struct AudioEffectBufferVdi *input,\n        struct AudioEffectBufferVdi *output);\n};",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/ieffect_control_vdi.h",
+        "source_line": 35,
+        "source_sha256": "4a243fa4ead98fbe6090cd589479c3149b4dbdb90e8384ffb6e538c8d0e1bd30",
+        "source_symbol": "EffectReverse",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "IEffectControlVdi::EffectReverse"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "effectid",
+          "geteffectdescriptor",
+          "provider"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "可用于确认 selected effect provider 的身份；它不等价于 DSP capability、算法类型或数据面吞吐。",
+      "name_zh": "Audio Effect HDI 描述查询",
+      "one_line_abstract_zh": "读取 effect controller 的 effectId、库名和供应商描述。",
+      "record_id": "dsp_api:IEffectControlVdi::GetEffectDescriptor",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "const int8_t *cmdData, uint32_t cmdDataLen, int8_t *replyData, uint32_t *replyDataLen);\n    int32_t (*GetEffectDescriptor)(struct IEffectControlVdi *self, struct EffectControllerDescriptorVdi *desc);\n    int32_t (*EffectReverse)(struct IEffectControlVdi *self, const struct AudioEffectBufferVdi *input,\n        struct AudioEffectBufferVdi *output);\n};",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/ieffect_control_vdi.h",
+        "source_line": 34,
+        "source_sha256": "4a243fa4ead98fbe6090cd589479c3149b4dbdb90e8384ffb6e538c8d0e1bd30",
+        "source_symbol": "GetEffectDescriptor",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "IEffectControlVdi::GetEffectDescriptor"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audio_effect",
+          "effect_param",
+          "hdi_command",
+          "sendcommand"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "它是控制面接口：命令 buffer 和 reply buffer 需要匹配 provider 约定。控制面成功并不说明数据面 EffectProcess 已在 DSP 执行或具有性能收益。",
+      "name_zh": "Audio Effect HDI 参数命令",
+      "one_line_abstract_zh": "向 effect controller 发送配置、启停、参数或查询命令。",
+      "record_id": "dsp_api:IEffectControlVdi::SendCommand",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "struct AudioEffectBufferVdi *output);\n    int32_t (*SendCommand)(struct IEffectControlVdi *self,  enum EffectCommandTableIndexVdi cmdId,\n        const int8_t *cmdData, uint32_t cmdDataLen, int8_t *replyData, uint32_t *replyDataLen);\n    int32_t (*GetEffectDescriptor)(struct IEffectControlVdi *self, struct EffectControllerDescriptorVdi *desc);\n    int32_t (*EffectReverse)(struct IEffectControlVdi *self, const struct AudioEffectBufferVdi *input,",
+        "exposure": "driver_hdi_contract",
+        "library": "audio effect VDI/HDI provider",
+        "source_file": "openharmony/drivers/peripheral/audio/interfaces/effect/v1_0/ieffect_control_vdi.h",
+        "source_line": 32,
+        "source_sha256": "4a243fa4ead98fbe6090cd589479c3149b4dbdb90e8384ffb6e538c8d0e1bd30",
+        "source_symbol": "SendCommand",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "IEffectControlVdi::SendCommand"
+    },
+    {
+      "accelerator_unit": "dsp",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "Audio Effect HDI 头文件和 DSP 命名 provider 只证明系统集成契约；不证明某部手机启用了 DSP offload、支持某个 effect 或能满足实时延迟。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "audio effect/equalizer/reverb/spatial 语义",
+          "设备类型与状态更新",
+          "命令 buffer 与 reply",
+          "provider/controller 生命周期"
+        ],
+        "expected_data_forms": [
+          "effectId",
+          "命令字节 buffer",
+          "设备路由与 effect 配置"
+        ],
+        "operator_aliases": [
+          "audio_effect_mode",
+          "avplayer",
+          "setaudioeffectmode",
+          "spatial_audio"
+        ],
+        "standalone_offload_note": "控制面命令不是数据面处理热点；只有实际 PCM effect processing 和实时约束明确时才评估 DSP 卸载。"
+      },
+      "detailed_description_zh": "这是公开应用 API 的模式选择入口，而不是通用 DSP kernel/HDI 控制接口。实际是否走硬件、哪一个 effect provider 和数据格式均由系统运行时决定。",
+      "name_zh": "应用侧音效模式选择",
+      "one_line_abstract_zh": "为 AVPlayer 选择高层音效模式。",
+      "record_id": "dsp_api:OH_AVPlayer_SetAudioEffectMode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+        "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+        "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建 HDI effect controller、下发参数/状态并维护控制器生命周期。",
+        "id": "dsp_effect_control",
+        "label_zh": "DSP 音频效果控制"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_AVPlayer_SetAudioEffectMode(OH_AVPlayer *player, OH_AudioStream_AudioEffectMode effectMode);\n\n/**\n * @brief Sets the bit rate used by an HLS player. This function is valid only for HLS network streams.",
+        "exposure": "openharmony_ndk",
+        "library": "AVPlayer NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/player_framework/avplayer.h",
+        "source_line": 369,
+        "source_sha256": "913fcb64bcdbcd2f734e62beb5194072a25e75df2403f708ddd360ca05f96314",
+        "source_symbol": "OH_AVPlayer_SetAudioEffectMode",
+        "system_capability": "SystemCapability.Multimedia.Media.Player"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+        ]
+      },
+      "symbol": "OH_AVPlayer_SetAudioEffectMode"
+    }
+  ],
+  "runtime_probe_protocol": [
+    "确认目标设备实际加载相应 Audio Effect HDI provider，并成功创建 effect controller；HDI/VDI 仅在对应系统/驱动权限范围内使用。",
+    "以真实 sample rate、channel、frameCount、sample format、effect 参数和设备路由执行 EffectProcess/SendCommand，检查返回值和 bypass 行为。",
+    "在同一实时音频 workload 上比较 DSP/HDI 与 AP effect chain 的端到端延迟、XRUN、功耗和回退正确性。"
+  ],
+  "schema_version": "1.0",
+  "scope": {
+    "description_zh": "Audio Effect HDI/VDI 控制与处理契约、系统音频效果链回退路径，以及少量高层效果模式入口。HDI/VDI 记录不是普通应用侧 DSP SDK。",
+    "target_units": [
+      "AUDIO_EFFECT_DSP_HDI"
+    ]
+  },
+  "source_revision": "workspace-unpinned",
+  "summary": {
+    "record_count": 9,
+    "record_direct_strict_link_count": 4,
+    "semantic_family_counts": {
+      "dsp_ap_fallback": 1,
+      "dsp_effect_control": 6,
+      "dsp_effect_process": 2
+    },
+    "target_device_availability": "evidence_required",
+    "unit_strict_case_count": 1
+  },
+  "unit_strict_case_inventory": [
+    "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+  ]
+}

@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "application-flow-scenario-v2.schema.json",
+  "title": "Application Flow Scenario v2.0",
+  "description": "Generic application-flow locator contract. It preserves field names and value shapes without importing scenario, process, stage, matcher, constant, or trace-anchor values from any reference fixture.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scenario",
+    "description",
+    "source_mermaid",
+    "constants",
+    "process_groups",
+    "stage_search_window",
+    "stages",
+    "relations",
+    "relation_defaults"
+  ],
+  "properties": {
+    "version": { "const": "2.0" },
+    "scenario": { "$ref": "#/$defs/semantic_id" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "source_mermaid": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "constants": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Z][A-Z0-9_]{1,79}$" },
+      "additionalProperties": { "type": ["integer", "number", "string", "boolean"] }
+    },
+    "process_groups": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/semantic_id" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 128,
+        "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "stage_search_window": { "$ref": "#/$defs/time_window" },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/stage" }
+    },
+    "nodes": {
+      "description": "Additive hierarchical projection. Existing consumers may continue reading stages.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": { "$ref": "#/$defs/flow_node" }
+    },
+    "node_relations": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": { "$ref": "#/$defs/node_relation" }
+    },
+    "relations": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/relation" }
+    },
+    "relation_defaults": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/relation_default" }
+    }
+  },
+  "$defs": {
+    "semantic_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,79}$"
+    },
+    "constant_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "ref"],
+      "properties": {
+        "source": { "const": "constant" },
+        "ref": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,79}$" }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "point"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "point": { "type": "string", "enum": ["start", "end"] }
+      }
+    },
+    "time_window": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": { "source": { "const": "trace" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reference", "direction", "range"],
+          "properties": {
+            "reference": { "$ref": "#/$defs/reference" },
+            "direction": { "type": "string", "enum": ["backward", "forward", "around"] },
+            "range": {
+              "oneOf": [
+                { "$ref": "#/$defs/constant_ref" },
+                { "type": "integer", "minimum": 0 }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "process_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "process_group": { "$ref": "#/$defs/semantic_id" },
+        "process_name": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "trace_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name", "name_match", "which"],
+      "properties": {
+        "type": { "const": "trace_point" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Normalized HiTrace event label or stable selector, excluding raw H: and level/tag suffixes."
+        },
+        "name_match": { "type": "string", "enum": ["substring_case_insensitive", "exact", "regex"] },
+        "which": { "type": "string", "enum": ["start", "end"] },
+        "process": { "$ref": "#/$defs/process_filter" }
+      }
+    },
+    "relation_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "relation", "direction", "selection"],
+      "properties": {
+        "type": { "const": "relation" },
+        "relation": { "type": "string", "enum": ["wakeup", "binder_sync", "binder_async"] },
+        "direction": { "type": "string", "enum": ["incoming", "outgoing"] },
+        "reference": { "$ref": "#/$defs/reference" },
+        "from_process": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "to_process": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "pass_through": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "selection": { "type": "string", "enum": ["first", "last", "nearest"] }
+      },
+      "anyOf": [
+        { "required": ["from_process"] },
+        { "required": ["to_process"] }
+      ]
+    },
+    "locator": {
+      "oneOf": [
+        { "$ref": "#/$defs/trace_point" },
+        { "$ref": "#/$defs/relation_locator" }
+      ]
+    },
+    "node_boundary": {
+      "oneOf": [
+        { "$ref": "#/$defs/locator" },
+        { "type": "null" }
+      ]
+    },
+    "detailed_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "rule"],
+      "properties": {
+        "type": { "const": "detailed_rule" },
+        "rule": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "params": { "type": "object" }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "steps"],
+      "properties": {
+        "type": { "const": "composition" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["op"],
+            "properties": { "op": { "type": "string", "minLength": 1, "maxLength": 120 } }
+          }
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "process_name", "order", "optional"],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "process_name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "order": { "type": "integer", "minimum": 1 },
+        "optional": { "type": "boolean" },
+        "time_window": { "$ref": "#/$defs/time_window" },
+        "start": { "$ref": "#/$defs/locator" },
+        "end": { "$ref": "#/$defs/locator" },
+        "matcher": {
+          "oneOf": [
+            { "$ref": "#/$defs/detailed_rule" },
+            { "$ref": "#/$defs/composition" }
+          ]
+        }
+      },
+      "oneOf": [
+        { "required": ["start", "end"], "not": { "required": ["matcher"] } },
+        { "required": ["matcher"], "not": { "anyOf": [{ "required": ["start"] }, { "required": ["end"] }] } }
+      ]
+    },
+    "flow_node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "type", "parent_id", "name", "description", "order",
+        "process_name", "optional", "boundary_source", "start", "end"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "type": { "type": "string", "enum": ["action", "phase", "stage", "activity"] },
+        "parent_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/semantic_id" },
+            { "type": "null" }
+          ]
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "order": { "type": "integer", "minimum": 1 },
+        "process_name": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
+        "optional": { "type": "boolean" },
+        "boundary_source": {
+          "type": "string",
+          "enum": ["declared", "runtime_observed", "derived_from_children", "unresolved"]
+        },
+        "start": { "$ref": "#/$defs/node_boundary" },
+        "end": { "$ref": "#/$defs/node_boundary" },
+        "matcher": {
+          "oneOf": [
+            { "$ref": "#/$defs/detailed_rule" },
+            { "$ref": "#/$defs/composition" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "node_relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": { "$ref": "#/$defs/semantic_id" },
+        "to": { "$ref": "#/$defs/semantic_id" },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sequence", "data_dependency", "control_dependency", "async_dispatch",
+            "parallel", "parallel_candidate", "join_all", "join_any", "fallback"
+          ]
+        },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "to": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "type": { "type": "string", "enum": ["wakeup", "binder", "callstack"] },
+        "direction": { "type": "string", "enum": ["backward", "forward"] },
+        "binder_type": { "type": "string", "enum": ["sync", "async"] }
+      }
+    },
+    "relation_default": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["wakeup", "binder", "callstack"] },
+        "algorithm": { "type": "string", "maxLength": 120 },
+        "binder_type": { "type": "string", "enum": ["sync", "async"] },
+        "max_hops": { "oneOf": [{ "$ref": "#/$defs/constant_ref" }, { "type": "integer", "minimum": 0 }] },
+        "max_edges": { "oneOf": [{ "$ref": "#/$defs/constant_ref" }, { "type": "integer", "minimum": 0 }] },
+        "range": { "oneOf": [{ "$ref": "#/$defs/constant_ref" }, { "type": "integer", "minimum": 0 }] },
+        "exclude_process_groups": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/semantic_id" }
+        },
+        "allowed_process_groups": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/semantic_id" }
+        },
+        "match_rule": { "type": "string", "maxLength": 160 }
+      }
+    }
+  }
+}

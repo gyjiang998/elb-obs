@@ -1,0 +1,4 @@
+interface:
+  display_name: "应用执行流程重建"
+  short_description: "重建分层阶段图，校准 HiTrace 并生成负载预览"
+  default_prompt: "根据用户操作、已登记代码仓和可选真实 Trace，自主重建动作、业务阶段、可锚定子阶段和函数实现的分层 Mermaid，校准 HiTrace 边界，并交付标准流程 JSON 与阶段负载分析。"

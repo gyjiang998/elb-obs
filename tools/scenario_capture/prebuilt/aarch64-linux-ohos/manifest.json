@@ -1,0 +1,7 @@
+{
+  "binary": "versions/571c4f37db52bbe621e1239982b4ae19e6178ca121e3c4c3961f240daf66c8a7/thread_pmu_sampler",
+  "binary_sha256": "571c4f37db52bbe621e1239982b4ae19e6178ca121e3c4c3961f240daf66c8a7",
+  "receipt": "versions/571c4f37db52bbe621e1239982b4ae19e6178ca121e3c4c3961f240daf66c8a7/receipt.json",
+  "receipt_sha256": "cf63d834ed1924c45b0e117e7fec527cbbf69fcdba6c9c0a91eb404136541c16",
+  "schema_version": "pmu_sampler_bundle/v1"
+}

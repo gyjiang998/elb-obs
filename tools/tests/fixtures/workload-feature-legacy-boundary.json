@@ -1,0 +1,171 @@
+{
+  "id": "wf_18949a2ed45dab9866b0a090",
+  "created_at": "2026-10-23T01:03:01Z",
+  "dataset_id": "ds_e03cde14b6122ca7e87fdd07",
+  "hardware_profile_id": "kirin-gallery-reference-v1",
+  "quality": {
+    "classification_is_candidate": true,
+    "hardware_identity_verified": false,
+    "notes": [
+      "阶段顺序与并行建模共享 BuildItem 边界和 ID。",
+      "缺失指标保留 null，计数边界不足时展示区间。",
+      "不会把整帧 / 整进程 PMU 按时间分摊到每个阶段。",
+      "I/O 阻塞不由普通 blocked 状态推断；未采集时保留缺失。"
+    ],
+    "status": "partial"
+  },
+  "name": "QA 历史短阶段边界",
+  "stages": [
+    {
+      "classification": {
+        "evidence": [
+          "阶段边界 PMU 不确定性较大，保留上下界，不作为分型依据。",
+          "计算 / 访存类型待补充同线程、同时钟、阶段粒度 PMU。"
+        ],
+        "id": "unknown",
+        "method": "conservative-stage-rules/v1",
+        "name": "证据不足",
+        "parallel_implication": "需结合核组、频点与共跑组合实测校准；分型本身不保证并行收益。",
+        "status": "candidate"
+      },
+      "compute": {
+        "branch_instructions": null,
+        "branch_misses": null,
+        "cycle_bounds": [
+          0,
+          42917452
+        ],
+        "cycles": null,
+        "instruction_bounds": [
+          0,
+          50391782
+        ],
+        "instructions": null,
+        "interior_ipc": null,
+        "ipc": null,
+        "ipc_bounds": null
+      },
+      "cpu_ms": 0.176,
+      "display_id": "B01",
+      "end_ns": 674471190650000,
+      "evidence": {
+        "measurement": null,
+        "pmu": {
+          "bounds_valid": true,
+          "feature_usable_under_25pct_instruction_boundary_rule": false,
+          "interior_bins": 0,
+          "interior_ipc": null,
+          "interior_time_fraction": 0.0,
+          "intersecting_bins": 1,
+          "lower": {
+            "cycles": 0,
+            "generic_cache_misses": 0,
+            "generic_cache_references": 0,
+            "instructions": 0
+          },
+          "max_intersecting_snapshot_span_us": 30927.656,
+          "scope": "main-thread user-mode only; nested stages not additive",
+          "upper": {
+            "cycles": 42917452,
+            "generic_cache_misses": 743871,
+            "generic_cache_references": 20893313,
+            "instructions": 50391782
+          }
+        },
+        "request_ids": []
+      },
+      "id": "build_00",
+      "memory": {
+        "cache_miss_bounds": [
+          0,
+          743871
+        ],
+        "cache_misses": null,
+        "cache_mpki_bounds": null,
+        "cache_references": null,
+        "dram_bytes": null,
+        "llc_mapping_verified": false,
+        "llc_misses": null,
+        "llc_mpki": null,
+        "llc_mpki_bounds": null,
+        "loads": null,
+        "memory_stall_cycles": null,
+        "stores": null
+      },
+      "name": "LoginStatusLoading",
+      "quality": {
+        "missing_counters": [
+          "llc_misses",
+          "loads",
+          "stores",
+          "branch_instructions",
+          "branch_misses",
+          "memory_stall_cycles",
+          "dram_bytes",
+          "io_read_bytes",
+          "io_write_bytes"
+        ],
+        "pmu_scope": "main-thread user-mode only; nested stages not additive",
+        "pmu_source": "trace_aligned_interval_bounds",
+        "pmu_usable": false,
+        "reasons": [
+          "阶段边界 PMU 不确定性较大，保留上下界，不作为分型依据。",
+          "计算 / 访存类型待补充同线程、同时钟、阶段粒度 PMU。"
+        ],
+        "status": "partial"
+      },
+      "relative_start_ms": 15.02,
+      "scheduling": {
+        "binder_blocked_ms": 0.0,
+        "blocked_ms": 0,
+        "cpu_migrations": 0,
+        "cpu_residency": [
+          {
+            "cpu": 10,
+            "cpu_ms": 0.176,
+            "frequency_khz": 2500000
+          }
+        ],
+        "io_read_bytes": null,
+        "io_wait_ms": null,
+        "io_write_bytes": null,
+        "other_wait_ms": 0,
+        "runnable_ms": 0,
+        "service_calls": 0,
+        "service_cpu_ms": 0,
+        "service_residence_ms": 0,
+        "services": [],
+        "wakeup_count": 0
+      },
+      "source_line": 99850,
+      "start_ns": 674471190474000,
+      "states_ms": {
+        "blocked": 0,
+        "on_cpu": 0.176,
+        "runnable": 0,
+        "unknown": 0
+      },
+      "wall_ms": 0.176,
+      "workload_class": "unknown"
+    }
+  ],
+  "summary": {
+    "duration_ms": 112.355,
+    "non_builditem_ms": 112.179,
+    "stage_count": 1,
+    "stage_cpu_ms": 0.176,
+    "pmu_usable_stages": 0,
+    "classified_cpu_stages": 0,
+    "class_counts": {
+      "unknown": 1
+    }
+  },
+  "dataset_fingerprint": "qa_read_only_legacy_excerpt",
+  "profile_sha256": "qa_not_a_saved_profile",
+  "component_classes": {
+    "build_00": "unknown"
+  },
+  "provenance": {
+    "fixture_source": "Read-only excerpt of wf_18949a2ed45dab9866b0a090; counters and boundaries unchanged; other stages omitted"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "artifact_type": "accelerator_api_knowledge_manifest",
+  "content_sha256": "445491fa0e99e3a5cee167e0651bbc4fcae3ab55523933c017ca4ebcca0e4746",
+  "entries": [
+    {
+      "accelerator_unit": "dsp",
+      "artifact_path": "docs_ffrt/tools/hardware_kb/dsp_api_knowledge_base.json",
+      "content_sha256": "f0907f3e0a9aa02c85d7b73a90229ea1b803d8b42eecb1044ebe530263eaeb06",
+      "kb_id": "openharmony_dsp_api_knowledge",
+      "kb_version": "1.0.0",
+      "record_count": 9,
+      "unit_strict_case_count": 1
+    },
+    {
+      "accelerator_unit": "gpu",
+      "artifact_path": "docs_ffrt/tools/hardware_kb/gpu_api_knowledge_base.json",
+      "content_sha256": "aff895dd2a2cb48e87a4a6e2ed8c98cc28d23081b6f63c0c5520a4abe4c51746",
+      "kb_id": "openharmony_gpu_api_knowledge",
+      "kb_version": "1.0.0",
+      "record_count": 18,
+      "unit_strict_case_count": 7
+    },
+    {
+      "accelerator_unit": "media",
+      "artifact_path": "docs_ffrt/tools/hardware_kb/media_accelerator_api_knowledge_base.json",
+      "content_sha256": "d8572fecd0859afb0741b148ce5c413bf708f997e89b1c9eb0212a86b73d008b",
+      "kb_id": "openharmony_media_accelerator_api_knowledge",
+      "kb_version": "1.0.0",
+      "record_count": 31,
+      "unit_strict_case_count": 10
+    }
+  ],
+  "manifest_id": "openharmony_accelerator_api_knowledge",
+  "manifest_version": "1.0.0",
+  "schema_version": "1.0",
+  "source_revision": "workspace-unpinned"
+}

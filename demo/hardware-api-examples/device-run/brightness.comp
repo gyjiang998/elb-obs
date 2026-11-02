@@ -1,0 +1,29 @@
+#version 310 es
+// Vulkan 1.0 compute shader for RGBA brightness adjustment.
+// Each invocation consumes one 32-bit RGBA pixel (little-endian),
+// adds a float bias to R/G/B, clamps to [0,255], preserves A, and writes back.
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Src { uint data[]; } src;
+layout(std430, binding = 1) writeonly buffer Dst { uint data[]; } dst;
+
+layout(push_constant) uniform Params { float bias; uint count; } params;
+
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+    if (gid >= params.count) return;
+    uint word = src.data[gid];
+    uint b0 = word & 0xFFu;
+    uint b1 = (word >> 8u) & 0xFFu;
+    uint b2 = (word >> 16u) & 0xFFu;
+    uint b3 = (word >> 24u) & 0xFFu;
+    float f0 = float(b0) + params.bias;
+    float f1 = float(b1) + params.bias;
+    float f2 = float(b2) + params.bias;
+    uint r0 = uint(clamp(f0, 0.0, 255.0));
+    uint r1 = uint(clamp(f1, 0.0, 255.0));
+    uint r2 = uint(clamp(f2, 0.0, 255.0));
+    uint result = r0 | (r1 << 8u) | (r2 << 16u) | (b3 << 24u);
+    dst.data[gid] = result;
+}

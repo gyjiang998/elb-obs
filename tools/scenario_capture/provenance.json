@@ -1,0 +1,59 @@
+{
+  "schema_version": "scenario_capture_provenance/v1",
+  "source_project": "kirin/experiments/scheduler_time_aggregation/harmony",
+  "files": [
+    {
+      "file": "capture_gallery_case.py",
+      "original_path": "kirin/experiments/scheduler_time_aggregation/harmony/capture_gallery_case.py",
+      "sha256": "04cb1a7f458aab08ba2160c2aebbb9a4e378115565ff21ef739cb2520097fbee"
+    },
+    {
+      "file": "capture_gallery_edit_focus.py",
+      "original_path": "kirin/experiments/scheduler_time_aggregation/harmony/capture_gallery_edit_focus.py",
+      "sha256": "436d42cf73d88b0a6357c78102456b1be120d9245856527419af65d6d0160397"
+    },
+    {
+      "file": "gallery_case_17.json",
+      "original_path": "kirin/experiments/scheduler_time_aggregation/harmony/gallery_case_17.json",
+      "sha256": "5a6a40e31a74fa55ba3018c88c8218d36e0f91c2fd70613ed70bcc28ca1ac96d"
+    },
+    {
+      "file": "gallery_thread_pmu.c",
+      "original_path": "kirin/experiments/scheduler_time_aggregation/harmony/gallery_thread_pmu.c",
+      "sha256": "7839e69cae45d6d6a3f7c47fee806d5691783ee1e823051511fb542e46e5d04a",
+      "role": "Original PMU reference source; immutable archived copy, platform adaptations listed separately",
+      "archived_path": "reference/gallery_thread_pmu.original.c"
+    }
+  ],
+  "adaptation": "UI selection and 17-step workflow ported; capture control adapted to registered DeviceGateway RPC with per-step manifests. PMU reuses an existing executable or prepares a verified bundle built from the fixed platform source when the default device path is missing; capability inspection makes no perf hardware availability claim.",
+  "pmu_binary_binding": "The original reference and platform 1.1.0 source are archived with immutable hashes. Version 1.2.0 adds auto/all independent groups with per-event failure diagnostics and group-local denominators. Legacy single-group CLI and capability schema identifiers remain compatible. Managed bundles bind the current source, compiler and binary; when a default device executable lacks a requested multi-group mode, a verified new version is installed at a new content-addressed path, preserving existing files and saved plans. Custom device paths are inspected but never overwritten.",
+  "pmu_adaptations": [
+    {
+      "version": "1.1.0",
+      "date": "2026-10-22",
+      "path": "reference/thread_pmu_sampler.v1.1.0.c",
+      "sha256": "122fb36a67ff541ca44ade51fa4803b591d2d0e2721fe0d21636cbb1bd936b76",
+      "based_on_sha256": "7839e69cae45d6d6a3f7c47fee806d5691783ee1e823051511fb542e46e5d04a",
+      "changes": [
+        "Accept strictly parsed 10–10000 us requested periods; reject invalid decimal syntax, range and multiplication overflow before hardware setup",
+        "Add --version and --capabilities without perf_event_open; retain sampler version in measurements",
+        "Preserve normal-policy absolute clock_nanosleep; requested period is not a temporal-resolution guarantee"
+      ],
+      "device_runtime_validation": "not_performed_by_this_change"
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-10-23",
+      "path": "thread_pmu_sampler.c",
+      "sha256": "8e8526bf37d5034b75c5fa1ddaf96f0cfa748f9182512d7c6b3fb527a28d6ea4",
+      "based_on_sha256": "122fb36a67ff541ca44ade51fa4803b591d2d0e2721fe0d21636cbb1bd936b76",
+      "changes": [
+        "Add auto/all same-operation independent groups with group-local cycles/instructions and event-level open diagnostics",
+        "Preserve legacy single-group format; add grouped_long_csv and per-group scheduling, read brackets and runtime coverage",
+        "Limit multi-group sample buffers to 128 MiB and record requested/effective sampling periods",
+        "Provide base cycles/instructions fallback and retain all group opening/enable failures in metadata"
+      ],
+      "device_runtime_validation": "not_performed_by_this_change"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "executable": "C:\\Tools\\TeamAgent\\team-agent.exe",
+  "args": ["--workspace", "{workspace}", "--mcp-config", "{mcp_config}"],
+  "cwd": "C:\\Workspaces\\agent-workbench",
+  "environment": {},
+  "submitMode": "bracketed_paste_cr",
+  "startupDelayMs": 1000,
+  "submitDelayMs": 1000
+}

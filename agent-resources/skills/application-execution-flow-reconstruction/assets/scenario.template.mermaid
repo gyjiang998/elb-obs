@@ -1,0 +1,23 @@
+%% @scenario replace_with_scenario_id version=2.0
+%% @description 替换为所选应用流程说明
+%% @constant RELATION_RANGE_NS=5000000000
+%% @process_group application=replace_with_process
+%% @action {"id":"replace_with_action_id","order":1,"name":"替换为用户动作","description":"替换为动作语义"}
+%% @phase {"id":"replace_with_phase_id","action_id":"replace_with_action_id","order":1,"name":"替换为业务大阶段","description":"替换为阶段目标"}
+%% @stage replace_with_stage_id order=1 process=replace_with_process required name="替换为阶段显示名"
+%%   start: trace_point "replace_with_source_declared_trace_start" exact in application
+%%   end: trace_point "replace_with_source_declared_trace_end" exact in application
+%% @stage_hierarchy {"stage_id":"replace_with_stage_id","action_id":"replace_with_action_id","phase_id":"replace_with_phase_id"}
+%% @activity {"id":"replace_with_activity_one","stage_id":"replace_with_stage_id","order":1,"name":"替换为细粒度活动一","description":"替换为该活动的执行语义"}
+%% @activity {"id":"replace_with_activity_two","stage_id":"replace_with_stage_id","order":2,"name":"替换为细粒度活动二","description":"替换为该活动的执行语义"}
+%% @activity_relation {"from":"replace_with_activity_one","to":"replace_with_activity_two","type":"sequence","description":"替换为关系依据"}
+%% @implementation {"stage_id":"replace_with_stage_id","activity_id":"replace_with_activity_one","order":1,"symbol":"ReplaceWithFunction","path":"src/replace.cpp","line":1,"relation":"entry"}
+
+graph LR
+    subgraph A1["动作 1 · 替换为用户动作"]
+        subgraph P1["替换为业务大阶段"]
+            subgraph S1["替换为阶段显示名"]
+                T1["替换为细粒度活动一"] --> T2["替换为细粒度活动二"]
+            end
+        end
+    end

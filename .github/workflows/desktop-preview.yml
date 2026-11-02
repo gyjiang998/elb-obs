@@ -1,0 +1,129 @@
+name: Desktop Workbench
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'desktop/**'
+      - 'tools/scenario_capture/**'
+      - 'backend/scenario_capture*.py'
+      - 'backend/local_capture_package.py'
+      - 'backend/pmu_sampler.py'
+      - 'backend/core.py'
+      - 'backend/platform_paths.py'
+      - 'package.json'
+      - '.github/workflows/desktop-preview.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'tools/scenario_capture/**'
+      - 'backend/scenario_capture*.py'
+      - 'backend/local_capture_package.py'
+      - 'backend/pmu_sampler.py'
+      - 'backend/core.py'
+      - 'backend/platform_paths.py'
+      - 'package.json'
+      - '.github/workflows/desktop-preview.yml'
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.15'
+      - name: Build from source with Windows PowerShell 5.1
+        shell: powershell
+        run: ./run-desktop.ps1 -BuildOnly
+      - name: Verify cached source build with PowerShell 7
+        shell: pwsh
+        run: ./run-desktop.ps1 -BuildOnly
+      - name: Use an installed Python without preparing the embedded runtime
+        shell: powershell
+        run: |
+          $env:HETERO_DESKTOP_PYTHON = ((& python -B -I -S -c "import json, sys; print(json.dumps(sys.executable, ensure_ascii=True))") | ConvertFrom-Json)
+          $env:HETERO_PYTHON_ARCHIVE = Join-Path $env:RUNNER_TEMP 'must-not-be-read.zip'
+          Remove-Item build/resources/python-win-x64 -Recurse -Force
+          try {
+            ./run-desktop.ps1 -BuildOnly
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if (Test-Path build/resources/python-win-x64/python.exe) { throw 'Source mode unexpectedly prepared embedded Python' }
+          } finally {
+            Remove-Item Env:HETERO_DESKTOP_PYTHON, Env:HETERO_PYTHON_ARCHIVE -ErrorAction SilentlyContinue
+          }
+      - name: Repair missing Electron marker without reinstalling npm packages
+        shell: pwsh
+        run: |
+          $before = (Get-FileHash build/downloads/source-packages.json).Hash
+          Remove-Item node_modules/electron/path.txt
+          ./run-desktop.ps1 -BuildOnly
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path node_modules/electron/path.txt)) { throw 'Electron path.txt was not restored' }
+          if ((Get-FileHash build/downloads/source-packages.json).Hash -ne $before) { throw 'Runtime repair unexpectedly reinstalled npm packages' }
+      - name: Recover Electron from an offline ZIP with network unavailable
+        shell: pwsh
+        run: |
+          $version = node -p "require('./node_modules/electron/package.json').version"
+          $cache = Join-Path $env:LOCALAPPDATA 'electron/Cache'
+          $archive = Get-ChildItem $cache -Filter "electron-v$version-win32-x64.zip" -Recurse | Select-Object -First 1
+          if (-not $archive) { throw 'Verified Electron archive was not cached' }
+          $offline = Join-Path $env:RUNNER_TEMP '离线运行时 cache'
+          New-Item -ItemType Directory -Force $offline | Out-Null
+          $env:HETERO_ELECTRON_ARCHIVE = Join-Path $offline $archive.Name
+          Copy-Item $archive.FullName $env:HETERO_ELECTRON_ARCHIVE
+          $before = (Get-FileHash build/downloads/source-packages.json).Hash
+          Remove-Item node_modules/electron/path.txt
+          $env:HTTP_PROXY = 'http://127.0.0.1:1'
+          $env:HTTPS_PROXY = 'http://127.0.0.1:1'
+          try {
+            ./run-desktop.ps1 -BuildOnly
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if (-not (Test-Path node_modules/electron/path.txt)) { throw 'Offline archive did not restore Electron' }
+            if ((Get-FileHash build/downloads/source-packages.json).Hash -ne $before) { throw 'Offline repair unexpectedly reinstalled npm packages' }
+          } finally {
+            Remove-Item Env:HETERO_ELECTRON_ARCHIVE, Env:HTTP_PROXY, Env:HTTPS_PROXY
+          }
+      - name: Recover Python from an offline ZIP with network unavailable
+        shell: pwsh
+        run: |
+          $archive = Get-Item build/downloads/python-3.13.17-embed-amd64.zip
+          $offline = Join-Path $env:RUNNER_TEMP '离线 Python 运行时'
+          New-Item -ItemType Directory -Force $offline | Out-Null
+          $env:HETERO_PYTHON_ARCHIVE = Join-Path $offline $archive.Name
+          Copy-Item $archive.FullName $env:HETERO_PYTHON_ARCHIVE
+          Remove-Item build/resources/python-win-x64 -Recurse -Force
+          $env:HTTP_PROXY = 'http://127.0.0.1:1'
+          $env:HTTPS_PROXY = 'http://127.0.0.1:1'
+          try {
+            ./run-desktop.ps1 -BuildOnly
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if (-not (Test-Path build/resources/python-win-x64/python.exe)) { throw 'Offline archive did not restore Python' }
+            if ((Get-FileHash $env:HETERO_PYTHON_ARCHIVE -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9e35319bffedab8b36ad44d8f377cb4f1733bcec257a0b6d04d94f01486ddb38') {
+              throw 'Offline Python archive changed during preparation'
+            }
+          } finally {
+            Remove-Item Env:HETERO_PYTHON_ARCHIVE, Env:HTTP_PROXY, Env:HTTPS_PROXY
+          }
+      - run: npm test
+      - name: Package with the embedded Python even when an invalid workstation override exists
+        shell: powershell
+        run: |
+          $env:HETERO_DESKTOP_PYTHON = 'Z:\must-not-run\python.exe'
+          ./run-desktop.ps1 -Package
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Heterogeneous-Workbench-Windows-x64
+          path: desktop/release/*.exe
+          if-no-files-found: error

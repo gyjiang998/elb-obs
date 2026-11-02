@@ -1,0 +1,26 @@
+{
+  "schema_version": "skill_profile_source/v1",
+  "profile_id": "agent-centric-page-three-stage-flow-2026-08-20",
+  "label_zh": "Agent-Centric 三阶段流程（推荐）",
+  "description_zh": "先发现候选与交付流程图，再独立识别、校验并回填 HiTrace start/end 锚点。",
+  "created_at": "2026-08-20T15:30:00Z",
+  "recommended": false,
+  "parent_profile_id": "agent-centric-page-fast-flow-2026-08-20",
+  "skills": {
+    "agent-runtime-orchestrator": {"version": "1.5.0", "prompt_slot": "agent_runtime", "prompt_mode": "replace", "source": "skills/agent-runtime-orchestrator/1.5.0.md"},
+    "page-agent-control": {"version": "5.3.0", "prompt_slot": "page_agent", "prompt_mode": "replace", "source": "skills/page-agent-control/5.3.0.md"},
+    "page-analysis-artifact-orchestrator": {"version": "3.2.0", "prompt_slot": "page_analysis", "prompt_mode": "replace", "source": "skills/page-analysis-artifact-orchestrator/3.2.0.md"},
+    "trace-hotspot-code-investigation": {"version": "1.0.0", "prompt_slot": "hotspot_investigation", "prompt_mode": "replace", "source": "skills/trace-hotspot-code-investigation/1.0.0.md", "label_zh": "Trace 热点代码深挖", "description_zh": "区分桩点锚点、源码候选与无采样热点假设，并沿调用路径选择最小优化核心。"},
+    "agent-native-device-experimentation": {"version": "4.3.0", "prompt_slot": "device_validation", "prompt_mode": "replace", "source": "skills/agent-native-device-experimentation/4.3.0.md"},
+    "application-execution-flow-reconstruction": {"version": "2.3.0", "prompt_slot": "application_flow", "prompt_mode": "replace", "source": "skills/application-execution-flow-reconstruction/2.3.0.md"},
+    "code-knowledge-analysis": {"version": "1.6.0", "prompt_slot": "code_knowledge", "prompt_mode": "replace", "source": "skills/code-knowledge-analysis/1.6.0.md"},
+    "custom-accelerator-api-kb-builder": {"version": "2.0.0", "prompt_slot": "custom_api_kb", "prompt_mode": "replace", "source": "skills/custom-accelerator-api-kb-builder/2.0.0.md"},
+    "hardware-semantic-routing-experiment": {"version": "3.1.0", "prompt_slot": "hardware_route", "prompt_mode": "replace", "source": "skills/hardware-semantic-routing-experiment/3.1.0.md"},
+    "full-optimization-analysis": {"version": "2.1.0", "prompt_slot": "full_analysis", "prompt_mode": "replace", "source": "skills/full-optimization-analysis/2.1.0.md"},
+    "strategy-kb-rag": {"version": "2.0.0", "prompt_slot": "strategy_kb_rag", "prompt_mode": "replace", "source": "skills/strategy-kb-rag/2.0.0.md"},
+    "strategy-hardware-kb": {"version": "3.2.0", "prompt_slot": "strategy_hardware_kb", "prompt_mode": "replace", "source": "skills/strategy-hardware-kb/3.2.0.md"},
+    "strategy-direct-baseline": {"version": "2.0.0", "prompt_slot": "strategy_direct_baseline", "prompt_mode": "replace", "source": "skills/strategy-direct-baseline/2.0.0.md"},
+    "blind-opportunity-analysis": {"version": "2.1.0", "prompt_slot": "blind_reasoning", "prompt_mode": "replace", "source": "skills/blind-opportunity-analysis/2.1.0.md"},
+    "blind-flow-comparison": {"version": "2.0.0", "prompt_slot": "blind_comparison", "prompt_mode": "replace", "source": "skills/blind-flow-comparison/2.0.0.md"}
+  }
+}

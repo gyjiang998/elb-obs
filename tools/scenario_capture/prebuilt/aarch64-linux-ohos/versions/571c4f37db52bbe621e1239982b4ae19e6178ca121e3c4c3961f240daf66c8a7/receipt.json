@@ -1,0 +1,34 @@
+{
+  "binary_bytes": 25248,
+  "binary_sha256": "571c4f37db52bbe621e1239982b4ae19e6178ca121e3c4c3961f240daf66c8a7",
+  "built_at": "2026-10-23T01:10:54.335733+00:00",
+  "command": [
+    "clang",
+    "--target=aarch64-linux-ohos",
+    "--sysroot=<OPENHARMONY_NATIVE_SDK>/sysroot",
+    "-O2",
+    "-std=c11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "thread_pmu_sampler.c",
+    "-o",
+    "thread_pmu_sampler"
+  ],
+  "compiler": {
+    "path": "clang",
+    "sha256": "82b38b6a12bc0e782afdf8f429fc46fa50a35b16e8ec8a3f1290bccb7079165c",
+    "version": "OHOS (dev) clang version 12.0.1 (llvm-project 1971c85d809b8dd102ede1ec71208518a9b0f68e)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: <OPENHARMONY_NATIVE_SDK>/llvm/bin"
+  },
+  "elf": {
+    "class": "ELF64",
+    "endianness": "little",
+    "interpreter": "/lib/ld-musl-aarch64.so.1",
+    "machine": "AArch64"
+  },
+  "sampler_version": "1.2.0",
+  "schema_version": "pmu_sampler_build/v1",
+  "source": "thread_pmu_sampler.c",
+  "source_sha256": "8e8526bf37d5034b75c5fa1ddaf96f0cfa748f9182512d7c6b3fb527a28d6ea4",
+  "target": "aarch64-linux-ohos"
+}

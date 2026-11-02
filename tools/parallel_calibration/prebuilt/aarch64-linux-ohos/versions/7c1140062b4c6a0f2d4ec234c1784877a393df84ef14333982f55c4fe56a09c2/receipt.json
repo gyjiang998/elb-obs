@@ -1,0 +1,28 @@
+{
+  "binary_bytes": 69480,
+  "binary_sha256": "7c1140062b4c6a0f2d4ec234c1784877a393df84ef14333982f55c4fe56a09c2",
+  "built_at": "2026-10-30T07:34:32.918164+00:00",
+  "command": [
+    "clang",
+    "--target=aarch64-linux-ohos",
+    "--sysroot=<OPENHARMONY_NATIVE_SDK>/sysroot",
+    "-O2",
+    "-std=c11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-pthread",
+    "benchmark.c",
+    "-o",
+    "parallel_calibration_benchmark"
+  ],
+  "compiler": {
+    "name": "clang",
+    "sha256": "379d205ed3e46f82439dc5fd1c5b56dd313626a6bff929475664d4d62dbe514c",
+    "version": "OHOS (dev) clang version 15.0.4 (llvm-project feef13a36e78b7a2ff3e9e3f180a958f2782be1e)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: <OPENHARMONY_NATIVE_SDK>/llvm/bin"
+  },
+  "schema_version": "parallel_calibration_benchmark_build/v1",
+  "source": "benchmark.c",
+  "source_sha256": "eb5a6dd01f26341d6c25e45226175228af24f1f7ca9948fc88bf9e269e41c37d",
+  "target": "aarch64-linux-ohos"
+}

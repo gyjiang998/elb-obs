@@ -1,0 +1,54 @@
+{
+  "artifact_type": "heterogeneous_kb_manifest",
+  "schema_version": "1.0",
+  "kb_id": "openharmony_heterogeneous_optimization",
+  "kb_version": "0.3.0",
+  "source_revision": "workspace-unpinned",
+  "owners": [
+    {
+      "role": "knowledge_base_maintainer",
+      "team": "UNASSIGNED"
+    }
+  ],
+  "build_tool": {
+    "name": "build_heterogeneous_kb.py",
+    "version": "1.1.0"
+  },
+  "layers": [
+    {
+      "path": "code_signature_patterns.json",
+      "record_count": 5,
+      "sha256": "f90956d3ae5ac897946a1e7a93626daf5bc23256a8eb4ab089e64f83e227ff70"
+    },
+    {
+      "path": "algorithm_hardware_mapping.json",
+      "record_count": 5,
+      "sha256": "53ba3e4c721bf67bcdd20443c8ceb641fd366724de3429c1b9355546a25d0630"
+    },
+    {
+      "path": "hardware_capabilities.json",
+      "record_count": 14,
+      "sha256": "ac42e1c4fc22986cf32ee5de681f62465aec58d0bfd583e08ad6de0a862569aa"
+    },
+    {
+      "path": "cost_models.json",
+      "record_count": 3,
+      "sha256": "697f5ac5a7b229bed99a52e312390689d3358361b636034b6ba3095778722b1c"
+    },
+    {
+      "path": "fallback_pairs.json",
+      "record_count": 2,
+      "sha256": "59299ff925905b56e6d4ca819469da6bfee41c8b6ab24a7c1dd28ddbc3755e0e"
+    },
+    {
+      "path": "existing_heterogeneous_implementation_cases.json",
+      "record_count": 163,
+      "sha256": "7c2c7f44c82b95fa7010ea7a8af77c5ccadf3471884168e2c3a78342a90a1ddb"
+    },
+    {
+      "path": "runtime_hotspot_rules.json",
+      "record_count": 2,
+      "sha256": "ea901efdb33cd6b6a18aabbea352292202c1f53659a377f9afd47db68348c667"
+    }
+  ]
+}

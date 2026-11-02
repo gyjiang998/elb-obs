@@ -1,0 +1,4581 @@
+{
+  "catalog": {
+    "schema_version": "workload_features_catalog/v1",
+    "engine_version": "1.2.0",
+    "classes": [
+      {
+        "id": "compute",
+        "name": "计算主导候选"
+      },
+      {
+        "id": "memory",
+        "name": "访存压力候选"
+      },
+      {
+        "id": "mixed",
+        "name": "混合特征"
+      },
+      {
+        "id": "service",
+        "name": "系统服务等待"
+      },
+      {
+        "id": "scheduler",
+        "name": "调度等待"
+      },
+      {
+        "id": "unknown",
+        "name": "证据不足"
+      }
+    ],
+    "classification_rules": {
+      "version": "conservative-stage-rules/v1",
+      "minimum_cpu_share": 0.7,
+      "compute_min_ipc": 1.0,
+      "compute_max_llc_mpki": 5.0,
+      "memory_max_ipc": 1.0,
+      "memory_min_llc_mpki": 20.0,
+      "dominant_wait_share": 0.3,
+      "meaning": "候选分型阈值；依赖阶段计数边界与已核验 LLC 事件。不是芯片通用瓶颈阈值，也不是并行收益模型。"
+    },
+    "feature_groups": [
+      {
+        "id": "compute",
+        "name": "计算特征",
+        "metrics": [
+          "instructions",
+          "cycles",
+          "IPC",
+          "branch misses"
+        ]
+      },
+      {
+        "id": "memory",
+        "name": "访存特征",
+        "metrics": [
+          "cache misses",
+          "LLC MPKI",
+          "loads / stores",
+          "DRAM bytes"
+        ]
+      },
+      {
+        "id": "scheduling",
+        "name": "调度与服务",
+        "metrics": [
+          "CPU / runnable / blocked",
+          "Binder",
+          "核心驻留 / 迁移",
+          "I/O bytes"
+        ]
+      }
+    ],
+    "measurement_contract": {
+      "schema_version": "workload_stage_measurements/v1",
+      "dataset_id": "当前数据集 ID",
+      "hardware_profile_id": "与数据集一致（未绑定硬件时为 null）",
+      "clock_domain": "trace_monotonic",
+      "clock_alignment_evidence": "同轮时钟同步标记或逐阶段探针记录",
+      "provenance": {
+        "source": "原始文件 / 采集记录",
+        "run_id": "同轮采集 ID",
+        "collector": "采集工具与版本"
+      },
+      "stages": [
+        {
+          "stage_id": "build_00",
+          "start_ns": "精确阶段起点",
+          "end_ns": "精确阶段终点",
+          "tid": "目标线程",
+          "measurement_scope": "thread_user",
+          "counters": {
+            "instructions": {
+              "value": "实测计数",
+              "unit": "count",
+              "event": "硬件事件名 / 编码"
+            },
+            "llc_misses": {
+              "value": "实测计数",
+              "unit": "count",
+              "event": "已核验 LLC 事件名 / 编码"
+            }
+          },
+          "event_mapping": {
+            "llc_misses": {
+              "verified": true,
+              "cache_level": "LLC",
+              "event": "与 counters.llc_misses.event 完全相同"
+            }
+          }
+        }
+      ],
+      "supported_counters": {
+        "instructions": "count",
+        "cycles": "count",
+        "cache_references": "count",
+        "cache_misses": "count",
+        "llc_misses": "count",
+        "loads": "count",
+        "stores": "count",
+        "branch_instructions": "count",
+        "branch_misses": "count",
+        "memory_stall_cycles": "count",
+        "dram_bytes": "bytes",
+        "io_read_bytes": "bytes",
+        "io_write_bytes": "bytes",
+        "l1d_accesses": "count",
+        "l1d_misses": "count",
+        "llc_accesses": "count",
+        "dtlb_accesses": "count",
+        "dtlb_misses": "count",
+        "stalled_frontend": "count",
+        "stalled_backend": "count"
+      }
+    },
+    "notes": [
+      "阶段顺序与并行建模共享 BuildItem 边界和 ID。",
+      "主数值按同线程采样窗口的墙钟重叠比例估算，原始边界与覆盖单独保留。",
+      "估算假设窗口内计数均匀分布；未覆盖时间不外推，缺失指标保留 null。",
+      "IPC / MPKI 使用同组同窗口计数；估值不自动提升分型或校准置信度。",
+      "I/O 阻塞不由普通 blocked 状态推断；未采集时保留缺失。"
+    ]
+  },
+  "datasets": [
+    {
+      "schema_version": "parallel_modeling_dataset/v1",
+      "id": "ds_7d10f1336213311b8a95e81b",
+      "name": "多组复用",
+      "created_at": "2026-10-23T02:15:48Z",
+      "status": "ready",
+      "source_kind": "trace_text",
+      "hardware_profile_id": "kirin-gallery-reference-v1",
+      "summary": {
+        "duration_ms": 5.0,
+        "builditem_count": 1,
+        "service_call_count": 0,
+        "tid": 10,
+        "vsync_id": 1,
+        "endpoint": "ui_callback"
+      },
+      "provenance": {
+        "source_kind": "trace_text",
+        "data_kind": "measured",
+        "endpoint": "ui_callback",
+        "selection": {
+          "target_tid": 10,
+          "target_vsync_id": 1,
+          "rule": "longest_complete_callback_with_BuildItem",
+          "candidate_vsync_ids": [
+            1
+          ],
+          "trace_sha256": "5bdf8136ebf11ef467bb710d221d93ac74a4dc65b4db723b3f0046003a5aa84b"
+        }
+      },
+      "quality": {
+        "input_partition_valid": true,
+        "pmu": {
+          "sample_count": 70,
+          "retained_sample_count": 70,
+          "analysis_window_ns": [
+            1001000000,
+            1006000000
+          ],
+          "statistics_scope": "selected_callback_with_boundary_snapshots",
+          "median_period_us": 500.0,
+          "max_period_us": 500.0,
+          "median_read_us": 1.0,
+          "max_read_us": 1.0,
+          "rejected_bins": {},
+          "clock_verified_with_marker": true,
+          "clock_markers": [
+            {
+              "line": 2,
+              "ns": 1000500000,
+              "tid": 10,
+              "cpu": 0,
+              "event": "tracing_mark_write",
+              "interrupt_context": false,
+              "body": "PMU_CLOCK_SYNC|1000500000",
+              "comm": "app"
+            }
+          ],
+          "groups": {
+            "base": {
+              "id": "base",
+              "event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "requested_event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "status": "active",
+              "unavailable_events": [],
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "cache": {
+              "id": "cache",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "generic_cache_references",
+                "generic_cache_misses"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "branch": {
+              "id": "branch",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "branch_instructions",
+                "branch_misses"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "stall": {
+              "id": "stall",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "stalled_frontend",
+                "stalled_backend"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "l1d": {
+              "id": "l1d",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "l1d_read_access",
+                "l1d_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "llc": {
+              "id": "llc",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "llc_read_access",
+                "llc_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            },
+            "dtlb": {
+              "id": "dtlb",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "dtlb_read_access",
+                "dtlb_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 10,
+              "retained_sample_count": 10,
+              "rejected_bins": {},
+              "median_period_us": 500.0,
+              "multiplexed_bins": 9,
+              "zero_increment_events": []
+            }
+          },
+          "schema_version": "thread_pmu_capture/v2",
+          "scope": "target_thread_user_only_no_inherit",
+          "zero_increment_events": [],
+          "branch_semantics_warning": false
+        },
+        "scheduler_unknown_ms": 0,
+        "parse_warnings": {
+          "unclosed_main_begin": 0
+        },
+        "unresolved_binder_calls": 0,
+        "hardware_identity_verified": false,
+        "prediction_applicability": "explicit_reference_profile_transfer_without_application_validation",
+        "can_search": true
+      },
+      "artifacts": []
+    },
+    {
+      "schema_version": "parallel_modeling_dataset/v1",
+      "id": "ds_e02b8c62cfe94a5d8c5a6fd9",
+      "name": "边界包络",
+      "created_at": "2026-10-23T02:15:48Z",
+      "status": "ready",
+      "source_kind": "trace_text",
+      "hardware_profile_id": "kirin-gallery-reference-v1",
+      "summary": {
+        "duration_ms": 5.0,
+        "builditem_count": 1,
+        "service_call_count": 0,
+        "tid": 10,
+        "vsync_id": 1,
+        "endpoint": "ui_callback"
+      },
+      "provenance": {
+        "source_kind": "trace_text",
+        "data_kind": "measured",
+        "endpoint": "ui_callback",
+        "selection": {
+          "target_tid": 10,
+          "target_vsync_id": 1,
+          "rule": "longest_complete_callback_with_BuildItem",
+          "candidate_vsync_ids": [
+            1
+          ],
+          "trace_sha256": "f2e1ecf5f259a28ba443bbe7a95aedfb62e339b0048ced664d5d4632f6ff9de2"
+        }
+      },
+      "quality": {
+        "input_partition_valid": true,
+        "pmu": {
+          "sample_count": 14,
+          "retained_sample_count": 14,
+          "analysis_window_ns": [
+            1001000000,
+            1006000000
+          ],
+          "statistics_scope": "selected_callback_with_boundary_snapshots",
+          "median_period_us": 30926.656,
+          "max_period_us": 30926.656,
+          "median_read_us": 1.0,
+          "max_read_us": 1.0,
+          "rejected_bins": {},
+          "clock_verified_with_marker": true,
+          "clock_markers": [
+            {
+              "line": 2,
+              "ns": 1000500000,
+              "tid": 10,
+              "cpu": 0,
+              "event": "tracing_mark_write",
+              "interrupt_context": false,
+              "body": "PMU_CLOCK_SYNC|1000500000",
+              "comm": "app"
+            }
+          ],
+          "groups": {
+            "base": {
+              "id": "base",
+              "event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "requested_event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "status": "active",
+              "unavailable_events": [],
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "cache": {
+              "id": "cache",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "generic_cache_references",
+                "generic_cache_misses"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "branch": {
+              "id": "branch",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "branch_instructions",
+                "branch_misses"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "stall": {
+              "id": "stall",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "stalled_frontend",
+                "stalled_backend"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "l1d": {
+              "id": "l1d",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "l1d_read_access",
+                "l1d_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "llc": {
+              "id": "llc",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "llc_read_access",
+                "llc_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            },
+            "dtlb": {
+              "id": "dtlb",
+              "event_names": [
+                "cycles",
+                "instructions",
+                "dtlb_read_access",
+                "dtlb_read_misses"
+              ],
+              "status": "active",
+              "sample_count": 2,
+              "retained_sample_count": 2,
+              "rejected_bins": {},
+              "median_period_us": 30926.656,
+              "multiplexed_bins": 0,
+              "zero_increment_events": []
+            }
+          },
+          "schema_version": "thread_pmu_capture/v2",
+          "scope": "target_thread_user_only_no_inherit",
+          "zero_increment_events": [],
+          "branch_semantics_warning": false
+        },
+        "scheduler_unknown_ms": 0,
+        "parse_warnings": {
+          "unclosed_main_begin": 0
+        },
+        "unresolved_binder_calls": 0,
+        "hardware_identity_verified": false,
+        "prediction_applicability": "explicit_reference_profile_transfer_without_application_validation",
+        "can_search": true
+      },
+      "artifacts": []
+    }
+  ],
+  "profiles": [
+    {
+      "schema_version": "workload_feature_profile/v1",
+      "id": "wf_679adb5c100113fc05b01e69",
+      "name": "多组复用 · 负载特征",
+      "created_at": "2026-10-23T02:15:48Z",
+      "engine_version": "1.2.0",
+      "dataset_id": "ds_7d10f1336213311b8a95e81b",
+      "dataset_fingerprint": "3c6c56aa89065687e3065de3419fa7788a1bbc670319fe2f803dce1dd95d8360",
+      "hardware_profile_id": "kirin-gallery-reference-v1",
+      "endpoint": "ui_callback",
+      "status": "completed",
+      "stages": [
+        {
+          "id": "build_00",
+          "name": "Widget",
+          "display_id": "B01",
+          "start_ns": 1002000000,
+          "end_ns": 1004000000,
+          "source_line": 4,
+          "relative_start_ms": 1.0,
+          "wall_ms": 2.0,
+          "cpu_ms": 1.6,
+          "states_ms": {
+            "on_cpu": 1.6,
+            "runnable": 0.4,
+            "blocked": 0,
+            "unknown": 0
+          },
+          "time_breakdown": {
+            "partition_ms": {
+              "running": 1.6,
+              "preempted_wait": 0.2,
+              "runnable_other": 0.2,
+              "blocked": 0,
+              "unknown": 0
+            },
+            "runnable_total_ms": 0.4,
+            "preemption_evidence_available": true,
+            "preemption_event_count": 1,
+            "notes": [
+              "Interrupted 为 R+ 证据确认的抢占后等核，是 Runnable 子集；普通 R 不证明抢占。",
+              "Running 是调度驻留时间，可包含内核及中断；PMU 仅统计目标线程用户态。",
+              "Blocked 包含睡眠和同步服务等待；S / D 状态本身不能证明 I/O 原因。"
+            ],
+            "irq_overlap_ms": 0.1,
+            "irq_evidence_complete": true,
+            "softirq_overlap_ms": null,
+            "softirq_evidence_complete": false
+          },
+          "metric_evidence": {
+            "instructions": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 16000.0,
+              "interior_estimate": 12000.0,
+              "observed_counter_bounds": [
+                3000,
+                5000
+              ],
+              "unit": "count"
+            },
+            "cycles": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 8000.0,
+              "interior_estimate": 6000.0,
+              "observed_counter_bounds": [
+                1500,
+                2500
+              ],
+              "unit": "count"
+            },
+            "ipc": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 2.0,
+              "interior_estimate": 2.0,
+              "observed_counter_bounds": null,
+              "unit": "ratio"
+            },
+            "branch_misses": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "branch_instructions": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "branch_mpki": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 100.0,
+              "interior_estimate": 100.0,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "cache_misses": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "cache_references": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 640.0,
+              "interior_estimate": 480.0,
+              "observed_counter_bounds": [
+                120,
+                200
+              ],
+              "unit": "count"
+            },
+            "cache_mpki": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 100.0,
+              "interior_estimate": 100.0,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "dtlb_accesses": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "dtlb_misses": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "dtlb_mpki": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 100.0,
+              "interior_estimate": 100.0,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "l1d_accesses": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "l1d_misses": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "l1d_mpki": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 100.0,
+              "interior_estimate": 100.0,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "llc_misses": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count",
+              "hardware_mapping_verified": false
+            },
+            "llc_accesses": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count",
+              "hardware_mapping_verified": false
+            },
+            "llc_mpki": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 100.0,
+              "interior_estimate": 100.0,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst",
+              "hardware_mapping_verified": false
+            },
+            "stalled_frontend": {
+              "group_id": "stall",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "stalled_backend": {
+              "group_id": "stall",
+              "time_coverage": 1.0,
+              "runtime_coverage": 0.25,
+              "interior_time_coverage": 0.7485,
+              "interior_bins": 3,
+              "boundary_bins": 2,
+              "max_boundary_span_us": 501.0,
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 5,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 320.0,
+              "interior_estimate": 240.0,
+              "observed_counter_bounds": [
+                60,
+                100
+              ],
+              "unit": "count"
+            },
+            "loads": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "stores": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "memory_stall_cycles": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "dram_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_read_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_write_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            }
+          },
+          "compute": {
+            "instructions": null,
+            "cycles": null,
+            "branch_instructions": null,
+            "branch_misses": null,
+            "ipc": null,
+            "ipc_bounds": null,
+            "interior_ipc": 2.0,
+            "instruction_bounds": null,
+            "cycle_bounds": null
+          },
+          "memory": {
+            "cache_misses": null,
+            "cache_references": null,
+            "llc_misses": null,
+            "loads": null,
+            "stores": null,
+            "dram_bytes": null,
+            "memory_stall_cycles": null,
+            "cache_miss_bounds": null,
+            "llc_mpki": null,
+            "llc_mpki_bounds": null,
+            "cache_mpki_bounds": null,
+            "llc_mapping_verified": false
+          },
+          "scheduling": {
+            "runnable_ms": 0.4,
+            "blocked_ms": 0,
+            "binder_blocked_ms": 0.0,
+            "other_wait_ms": 0,
+            "service_cpu_ms": 0,
+            "service_residence_ms": 0,
+            "service_calls": 0,
+            "services": [],
+            "io_read_bytes": null,
+            "io_write_bytes": null,
+            "io_wait_ms": null,
+            "wakeup_count": 0,
+            "cpu_migrations": 0,
+            "cpu_residency": [
+              {
+                "cpu": 0,
+                "frequency_khz": null,
+                "cpu_ms": 1.6
+              }
+            ]
+          },
+          "classification": {
+            "id": "unknown",
+            "name": "证据不足",
+            "method": "conservative-stage-rules/v1",
+            "status": "candidate",
+            "evidence": [
+              "PMU 事件组存在复用；先按同组 enabled/running 校正，再分配已覆盖窗口内的计数，不能视为精确实测值或保守上界。",
+              "单值按采样窗口与阶段的墙钟时间重叠比例估算，假设计数在窗口内均匀分布；未覆盖时间不外推，100% 时间覆盖不等于精确归因。",
+              "阶段边界或 PMU 运行覆盖不足，计算 / 访存分型保留未知。"
+            ],
+            "parallel_implication": "需结合核组、频点与共跑组合实测校准；分型本身不保证并行收益。"
+          },
+          "workload_class": "unknown",
+          "quality": {
+            "pmu_usable": false,
+            "pmu_source": "trace_aligned_time_weighted_estimates",
+            "pmu_scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+            "missing_counters": [
+              "instructions",
+              "cycles",
+              "cache_references",
+              "cache_misses",
+              "llc_misses",
+              "loads",
+              "stores",
+              "branch_instructions",
+              "branch_misses",
+              "memory_stall_cycles",
+              "dram_bytes",
+              "io_read_bytes",
+              "io_write_bytes",
+              "l1d_accesses",
+              "l1d_misses",
+              "llc_accesses",
+              "dtlb_accesses",
+              "dtlb_misses",
+              "stalled_frontend",
+              "stalled_backend"
+            ],
+            "reasons": [
+              "PMU 事件组存在复用；先按同组 enabled/running 校正，再分配已覆盖窗口内的计数，不能视为精确实测值或保守上界。",
+              "单值按采样窗口与阶段的墙钟时间重叠比例估算，假设计数在窗口内均匀分布；未覆盖时间不外推，100% 时间覆盖不等于精确归因。",
+              "阶段边界或 PMU 运行覆盖不足，计算 / 访存分型保留未知。"
+            ],
+            "status": "partial"
+          },
+          "evidence": {
+            "request_ids": [],
+            "measurement": null,
+            "pmu": {
+              "boundary_bins": 2,
+              "bounds_valid": false,
+              "estimate_scope": "interior_only",
+              "estimate_time_fraction": 0.7485,
+              "event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "evidence_version": "grouped_stage_pmu/v3",
+              "feature_usable_under_25pct_instruction_boundary_rule": false,
+              "group_id": "base",
+              "groups": {
+                "base": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "base",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 6000.0,
+                    "instructions": 12000.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 1500,
+                    "instructions": 3000
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 2500,
+                    "instructions": 5000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 8000.0,
+                    "instructions": 16000.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "branch": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "branch_instructions",
+                    "branch_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "branch",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "branch_instructions": 240.0,
+                    "branch_misses": 240.0,
+                    "cycles": 1200.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "branch_instructions": 60,
+                    "branch_misses": 60,
+                    "cycles": 300,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "branch_instructions": 100,
+                    "branch_misses": 100,
+                    "cycles": 500,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "branch_instructions": 320.0,
+                    "branch_misses": 320.0,
+                    "cycles": 1600.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "cache": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "generic_cache_references",
+                    "generic_cache_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "cache",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "generic_cache_misses": 240.0,
+                    "generic_cache_references": 480.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "generic_cache_misses": 60,
+                    "generic_cache_references": 120,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "generic_cache_misses": 100,
+                    "generic_cache_references": 200,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "generic_cache_misses": 320.0,
+                    "generic_cache_references": 640.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "dtlb": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "dtlb_read_access",
+                    "dtlb_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "dtlb",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "dtlb_read_access": 240.0,
+                    "dtlb_read_misses": 240.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "dtlb_read_access": 60,
+                    "dtlb_read_misses": 60,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "dtlb_read_access": 100,
+                    "dtlb_read_misses": 100,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "dtlb_read_access": 320.0,
+                    "dtlb_read_misses": 320.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "l1d": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "l1d_read_access",
+                    "l1d_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "l1d",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "l1d_read_access": 240.0,
+                    "l1d_read_misses": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "l1d_read_access": 60,
+                    "l1d_read_misses": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "l1d_read_access": 100,
+                    "l1d_read_misses": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "l1d_read_access": 320.0,
+                    "l1d_read_misses": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "llc": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "llc_read_access",
+                    "llc_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "llc",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "llc_read_access": 240.0,
+                    "llc_read_misses": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "llc_read_access": 60,
+                    "llc_read_misses": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "llc_read_access": 100,
+                    "llc_read_misses": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "llc_read_access": 320.0,
+                    "llc_read_misses": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "stall": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "stalled_frontend",
+                    "stalled_backend"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "stall",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "stalled_backend": 240.0,
+                    "stalled_frontend": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "stalled_backend": 60,
+                    "stalled_frontend": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "stalled_backend": 100,
+                    "stalled_frontend": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "stalled_backend": 320.0,
+                    "stalled_frontend": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                }
+              },
+              "interior_bins": 3,
+              "interior_estimates": {
+                "cycles": 6000.0,
+                "instructions": 12000.0
+              },
+              "interior_ipc": 2.0,
+              "interior_time_fraction": 0.7485,
+              "intersecting_bins": 5,
+              "lower": null,
+              "max_intersecting_snapshot_span_us": 501.0,
+              "observed_counter_bounds_valid": true,
+              "observed_counter_lower": {
+                "cycles": 1500,
+                "instructions": 3000
+              },
+              "observed_counter_upper": {
+                "cycles": 2500,
+                "instructions": 5000
+              },
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "runtime_coverage": 0.25,
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "time_weighted_estimates": {
+                "cycles": 8000.0,
+                "instructions": 16000.0
+              },
+              "unavailable_events": [],
+              "upper": null,
+              "weighted_bins": 5,
+              "weighted_estimate_method": "wall_time_overlap",
+              "weighted_estimate_scope": "covered_stage_window",
+              "weighted_runtime_coverage": 0.25,
+              "weighted_time_coverage": 1.0
+            }
+          }
+        }
+      ],
+      "component_classes": {
+        "build_00": "unknown"
+      },
+      "summary": {
+        "stage_count": 1,
+        "duration_ms": 5.0,
+        "stage_wall_ms": 2.0,
+        "stage_cpu_ms": 1.6,
+        "non_builditem_ms": 3.0,
+        "pmu_usable_stages": 0,
+        "classified_cpu_stages": 0,
+        "class_counts": {
+          "unknown": 1
+        }
+      },
+      "quality": {
+        "status": "partial",
+        "hardware_identity_verified": false,
+        "classification_is_candidate": true,
+        "notes": [
+          "阶段顺序与并行建模共享 BuildItem 边界和 ID。",
+          "主数值按同线程采样窗口的墙钟重叠比例估算，原始边界与覆盖单独保留。",
+          "估算假设窗口内计数均匀分布；未覆盖时间不外推，缺失指标保留 null。",
+          "IPC / MPKI 使用同组同窗口计数；估值不自动提升分型或校准置信度。",
+          "I/O 阻塞不由普通 blocked 状态推断；未采集时保留缺失。"
+        ]
+      },
+      "provenance": {
+        "dataset": {
+          "data_kind": "measured",
+          "endpoint": "ui_callback",
+          "selection": {
+            "candidate_vsync_ids": [
+              1
+            ],
+            "rule": "longest_complete_callback_with_BuildItem",
+            "target_tid": 10,
+            "target_vsync_id": 1,
+            "trace_sha256": "5bdf8136ebf11ef467bb710d221d93ac74a4dc65b4db723b3f0046003a5aa84b"
+          },
+          "source_kind": "trace_text"
+        },
+        "dataset_fingerprint": "3c6c56aa89065687e3065de3419fa7788a1bbc670319fe2f803dce1dd95d8360",
+        "classification_rules": {
+          "version": "conservative-stage-rules/v1",
+          "minimum_cpu_share": 0.7,
+          "compute_min_ipc": 1.0,
+          "compute_max_llc_mpki": 5.0,
+          "memory_max_ipc": 1.0,
+          "memory_min_llc_mpki": 20.0,
+          "dominant_wait_share": 0.3,
+          "meaning": "候选分型阈值；依赖阶段计数边界与已核验 LLC 事件。不是芯片通用瓶颈阈值，也不是并行收益模型。"
+        },
+        "measurements": null,
+        "pmu_estimate_rebuild": {
+          "status": "stored_evidence"
+        },
+        "measurement_sha256": null,
+        "measurement_verification": "同线程同钟采样窗口墙钟重叠估算；保留 PMU 保守区间，不将估值视为精确测量。"
+      },
+      "profile_sha256": "c2a0687cfbf5fd66ac5778157d5a8c44a92a38abe9aa7fd4ba6437b13a477341"
+    },
+    {
+      "schema_version": "workload_feature_profile/v1",
+      "id": "wf_11d7736d4f71a5e57b32d73e",
+      "name": "边界包络 · 负载特征",
+      "created_at": "2026-10-23T02:15:48Z",
+      "engine_version": "1.2.0",
+      "dataset_id": "ds_e02b8c62cfe94a5d8c5a6fd9",
+      "dataset_fingerprint": "ab6cf7ed9a684d5cba5190992499d8ecdf6d89d40e31127b49ad42297f112d28",
+      "hardware_profile_id": "kirin-gallery-reference-v1",
+      "endpoint": "ui_callback",
+      "status": "completed",
+      "stages": [
+        {
+          "id": "build_00",
+          "name": "Widget",
+          "display_id": "B01",
+          "start_ns": 1002000000,
+          "end_ns": 1002176000,
+          "source_line": 4,
+          "relative_start_ms": 1.0,
+          "wall_ms": 0.176,
+          "cpu_ms": 0.176,
+          "states_ms": {
+            "on_cpu": 0.176,
+            "runnable": 0,
+            "blocked": 0,
+            "unknown": 0
+          },
+          "time_breakdown": {
+            "partition_ms": {
+              "running": 0.176,
+              "preempted_wait": 0,
+              "runnable_other": 0,
+              "blocked": 0,
+              "unknown": 0
+            },
+            "runnable_total_ms": 0,
+            "preemption_evidence_available": false,
+            "preemption_event_count": null,
+            "notes": [
+              "Interrupted 为 R+ 证据确认的抢占后等核，是 Runnable 子集；普通 R 不证明抢占。",
+              "Running 是调度驻留时间，可包含内核及中断；PMU 仅统计目标线程用户态。",
+              "Blocked 包含睡眠和同步服务等待；S / D 状态本身不能证明 I/O 原因。"
+            ],
+            "irq_overlap_ms": 0.076,
+            "irq_evidence_complete": true,
+            "softirq_overlap_ms": null,
+            "softirq_evidence_complete": false
+          },
+          "metric_evidence": {
+            "instructions": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                50391782
+              ],
+              "estimate": 286773.7666820493,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                50391782
+              ],
+              "unit": "count"
+            },
+            "cycles": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                25195891
+              ],
+              "estimate": 143386.88334102466,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                25195891
+              ],
+              "unit": "count"
+            },
+            "ipc": {
+              "group_id": "base",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 2.0,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "ratio"
+            },
+            "branch_misses": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "branch_instructions": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "branch_mpki": {
+              "group_id": "branch",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 0.00039689011196309743,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "cache_misses": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "cache_references": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                40
+              ],
+              "estimate": 0.22763534473303548,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                40
+              ],
+              "unit": "count"
+            },
+            "cache_mpki": {
+              "group_id": "cache",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 0.00039689011196309743,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "dtlb_accesses": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "dtlb_misses": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "dtlb_mpki": {
+              "group_id": "dtlb",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 0.00039689011196309743,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "l1d_accesses": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "l1d_misses": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "l1d_mpki": {
+              "group_id": "l1d",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 0.00039689011196309743,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst"
+            },
+            "llc_misses": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count",
+              "hardware_mapping_verified": false
+            },
+            "llc_accesses": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count",
+              "hardware_mapping_verified": false
+            },
+            "llc_mpki": {
+              "group_id": "llc",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated",
+                "hardware_llc_mapping_unverified"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": null,
+              "estimate": 0.00039689011196309743,
+              "interior_estimate": null,
+              "observed_counter_bounds": null,
+              "unit": "per_kinst",
+              "hardware_mapping_verified": false
+            },
+            "stalled_frontend": {
+              "group_id": "stall",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "stalled_backend": {
+              "group_id": "stall",
+              "time_coverage": 1.0,
+              "runtime_coverage": 1.0,
+              "interior_time_coverage": 0.0,
+              "interior_bins": 0,
+              "boundary_bins": 1,
+              "max_boundary_span_us": 30927.656,
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption",
+                "boundary_dominated"
+              ],
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "estimate_scope": "covered_stage_window",
+              "estimate_method": "wall_time_overlap",
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "weighted_bins": 1,
+              "status": "estimated",
+              "exact": null,
+              "bounds": [
+                0,
+                20
+              ],
+              "estimate": 0.11381767236651774,
+              "interior_estimate": null,
+              "observed_counter_bounds": [
+                0,
+                20
+              ],
+              "unit": "count"
+            },
+            "loads": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "stores": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "memory_stall_cycles": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "dram_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_read_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_write_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            }
+          },
+          "compute": {
+            "instructions": null,
+            "cycles": null,
+            "branch_instructions": null,
+            "branch_misses": null,
+            "ipc": null,
+            "ipc_bounds": null,
+            "interior_ipc": null,
+            "instruction_bounds": [
+              0,
+              50391782
+            ],
+            "cycle_bounds": [
+              0,
+              25195891
+            ]
+          },
+          "memory": {
+            "cache_misses": null,
+            "cache_references": null,
+            "llc_misses": null,
+            "loads": null,
+            "stores": null,
+            "dram_bytes": null,
+            "memory_stall_cycles": null,
+            "cache_miss_bounds": [
+              0,
+              20
+            ],
+            "llc_mpki": null,
+            "llc_mpki_bounds": null,
+            "cache_mpki_bounds": null,
+            "llc_mapping_verified": false
+          },
+          "scheduling": {
+            "runnable_ms": 0,
+            "blocked_ms": 0,
+            "binder_blocked_ms": 0.0,
+            "other_wait_ms": 0,
+            "service_cpu_ms": 0,
+            "service_residence_ms": 0,
+            "service_calls": 0,
+            "services": [],
+            "io_read_bytes": null,
+            "io_write_bytes": null,
+            "io_wait_ms": null,
+            "wakeup_count": 0,
+            "cpu_migrations": 0,
+            "cpu_residency": [
+              {
+                "cpu": 0,
+                "frequency_khz": null,
+                "cpu_ms": 0.176
+              }
+            ]
+          },
+          "classification": {
+            "id": "unknown",
+            "name": "证据不足",
+            "method": "conservative-stage-rules/v1",
+            "status": "candidate",
+            "evidence": [
+              "阶段短于采样包络且没有完整内部采样区间；0–上界表示边界不确定，不能作为阶段总计数。",
+              "单值按采样窗口与阶段的墙钟时间重叠比例估算，假设计数在窗口内均匀分布；未覆盖时间不外推，100% 时间覆盖不等于精确归因。",
+              "阶段边界或 PMU 运行覆盖不足，计算 / 访存分型保留未知。"
+            ],
+            "parallel_implication": "需结合核组、频点与共跑组合实测校准；分型本身不保证并行收益。"
+          },
+          "workload_class": "unknown",
+          "quality": {
+            "pmu_usable": false,
+            "pmu_source": "trace_aligned_time_weighted_estimates",
+            "pmu_scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+            "missing_counters": [
+              "loads",
+              "stores",
+              "memory_stall_cycles",
+              "dram_bytes",
+              "io_read_bytes",
+              "io_write_bytes"
+            ],
+            "reasons": [
+              "阶段短于采样包络且没有完整内部采样区间；0–上界表示边界不确定，不能作为阶段总计数。",
+              "单值按采样窗口与阶段的墙钟时间重叠比例估算，假设计数在窗口内均匀分布；未覆盖时间不外推，100% 时间覆盖不等于精确归因。",
+              "阶段边界或 PMU 运行覆盖不足，计算 / 访存分型保留未知。"
+            ],
+            "status": "partial"
+          },
+          "evidence": {
+            "request_ids": [],
+            "measurement": null,
+            "pmu": {
+              "boundary_bins": 1,
+              "bounds_valid": true,
+              "estimate_scope": null,
+              "estimate_time_fraction": 0,
+              "event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "evidence_version": "grouped_stage_pmu/v3",
+              "feature_usable_under_25pct_instruction_boundary_rule": false,
+              "group_id": "base",
+              "groups": {
+                "base": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "base",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "instructions": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "instructions": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "instructions": 286773.7666820493
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "branch": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "branch_instructions",
+                    "branch_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "branch",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "branch_instructions": 0,
+                    "branch_misses": 0,
+                    "cycles": 0,
+                    "instructions": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "branch_instructions": 0,
+                    "branch_misses": 0,
+                    "cycles": 0,
+                    "instructions": 0
+                  },
+                  "observed_counter_upper": {
+                    "branch_instructions": 20,
+                    "branch_misses": 20,
+                    "cycles": 25195891,
+                    "instructions": 50391782
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "branch_instructions": 0.11381767236651774,
+                    "branch_misses": 0.11381767236651774,
+                    "cycles": 143386.88334102466,
+                    "instructions": 286773.7666820493
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "branch_instructions": 20,
+                    "branch_misses": 20,
+                    "cycles": 25195891,
+                    "instructions": 50391782
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "cache": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "generic_cache_references",
+                    "generic_cache_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "cache",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "generic_cache_misses": 0,
+                    "generic_cache_references": 0,
+                    "instructions": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "generic_cache_misses": 0,
+                    "generic_cache_references": 0,
+                    "instructions": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "generic_cache_misses": 20,
+                    "generic_cache_references": 40,
+                    "instructions": 50391782
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "generic_cache_misses": 0.11381767236651774,
+                    "generic_cache_references": 0.22763534473303548,
+                    "instructions": 286773.7666820493
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "generic_cache_misses": 20,
+                    "generic_cache_references": 40,
+                    "instructions": 50391782
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "dtlb": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "dtlb_read_access",
+                    "dtlb_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "dtlb",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "dtlb_read_access": 0,
+                    "dtlb_read_misses": 0,
+                    "instructions": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "dtlb_read_access": 0,
+                    "dtlb_read_misses": 0,
+                    "instructions": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "dtlb_read_access": 20,
+                    "dtlb_read_misses": 20,
+                    "instructions": 50391782
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "dtlb_read_access": 0.11381767236651774,
+                    "dtlb_read_misses": 0.11381767236651774,
+                    "instructions": 286773.7666820493
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "dtlb_read_access": 20,
+                    "dtlb_read_misses": 20,
+                    "instructions": 50391782
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "l1d": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "l1d_read_access",
+                    "l1d_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "l1d",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "l1d_read_access": 0,
+                    "l1d_read_misses": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "l1d_read_access": 0,
+                    "l1d_read_misses": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "l1d_read_access": 20,
+                    "l1d_read_misses": 20
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "instructions": 286773.7666820493,
+                    "l1d_read_access": 0.11381767236651774,
+                    "l1d_read_misses": 0.11381767236651774
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "l1d_read_access": 20,
+                    "l1d_read_misses": 20
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "llc": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "llc_read_access",
+                    "llc_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "llc",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "llc_read_access": 0,
+                    "llc_read_misses": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "llc_read_access": 0,
+                    "llc_read_misses": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "llc_read_access": 20,
+                    "llc_read_misses": 20
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "instructions": 286773.7666820493,
+                    "llc_read_access": 0.11381767236651774,
+                    "llc_read_misses": 0.11381767236651774
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "llc_read_access": 20,
+                    "llc_read_misses": 20
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                },
+                "stall": {
+                  "boundary_bins": 1,
+                  "bounds_valid": true,
+                  "estimate_scope": null,
+                  "estimate_time_fraction": 0,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "stalled_frontend",
+                    "stalled_backend"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "stall",
+                  "interior_bins": 0,
+                  "interior_estimates": null,
+                  "interior_ipc": null,
+                  "interior_time_fraction": 0.0,
+                  "intersecting_bins": 1,
+                  "lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "stalled_backend": 0,
+                    "stalled_frontend": 0
+                  },
+                  "max_intersecting_snapshot_span_us": 30927.656,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 0,
+                    "instructions": 0,
+                    "stalled_backend": 0,
+                    "stalled_frontend": 0
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "stalled_backend": 20,
+                    "stalled_frontend": 20
+                  },
+                  "reason_codes": [
+                    "short_stage_no_interior_samples",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": null,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 143386.88334102466,
+                    "instructions": 286773.7666820493,
+                    "stalled_backend": 0.11381767236651774,
+                    "stalled_frontend": 0.11381767236651774
+                  },
+                  "unavailable_events": [],
+                  "upper": {
+                    "cycles": 25195891,
+                    "instructions": 50391782,
+                    "stalled_backend": 20,
+                    "stalled_frontend": 20
+                  },
+                  "weighted_bins": 1,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 1.0,
+                  "weighted_time_coverage": 1.0
+                }
+              },
+              "interior_bins": 0,
+              "interior_estimates": null,
+              "interior_ipc": null,
+              "interior_time_fraction": 0.0,
+              "intersecting_bins": 1,
+              "lower": {
+                "cycles": 0,
+                "instructions": 0
+              },
+              "max_intersecting_snapshot_span_us": 30927.656,
+              "observed_counter_bounds_valid": true,
+              "observed_counter_lower": {
+                "cycles": 0,
+                "instructions": 0
+              },
+              "observed_counter_upper": {
+                "cycles": 25195891,
+                "instructions": 50391782
+              },
+              "reason_codes": [
+                "short_stage_no_interior_samples",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "runtime_coverage": null,
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "time_weighted_estimates": {
+                "cycles": 143386.88334102466,
+                "instructions": 286773.7666820493
+              },
+              "unavailable_events": [],
+              "upper": {
+                "cycles": 25195891,
+                "instructions": 50391782
+              },
+              "weighted_bins": 1,
+              "weighted_estimate_method": "wall_time_overlap",
+              "weighted_estimate_scope": "covered_stage_window",
+              "weighted_runtime_coverage": 1.0,
+              "weighted_time_coverage": 1.0
+            }
+          }
+        }
+      ],
+      "component_classes": {
+        "build_00": "unknown"
+      },
+      "summary": {
+        "stage_count": 1,
+        "duration_ms": 5.0,
+        "stage_wall_ms": 0.176,
+        "stage_cpu_ms": 0.176,
+        "non_builditem_ms": 4.824,
+        "pmu_usable_stages": 0,
+        "classified_cpu_stages": 0,
+        "class_counts": {
+          "unknown": 1
+        }
+      },
+      "quality": {
+        "status": "partial",
+        "hardware_identity_verified": false,
+        "classification_is_candidate": true,
+        "notes": [
+          "阶段顺序与并行建模共享 BuildItem 边界和 ID。",
+          "主数值按同线程采样窗口的墙钟重叠比例估算，原始边界与覆盖单独保留。",
+          "估算假设窗口内计数均匀分布；未覆盖时间不外推，缺失指标保留 null。",
+          "IPC / MPKI 使用同组同窗口计数；估值不自动提升分型或校准置信度。",
+          "I/O 阻塞不由普通 blocked 状态推断；未采集时保留缺失。"
+        ]
+      },
+      "provenance": {
+        "dataset": {
+          "data_kind": "measured",
+          "endpoint": "ui_callback",
+          "selection": {
+            "candidate_vsync_ids": [
+              1
+            ],
+            "rule": "longest_complete_callback_with_BuildItem",
+            "target_tid": 10,
+            "target_vsync_id": 1,
+            "trace_sha256": "f2e1ecf5f259a28ba443bbe7a95aedfb62e339b0048ced664d5d4632f6ff9de2"
+          },
+          "source_kind": "trace_text"
+        },
+        "dataset_fingerprint": "ab6cf7ed9a684d5cba5190992499d8ecdf6d89d40e31127b49ad42297f112d28",
+        "classification_rules": {
+          "version": "conservative-stage-rules/v1",
+          "minimum_cpu_share": 0.7,
+          "compute_min_ipc": 1.0,
+          "compute_max_llc_mpki": 5.0,
+          "memory_max_ipc": 1.0,
+          "memory_min_llc_mpki": 20.0,
+          "dominant_wait_share": 0.3,
+          "meaning": "候选分型阈值；依赖阶段计数边界与已核验 LLC 事件。不是芯片通用瓶颈阈值，也不是并行收益模型。"
+        },
+        "measurements": null,
+        "pmu_estimate_rebuild": {
+          "status": "stored_evidence"
+        },
+        "measurement_sha256": null,
+        "measurement_verification": "同线程同钟采样窗口墙钟重叠估算；保留 PMU 保守区间，不将估值视为精确测量。"
+      },
+      "profile_sha256": "11ba9d770616200925e6aa57bb9ce4151e567119af674e58b4610b92117efbd0"
+    },
+    {
+      "schema_version": "workload_feature_profile/v1",
+      "id": "wf_cd78acf228d4bd693db8f2dc",
+      "name": "多组复用 · 负载特征",
+      "created_at": "2026-10-23T02:15:48Z",
+      "engine_version": "1.2.0",
+      "dataset_id": "ds_7d10f1336213311b8a95e81b",
+      "dataset_fingerprint": "3c6c56aa89065687e3065de3419fa7788a1bbc670319fe2f803dce1dd95d8360",
+      "hardware_profile_id": "kirin-gallery-reference-v1",
+      "endpoint": "ui_callback",
+      "status": "completed",
+      "stages": [
+        {
+          "id": "build_00",
+          "name": "Widget",
+          "display_id": "B01",
+          "start_ns": 1002000000,
+          "end_ns": 1004000000,
+          "source_line": 4,
+          "relative_start_ms": 1.0,
+          "wall_ms": 2.0,
+          "cpu_ms": 1.6,
+          "states_ms": {
+            "on_cpu": 1.6,
+            "runnable": 0.4,
+            "blocked": 0,
+            "unknown": 0
+          },
+          "time_breakdown": {
+            "partition_ms": {
+              "running": 1.6,
+              "preempted_wait": 0.2,
+              "runnable_other": 0.2,
+              "blocked": 0,
+              "unknown": 0
+            },
+            "runnable_total_ms": 0.4,
+            "preemption_evidence_available": true,
+            "preemption_event_count": 1,
+            "notes": [
+              "Interrupted 为 R+ 证据确认的抢占后等核，是 Runnable 子集；普通 R 不证明抢占。",
+              "Running 是调度驻留时间，可包含内核及中断；PMU 仅统计目标线程用户态。",
+              "Blocked 包含睡眠和同步服务等待；S / D 状态本身不能证明 I/O 原因。"
+            ],
+            "irq_overlap_ms": 0.1,
+            "irq_evidence_complete": true,
+            "softirq_overlap_ms": null,
+            "softirq_evidence_complete": false
+          },
+          "metric_evidence": {
+            "instructions": {
+              "status": "exact",
+              "exact": 2000,
+              "bounds": [
+                2000,
+                2000
+              ],
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": "stage_measurement",
+              "time_coverage": 1,
+              "runtime_coverage": 1,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": 0,
+              "reason_codes": [],
+              "unit": "count",
+              "scope": "thread_user"
+            },
+            "cycles": {
+              "status": "exact",
+              "exact": 1000,
+              "bounds": [
+                1000,
+                1000
+              ],
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": "stage_measurement",
+              "time_coverage": 1,
+              "runtime_coverage": 1,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": 0,
+              "reason_codes": [],
+              "unit": "count",
+              "scope": "thread_user"
+            },
+            "llc_misses": {
+              "status": "exact",
+              "exact": 2,
+              "bounds": [
+                2,
+                2
+              ],
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": "stage_measurement",
+              "time_coverage": 1,
+              "runtime_coverage": 1,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": 0,
+              "reason_codes": [
+                "hardware_llc_mapping_unverified"
+              ],
+              "unit": "count",
+              "scope": "thread_user",
+              "hardware_mapping_verified": false
+            },
+            "ipc": {
+              "status": "exact",
+              "exact": 2.0,
+              "bounds": [
+                2.0,
+                2.0
+              ],
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": "stage_measurement",
+              "time_coverage": 1,
+              "runtime_coverage": 1,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": 0,
+              "reason_codes": [],
+              "unit": "ratio",
+              "scope": "thread_user"
+            },
+            "llc_mpki": {
+              "status": "exact",
+              "exact": 1.0,
+              "bounds": [
+                1.0,
+                1.0
+              ],
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": "stage_measurement",
+              "time_coverage": 1,
+              "runtime_coverage": 1,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": 0,
+              "reason_codes": [
+                "hardware_llc_mapping_unverified"
+              ],
+              "unit": "per_kinst",
+              "scope": "thread_user",
+              "hardware_mapping_verified": false
+            },
+            "cache_references": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "cache_misses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "loads": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "stores": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "branch_instructions": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "branch_misses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "memory_stall_cycles": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "dram_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_read_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "io_write_bytes": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "bytes",
+              "scope": null
+            },
+            "l1d_accesses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "l1d_misses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "llc_accesses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "dtlb_accesses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "dtlb_misses": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "stalled_frontend": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "stalled_backend": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "count",
+              "scope": null
+            },
+            "cache_mpki": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "per_kinst",
+              "scope": null
+            },
+            "branch_mpki": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "per_kinst",
+              "scope": null
+            },
+            "l1d_mpki": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "per_kinst",
+              "scope": null
+            },
+            "dtlb_mpki": {
+              "status": "unavailable",
+              "exact": null,
+              "bounds": null,
+              "estimate": null,
+              "estimate_scope": null,
+              "observed_counter_bounds": null,
+              "group_id": null,
+              "time_coverage": 0,
+              "runtime_coverage": null,
+              "interior_bins": 0,
+              "boundary_bins": 0,
+              "max_boundary_span_us": null,
+              "reason_codes": [
+                "event_not_collected_or_unavailable"
+              ],
+              "unit": "per_kinst",
+              "scope": null
+            }
+          },
+          "compute": {
+            "instructions": 2000,
+            "cycles": 1000,
+            "branch_instructions": null,
+            "branch_misses": null,
+            "ipc": 2.0,
+            "ipc_bounds": [
+              2.0,
+              2.0
+            ],
+            "interior_ipc": null,
+            "instruction_bounds": [
+              2000,
+              2000
+            ],
+            "cycle_bounds": [
+              1000,
+              1000
+            ]
+          },
+          "memory": {
+            "cache_misses": null,
+            "cache_references": null,
+            "llc_misses": 2,
+            "loads": null,
+            "stores": null,
+            "dram_bytes": null,
+            "memory_stall_cycles": null,
+            "cache_miss_bounds": null,
+            "llc_mpki": 1.0,
+            "llc_mpki_bounds": [
+              1.0,
+              1.0
+            ],
+            "cache_mpki_bounds": null,
+            "llc_mapping_verified": false
+          },
+          "scheduling": {
+            "runnable_ms": 0.4,
+            "blocked_ms": 0,
+            "binder_blocked_ms": 0.0,
+            "other_wait_ms": 0,
+            "service_cpu_ms": 0,
+            "service_residence_ms": 0,
+            "service_calls": 0,
+            "services": [],
+            "io_read_bytes": null,
+            "io_write_bytes": null,
+            "io_wait_ms": null,
+            "wakeup_count": 0,
+            "cpu_migrations": 0,
+            "cpu_residency": [
+              {
+                "cpu": 0,
+                "frequency_khz": null,
+                "cpu_ms": 1.6
+              }
+            ]
+          },
+          "classification": {
+            "id": "unknown",
+            "name": "证据不足",
+            "method": "conservative-stage-rules/v1",
+            "status": "candidate",
+            "evidence": [
+              "缺少已核验的 LLC 事件语义；通用 cache miss 不直接推断 DRAM 带宽压力。"
+            ],
+            "parallel_implication": "需结合核组、频点与共跑组合实测校准；分型本身不保证并行收益。"
+          },
+          "workload_class": "unknown",
+          "quality": {
+            "pmu_usable": true,
+            "pmu_source": "stage_exact_measurement",
+            "pmu_scope": "thread_user",
+            "missing_counters": [
+              "cache_references",
+              "cache_misses",
+              "loads",
+              "stores",
+              "branch_instructions",
+              "branch_misses",
+              "memory_stall_cycles",
+              "dram_bytes",
+              "io_read_bytes",
+              "io_write_bytes",
+              "l1d_accesses",
+              "l1d_misses",
+              "llc_accesses",
+              "dtlb_accesses",
+              "dtlb_misses",
+              "stalled_frontend",
+              "stalled_backend"
+            ],
+            "reasons": [
+              "缺少已核验的 LLC 事件语义；通用 cache miss 不直接推断 DRAM 带宽压力。"
+            ],
+            "status": "partial"
+          },
+          "evidence": {
+            "request_ids": [],
+            "measurement": {
+              "stage_id": "build_00",
+              "start_ns": 1002000000,
+              "end_ns": 1004000000,
+              "tid": 10,
+              "measurement_scope": "thread_user",
+              "counters": {
+                "instructions": {
+                  "value": 2000,
+                  "unit": "count",
+                  "event": "instructions"
+                },
+                "cycles": {
+                  "value": 1000,
+                  "unit": "count",
+                  "event": "cycles"
+                },
+                "llc_misses": {
+                  "value": 2,
+                  "unit": "count",
+                  "event": "llc_misses"
+                }
+              }
+            },
+            "pmu": {
+              "boundary_bins": 2,
+              "bounds_valid": false,
+              "estimate_scope": "interior_only",
+              "estimate_time_fraction": 0.7485,
+              "event_names": [
+                "cycles",
+                "instructions"
+              ],
+              "evidence_version": "grouped_stage_pmu/v3",
+              "feature_usable_under_25pct_instruction_boundary_rule": false,
+              "group_id": "base",
+              "groups": {
+                "base": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "base",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 6000.0,
+                    "instructions": 12000.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 1500,
+                    "instructions": 3000
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 2500,
+                    "instructions": 5000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 8000.0,
+                    "instructions": 16000.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "branch": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "branch_instructions",
+                    "branch_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "branch",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "branch_instructions": 240.0,
+                    "branch_misses": 240.0,
+                    "cycles": 1200.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "branch_instructions": 60,
+                    "branch_misses": 60,
+                    "cycles": 300,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "branch_instructions": 100,
+                    "branch_misses": 100,
+                    "cycles": 500,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "branch_instructions": 320.0,
+                    "branch_misses": 320.0,
+                    "cycles": 1600.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "cache": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "generic_cache_references",
+                    "generic_cache_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "cache",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "generic_cache_misses": 240.0,
+                    "generic_cache_references": 480.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "generic_cache_misses": 60,
+                    "generic_cache_references": 120,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "generic_cache_misses": 100,
+                    "generic_cache_references": 200,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "generic_cache_misses": 320.0,
+                    "generic_cache_references": 640.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "dtlb": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "dtlb_read_access",
+                    "dtlb_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "dtlb",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "dtlb_read_access": 240.0,
+                    "dtlb_read_misses": 240.0,
+                    "instructions": 2400.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "dtlb_read_access": 60,
+                    "dtlb_read_misses": 60,
+                    "instructions": 600
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "dtlb_read_access": 100,
+                    "dtlb_read_misses": 100,
+                    "instructions": 1000
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "dtlb_read_access": 320.0,
+                    "dtlb_read_misses": 320.0,
+                    "instructions": 3200.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "l1d": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "l1d_read_access",
+                    "l1d_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "l1d",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "l1d_read_access": 240.0,
+                    "l1d_read_misses": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "l1d_read_access": 60,
+                    "l1d_read_misses": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "l1d_read_access": 100,
+                    "l1d_read_misses": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "l1d_read_access": 320.0,
+                    "l1d_read_misses": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "llc": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "llc_read_access",
+                    "llc_read_misses"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "llc",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "llc_read_access": 240.0,
+                    "llc_read_misses": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "llc_read_access": 60,
+                    "llc_read_misses": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "llc_read_access": 100,
+                    "llc_read_misses": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "llc_read_access": 320.0,
+                    "llc_read_misses": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                },
+                "stall": {
+                  "boundary_bins": 2,
+                  "bounds_valid": false,
+                  "estimate_scope": "interior_only",
+                  "estimate_time_fraction": 0.7485,
+                  "event_names": [
+                    "cycles",
+                    "instructions",
+                    "stalled_frontend",
+                    "stalled_backend"
+                  ],
+                  "feature_usable_under_25pct_instruction_boundary_rule": false,
+                  "group_id": "stall",
+                  "interior_bins": 3,
+                  "interior_estimates": {
+                    "cycles": 1200.0,
+                    "instructions": 2400.0,
+                    "stalled_backend": 240.0,
+                    "stalled_frontend": 240.0
+                  },
+                  "interior_ipc": 2.0,
+                  "interior_time_fraction": 0.7485,
+                  "intersecting_bins": 5,
+                  "lower": null,
+                  "max_intersecting_snapshot_span_us": 501.0,
+                  "observed_counter_bounds_valid": true,
+                  "observed_counter_lower": {
+                    "cycles": 300,
+                    "instructions": 600,
+                    "stalled_backend": 60,
+                    "stalled_frontend": 60
+                  },
+                  "observed_counter_upper": {
+                    "cycles": 500,
+                    "instructions": 1000,
+                    "stalled_backend": 100,
+                    "stalled_frontend": 100
+                  },
+                  "reason_codes": [
+                    "counter_multiplexed_full_stage_upper_unknown",
+                    "boundary_or_runtime_uncertainty",
+                    "uniform_wall_time_attribution_assumption"
+                  ],
+                  "runtime_coverage": 0.25,
+                  "sample_window_convention": "adjacent_read_bracket_midpoints",
+                  "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+                  "time_weighted_estimates": {
+                    "cycles": 1600.0,
+                    "instructions": 3200.0,
+                    "stalled_backend": 320.0,
+                    "stalled_frontend": 320.0
+                  },
+                  "unavailable_events": [],
+                  "upper": null,
+                  "weighted_bins": 5,
+                  "weighted_estimate_method": "wall_time_overlap",
+                  "weighted_estimate_scope": "covered_stage_window",
+                  "weighted_runtime_coverage": 0.25,
+                  "weighted_time_coverage": 1.0
+                }
+              },
+              "interior_bins": 3,
+              "interior_estimates": {
+                "cycles": 6000.0,
+                "instructions": 12000.0
+              },
+              "interior_ipc": 2.0,
+              "interior_time_fraction": 0.7485,
+              "intersecting_bins": 5,
+              "lower": null,
+              "max_intersecting_snapshot_span_us": 501.0,
+              "observed_counter_bounds_valid": true,
+              "observed_counter_lower": {
+                "cycles": 1500,
+                "instructions": 3000
+              },
+              "observed_counter_upper": {
+                "cycles": 2500,
+                "instructions": 5000
+              },
+              "reason_codes": [
+                "counter_multiplexed_full_stage_upper_unknown",
+                "boundary_or_runtime_uncertainty",
+                "uniform_wall_time_attribution_assumption"
+              ],
+              "runtime_coverage": 0.25,
+              "sample_window_convention": "adjacent_read_bracket_midpoints",
+              "scope": "target-thread user-mode only; wall-overlap estimates assume uniform work within sampled windows; no extrapolation across uncovered time; nested stages not additive",
+              "time_weighted_estimates": {
+                "cycles": 8000.0,
+                "instructions": 16000.0
+              },
+              "unavailable_events": [],
+              "upper": null,
+              "weighted_bins": 5,
+              "weighted_estimate_method": "wall_time_overlap",
+              "weighted_estimate_scope": "covered_stage_window",
+              "weighted_runtime_coverage": 0.25,
+              "weighted_time_coverage": 1.0
+            }
+          }
+        }
+      ],
+      "component_classes": {
+        "build_00": "unknown"
+      },
+      "summary": {
+        "stage_count": 1,
+        "duration_ms": 5.0,
+        "stage_wall_ms": 2.0,
+        "stage_cpu_ms": 1.6,
+        "non_builditem_ms": 3.0,
+        "pmu_usable_stages": 1,
+        "classified_cpu_stages": 0,
+        "class_counts": {
+          "unknown": 1
+        }
+      },
+      "quality": {
+        "status": "partial",
+        "hardware_identity_verified": false,
+        "classification_is_candidate": true,
+        "notes": [
+          "阶段顺序与并行建模共享 BuildItem 边界和 ID。",
+          "主数值按同线程采样窗口的墙钟重叠比例估算，原始边界与覆盖单独保留。",
+          "估算假设窗口内计数均匀分布；未覆盖时间不外推，缺失指标保留 null。",
+          "IPC / MPKI 使用同组同窗口计数；估值不自动提升分型或校准置信度。",
+          "I/O 阻塞不由普通 blocked 状态推断；未采集时保留缺失。"
+        ]
+      },
+      "provenance": {
+        "dataset": {
+          "data_kind": "measured",
+          "endpoint": "ui_callback",
+          "selection": {
+            "candidate_vsync_ids": [
+              1
+            ],
+            "rule": "longest_complete_callback_with_BuildItem",
+            "target_tid": 10,
+            "target_vsync_id": 1,
+            "trace_sha256": "5bdf8136ebf11ef467bb710d221d93ac74a4dc65b4db723b3f0046003a5aa84b"
+          },
+          "source_kind": "trace_text"
+        },
+        "dataset_fingerprint": "3c6c56aa89065687e3065de3419fa7788a1bbc670319fe2f803dce1dd95d8360",
+        "classification_rules": {
+          "version": "conservative-stage-rules/v1",
+          "minimum_cpu_share": 0.7,
+          "compute_min_ipc": 1.0,
+          "compute_max_llc_mpki": 5.0,
+          "memory_max_ipc": 1.0,
+          "memory_min_llc_mpki": 20.0,
+          "dominant_wait_share": 0.3,
+          "meaning": "候选分型阈值；依赖阶段计数边界与已核验 LLC 事件。不是芯片通用瓶颈阈值，也不是并行收益模型。"
+        },
+        "measurements": {
+          "schema_version": "workload_stage_measurements/v1",
+          "dataset_id": "ds_7d10f1336213311b8a95e81b",
+          "hardware_profile_id": "kirin-gallery-reference-v1",
+          "clock_domain": "trace_monotonic",
+          "clock_alignment_evidence": "synthetic aligned stage",
+          "provenance": {
+            "source": "synthetic unit fixture",
+            "run_id": "fixture",
+            "collector": "test"
+          },
+          "stages": [
+            {
+              "stage_id": "build_00",
+              "start_ns": 1002000000,
+              "end_ns": 1004000000,
+              "tid": 10,
+              "measurement_scope": "thread_user",
+              "counters": {
+                "instructions": {
+                  "value": 2000,
+                  "unit": "count",
+                  "event": "instructions"
+                },
+                "cycles": {
+                  "value": 1000,
+                  "unit": "count",
+                  "event": "cycles"
+                },
+                "llc_misses": {
+                  "value": 2,
+                  "unit": "count",
+                  "event": "llc_misses"
+                }
+              }
+            }
+          ]
+        },
+        "pmu_estimate_rebuild": {
+          "status": "stored_evidence"
+        },
+        "measurement_sha256": "81d1d92d19e244b7b56b62b97cf1e5164f5e3d15b770932770506d1d8e6aba0e",
+        "measurement_verification": "用户提供的逐阶段计数声明；校验身份、边界与单位，不等同独立硬件事件认证。"
+      },
+      "profile_sha256": "69df4310cc44207589d53c2238cf93a73cd3df6e19de6dce31889a6f640ef148"
+    }
+  ]
+}

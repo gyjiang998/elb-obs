@@ -1,0 +1,58 @@
+{
+  "case_id": "gallery_17_steps_v1",
+  "bundle": "com.huawei.hmos.photos",
+  "ability": "com.huawei.hmos.photos.MainAbility",
+  "screen_size": [1280, 2832],
+  "screen_size_mode": "dynamic",
+  "hold_seconds": 1.0,
+  "guard_seconds": 0.2,
+  "prepare_settle_seconds": 0.5,
+  "trace_buffer_kb": 262144,
+  "trace_categories": ["sched", "freq", "idle", "irq", "workq", "power", "regulators", "load", "ace", "graphic", "animation", "multimodalinput", "ffrt", "app", "ability", "window", "binder", "zimage", "sync", "disk"],
+  "step_timeout_seconds": 120,
+  "calibration": {
+    "confirmed": false,
+    "notes": "首次执行前确认第一项为可编辑静态照片，至少有一个地点城市，缩放极值、返回次数及另存为路径已校准。",
+    "zoom_extrema_verified": false
+  },
+  "zoom": {
+    "center": [0.5, 0.55],
+    "inner_half_width": 0.08,
+    "outer_half_width": 0.40,
+    "sweeps_per_extreme": 3,
+    "rounds": 3,
+    "duration_ms": 350,
+    "gesture_gap_seconds": 0.15
+  },
+  "scroll": {
+    "step15_mode": "up3_down3",
+    "upper": [0.5, 0.35],
+    "lower": [0.5, 0.75],
+    "velocity": 1000,
+    "gesture_gap_seconds": 0.2
+  },
+  "navigation": {
+    "date_mode_cycle": ["日", "月", "年"],
+    "step11_back_count": 1,
+    "step16_back_count": 2,
+    "back_gap_seconds": 0.35
+  },
+  "targets": {
+    "photos": {"id": "TabPhotos"},
+    "albums": {"id": "TabAlbums"},
+    "albums_title": {"id": "FirstLevelTitle", "text": "相册"},
+    "date_mode_button": {"id": "gridButtonRightButton"},
+    "year": {"text": "年"},
+    "day": {"text": "日"},
+    "first_photo": {"id_regex": "photoGridView_gird_[0-9]+", "index": 0},
+    "edit": {"id": "ToolBarButtonEdit"},
+    "filters": {"id": "petalClip_bottomToolBar_4"},
+    "classic": {"id": "filter_Classic"},
+    "save_menu": {"id": "petalClip_topToolBar_save"},
+    "save_as": {"id": "petalClip_topToolBar_saves", "text": "另存为"},
+    "places": {"text": "地点"},
+    "cities": {"text": "城市"},
+    "first_city": null,
+    "city_page": null
+  }
+}

@@ -1,0 +1,238 @@
+[
+  {
+    "pattern_id": "code_sig_jpeg_decode",
+    "category": "code_algorithm_signature",
+    "algorithm": "jpeg_decode",
+    "name": "JPEG decode CPU signature",
+    "features": {
+      "domain_keywords": [
+        "jpeg",
+        "jpg",
+        "scanline",
+        "ycbcr",
+        "rgb",
+        "decode",
+        "dct",
+        "huffman"
+      ],
+      "operations": [
+        "dct",
+        "color_space_convert",
+        "upsampling",
+        "huffman_decode"
+      ],
+      "memory_patterns": [
+        "scanline_sequential",
+        "array_subscript"
+      ],
+      "data_types": [
+        "uint8",
+        "int",
+        "char"
+      ],
+      "loop_nesting_min": 1,
+      "loop_nesting_max": 3
+    },
+    "hard_constraints": {
+      "required_keywords": [
+        "jpeg"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "pattern_id": "code_sig_image_blur_2d",
+    "category": "code_algorithm_signature",
+    "algorithm": "image_blur",
+    "name": "2D blur CPU signature",
+    "features": {
+      "domain_keywords": [
+        "blur",
+        "gaussian",
+        "kawase",
+        "mesa",
+        "sigma",
+        "radius",
+        "filter"
+      ],
+      "operations": [
+        "convolution",
+        "neighbor_access",
+        "weighted_sum",
+        "multi_pass"
+      ],
+      "memory_patterns": [
+        "array_subscript",
+        "neighbor_access",
+        "stride_unit_stride"
+      ],
+      "data_types": [
+        "float",
+        "half",
+        "uint8"
+      ],
+      "loop_nesting_min": 2,
+      "loop_nesting_max": 4
+    },
+    "hard_constraints": {
+      "required_keywords": [
+        "blur"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "pattern_id": "code_sig_image_resize",
+    "category": "code_algorithm_signature",
+    "algorithm": "image_resize",
+    "name": "Image resize CPU signature",
+    "features": {
+      "domain_keywords": [
+        "resize",
+        "scale",
+        "upsample",
+        "downsample",
+        "interpolation",
+        "bilinear",
+        "bicubic"
+      ],
+      "operations": [
+        "interpolation",
+        "sample",
+        "scale"
+      ],
+      "memory_patterns": [
+        "array_subscript",
+        "stride_unit_stride"
+      ],
+      "data_types": [
+        "float",
+        "uint8",
+        "half"
+      ],
+      "loop_nesting_min": 2,
+      "loop_nesting_max": 3
+    },
+    "hard_constraints": {
+      "required_keywords": [
+        "scale",
+        "resize",
+        "upsample",
+        "downsample"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "pattern_id": "code_sig_matrix_multiply",
+    "category": "code_algorithm_signature",
+    "algorithm": "matrix_multiply",
+    "name": "GEMM CPU signature",
+    "features": {
+      "domain_keywords": [
+        "matmul",
+        "gemm",
+        "matrix",
+        "multiply",
+        "dot",
+        "linear"
+      ],
+      "operations": [
+        "mac",
+        "multiply",
+        "add",
+        "accumulate"
+      ],
+      "memory_patterns": [
+        "array_subscript",
+        "stride_row_major_2d",
+        "stride_strided_2d"
+      ],
+      "data_types": [
+        "float",
+        "half",
+        "int8"
+      ],
+      "loop_nesting_min": 3,
+      "loop_nesting_max": 5
+    },
+    "hard_constraints": {
+      "required_operations": [
+        "mac"
+      ],
+      "loop_nesting_min": 3,
+      "any_keywords": [
+        "matmul",
+        "gemm",
+        "matrix",
+        "dot",
+        "linear"
+      ],
+      "forbidden_keywords": [
+        "blur",
+        "gaussian",
+        "kawase",
+        "radius",
+        "filter"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "pattern_id": "code_sig_softmax",
+    "category": "code_algorithm_signature",
+    "algorithm": "softmax",
+    "name": "Softmax CPU signature",
+    "features": {
+      "domain_keywords": [
+        "softmax",
+        "normalize",
+        "exp",
+        "probability",
+        "logit"
+      ],
+      "operations": [
+        "exp",
+        "sum",
+        "divide",
+        "max"
+      ],
+      "memory_patterns": [
+        "array_subscript",
+        "stride_unit_stride"
+      ],
+      "data_types": [
+        "float",
+        "half"
+      ],
+      "loop_nesting_min": 1,
+      "loop_nesting_max": 2
+    },
+    "hard_constraints": {
+      "required_operations": [
+        "exp"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  }
+]

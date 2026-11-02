@@ -1,0 +1,24 @@
+[Unit]
+Description=Heterogeneous Enablement Platform API
+After=network-online.target heterogeneous-kimi.service
+Wants=network-online.target heterogeneous-kimi.service
+
+[Service]
+Type=simple
+User=hetero
+Group=hetero
+WorkingDirectory=/opt/heterogeneous-enable-web
+EnvironmentFile=/etc/heterogeneous-enable-web/platform.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/heterogeneous-enable-web/.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8006 --workers 1 --timeout-keep-alive 75
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadOnlyPaths=/opt/heterogeneous-enable-web-runtime
+ReadWritePaths=/var/lib/heterogeneous-enable-web
+
+[Install]
+WantedBy=multi-user.target

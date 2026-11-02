@@ -1,0 +1,22 @@
+[Unit]
+Description=Heterogeneous Enablement Platform Web UI
+After=network-online.target heterogeneous-api.service
+Wants=network-online.target heterogeneous-api.service
+
+[Service]
+Type=simple
+User=hetero
+Group=hetero
+WorkingDirectory=/opt/heterogeneous-enable-web
+Environment=NODE_ENV=production
+Environment=HETERO_NEXT_API_PROXY_TARGET=http://127.0.0.1:8006
+ExecStart=/usr/bin/node /opt/heterogeneous-enable-web/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 4032
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/heterogeneous-enable-web/.next/cache
+
+[Install]
+WantedBy=multi-user.target

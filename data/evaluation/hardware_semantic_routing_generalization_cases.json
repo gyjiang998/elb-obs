@@ -1,0 +1,214 @@
+{
+  "schema_version": "hardware_semantic_routing_generalization_suite/v1",
+  "suite_id": "hardware_semantic_routing_generalization",
+  "suite_version": "1.0.0",
+  "purpose_zh": "评测模型优先硬件语义路由对函数改名、等价控制流改写、领域语义缺失与非加速器边界的稳定性。oracle 仅在服务端评分，不进入模型上下文。",
+  "cases": [
+    {
+      "case_id": "dsp_pcm_base",
+      "title_zh": "DSP：PCM 逐帧逐通道增益",
+      "category": "dsp_positive",
+      "partition": "smoke",
+      "family_id": "dsp_pcm_sample_map",
+      "variation_axis": "base",
+      "public_input": {
+        "function_hint": "ApplyStereoGain",
+        "code": "void ApplyStereoGain(float *pcm, size_t frameCount, size_t channelCount, float gain) {\n  for (size_t frame = 0; frame < frameCount; ++frame) {\n    for (size_t channel = 0; channel < channelCount; ++channel) {\n      const size_t index = frame * channelCount + channel;\n      pcm[index] = Clamp(pcm[index] * gain);\n    }\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["dsp"] }
+    },
+    {
+      "case_id": "dsp_pcm_function_renamed",
+      "title_zh": "DSP：函数名完全改写",
+      "category": "dsp_positive",
+      "partition": "development",
+      "family_id": "dsp_pcm_sample_map",
+      "variation_axis": "function_rename",
+      "public_input": {
+        "function_hint": "F_204",
+        "code": "void F_204(float *samples, size_t blockCount, size_t laneCount, float scale) {\n  for (size_t block = 0; block < blockCount; ++block) {\n    for (size_t lane = 0; lane < laneCount; ++lane) {\n      const size_t p = block * laneCount + lane;\n      samples[p] = Clamp(samples[p] * scale);\n    }\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["dsp"] }
+    },
+    {
+      "case_id": "dsp_pcm_while_rewrite",
+      "title_zh": "DSP：等价 while 控制流改写",
+      "category": "dsp_positive",
+      "partition": "validation",
+      "family_id": "dsp_pcm_sample_map",
+      "variation_axis": "control_flow_rewrite",
+      "public_input": {
+        "function_hint": "RunBlock",
+        "code": "void RunBlock(float *interleaved, size_t frames, size_t channels, float g) {\n  size_t i = 0;\n  while (i < frames * channels) {\n    const float x = interleaved[i];\n    interleaved[i] = Clamp(x * g);\n    ++i;\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["dsp"] }
+    },
+    {
+      "case_id": "npu_matmul_base",
+      "title_zh": "NPU：浮点矩阵乘加核心",
+      "category": "npu_positive",
+      "partition": "smoke",
+      "family_id": "npu_dense_matmul",
+      "variation_axis": "base",
+      "public_input": {
+        "function_hint": "MatMul",
+        "code": "void MatMul(const float *lhs, const float *rhs, float *out, size_t m, size_t n, size_t k) {\n  for (size_t row = 0; row < m; ++row) {\n    for (size_t col = 0; col < n; ++col) {\n      float sum = 0.0F;\n      for (size_t inner = 0; inner < k; ++inner) sum += lhs[row * k + inner] * rhs[inner * n + col];\n      out[row * n + col] = sum;\n    }\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["npu"] }
+    },
+    {
+      "case_id": "npu_matmul_function_renamed",
+      "title_zh": "NPU：函数名改写但保留计算拓扑",
+      "category": "npu_positive",
+      "partition": "development",
+      "family_id": "npu_dense_matmul",
+      "variation_axis": "function_rename",
+      "public_input": {
+        "function_hint": "K17",
+        "code": "void K17(const float *a, const float *b, float *c, size_t x, size_t y, size_t z) {\n  for (size_t i = 0; i < x; ++i) {\n    for (size_t j = 0; j < y; ++j) {\n      float acc = 0.0F;\n      for (size_t t = 0; t < z; ++t) acc += a[i * z + t] * b[t * y + j];\n      c[i * y + j] = acc;\n    }\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["npu"] }
+    },
+    {
+      "case_id": "npu_matmul_split_rewrite",
+      "title_zh": "NPU：临时变量等价改写",
+      "category": "npu_positive",
+      "partition": "validation",
+      "family_id": "npu_dense_matmul",
+      "variation_axis": "temporary_variable_rewrite",
+      "public_input": {
+        "function_hint": "ComputeTile",
+        "code": "void ComputeTile(const float *u, const float *v, float *w, size_t rows, size_t cols, size_t depth) {\n  for (size_t r = 0; r < rows; ++r) {\n    for (size_t q = 0; q < cols; ++q) {\n      w[r * cols + q] = 0.0F;\n      for (size_t d = 0; d < depth; ++d) {\n        const float left = u[r * depth + d];\n        const float right = v[d * cols + q];\n        w[r * cols + q] += left * right;\n      }\n    }\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["npu"] }
+    },
+    {
+      "case_id": "gpu_rgba_base",
+      "title_zh": "GPU：RGBA 逐像素颜色变换",
+      "category": "gpu_positive",
+      "partition": "smoke",
+      "family_id": "gpu_rgba_map",
+      "variation_axis": "base",
+      "public_input": {
+        "function_hint": "AdjustRgba",
+        "code": "void AdjustRgba(uint8_t *rgba, size_t pixelCount, float gain) {\n  for (size_t pixel = 0; pixel < pixelCount; ++pixel) {\n    const size_t base = pixel * 4;\n    rgba[base] = ClampByte(rgba[base] * gain);\n    rgba[base + 1] = ClampByte(rgba[base + 1] * gain);\n    rgba[base + 2] = ClampByte(rgba[base + 2] * gain);\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["gpu"] }
+    },
+    {
+      "case_id": "gpu_rgba_function_renamed",
+      "title_zh": "GPU：包装函数改名",
+      "category": "gpu_positive",
+      "partition": "development",
+      "family_id": "gpu_rgba_map",
+      "variation_axis": "function_rename",
+      "public_input": {
+        "function_hint": "Pass17",
+        "code": "void Pass17(uint8_t *pixels, size_t count, float factor) {\n  for (size_t i = 0; i < count; ++i) {\n    const size_t p = i << 2;\n    pixels[p + 0] = ClampByte(pixels[p + 0] * factor);\n    pixels[p + 1] = ClampByte(pixels[p + 1] * factor);\n    pixels[p + 2] = ClampByte(pixels[p + 2] * factor);\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["gpu"] }
+    },
+    {
+      "case_id": "gpu_rgba_pointer_rewrite",
+      "title_zh": "GPU：指针式等价改写",
+      "category": "gpu_positive",
+      "partition": "validation",
+      "family_id": "gpu_rgba_map",
+      "variation_axis": "memory_syntax_rewrite",
+      "public_input": {
+        "function_hint": "ColorPass",
+        "code": "void ColorPass(uint8_t *image, size_t width, size_t height, float amount) {\n  uint8_t *p = image;\n  const uint8_t *end = image + width * height * 4;\n  while (p < end) {\n    p[0] = ClampByte(p[0] * amount);\n    p[1] = ClampByte(p[1] * amount);\n    p[2] = ClampByte(p[2] * amount);\n    p += 4;\n  }\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["gpu"] }
+    },
+    {
+      "case_id": "media_decoder_base",
+      "title_zh": "媒体：视频解码生命周期",
+      "category": "media_positive",
+      "partition": "smoke",
+      "family_id": "media_decoder_lifecycle",
+      "variation_axis": "base",
+      "public_input": {
+        "function_hint": "CreateDecoder",
+        "code": "int CreateDecoder(OH_AVFormat *format, OH_AVMemory *input) {\n  OH_AVCodec *decoder = OH_VideoDecoder_CreateByMime(\"video/avc\");\n  if (decoder == nullptr) return -1;\n  OH_VideoDecoder_Configure(decoder, format);\n  OH_VideoDecoder_Prepare(decoder);\n  OH_VideoDecoder_Start(decoder);\n  return OH_VideoDecoder_PushInputData(decoder, 0, input);\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["media"] }
+    },
+    {
+      "case_id": "media_decoder_wrapper_renamed",
+      "title_zh": "媒体：包装函数改名",
+      "category": "media_positive",
+      "partition": "development",
+      "family_id": "media_decoder_lifecycle",
+      "variation_axis": "function_rename",
+      "public_input": {
+        "function_hint": "G9",
+        "code": "int G9(OH_AVFormat *cfg, OH_AVMemory *packet) {\n  OH_AVCodec *x = OH_VideoDecoder_CreateByMime(\"video/hevc\");\n  if (x == nullptr) return -1;\n  OH_VideoDecoder_Configure(x, cfg);\n  OH_VideoDecoder_Prepare(x);\n  OH_VideoDecoder_Start(x);\n  return OH_VideoDecoder_PushInputData(x, 0, packet);\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["media"] }
+    },
+    {
+      "case_id": "media_decoder_lifecycle_rewrite",
+      "title_zh": "媒体：分步生命周期改写",
+      "category": "media_positive",
+      "partition": "validation",
+      "family_id": "media_decoder_lifecycle",
+      "variation_axis": "statement_reorder",
+      "public_input": {
+        "function_hint": "OpenPipeline",
+        "code": "int OpenPipeline(OH_AVFormat *format) {\n  auto *codec = OH_VideoDecoder_CreateByMime(\"video/avc\");\n  if (!codec) return -1;\n  int status = OH_VideoDecoder_Configure(codec, format);\n  if (status != 0) return status;\n  status = OH_VideoDecoder_Prepare(codec);\n  if (status != 0) return status;\n  return OH_VideoDecoder_Start(codec);\n}"
+      },
+      "oracle": { "decision": "select_units", "allowed_units": ["media"] }
+    },
+    {
+      "case_id": "negative_ipc_proxy",
+      "title_zh": "反例：同步 IPC 包装",
+      "category": "negative_ipc",
+      "partition": "smoke",
+      "family_id": "negative_ipc",
+      "variation_axis": "boundary",
+      "public_input": { "function_hint": "Proxy", "code": "bool Proxy(MessageParcel &data, MessageParcel &reply) { data.WriteInt32(7); return SendTransactCmd(42, data, reply); }" },
+      "oracle": { "decision": "conservative", "allowed_units": [] }
+    },
+    {
+      "case_id": "negative_lock_update",
+      "title_zh": "反例：共享锁状态更新",
+      "category": "negative_lock",
+      "partition": "development",
+      "family_id": "negative_lock",
+      "variation_axis": "boundary",
+      "public_input": { "function_hint": "Update", "code": "void Update(State &state, int key) { std::unique_lock lock(state.mutex); state.counts[key] += 1; }" },
+      "oracle": { "decision": "conservative", "allowed_units": [] }
+    },
+    {
+      "case_id": "negative_prefix_sum",
+      "title_zh": "反例：循环携带依赖前缀和",
+      "category": "negative_dependency",
+      "partition": "validation",
+      "family_id": "negative_prefix_sum",
+      "variation_axis": "dependency",
+      "public_input": { "function_hint": "Prefix", "code": "void Prefix(float *out, const float *in, size_t count) { float carry = 0.0F; for (size_t i = 0; i < count; ++i) { carry += in[i]; out[i] = carry; } }" },
+      "oracle": { "decision": "conservative", "allowed_units": [] }
+    },
+    {
+      "case_id": "negative_file_io",
+      "title_zh": "反例：文件读取循环",
+      "category": "negative_io",
+      "partition": "holdout",
+      "family_id": "negative_io",
+      "variation_axis": "boundary",
+      "public_input": { "function_hint": "ReadFile", "code": "int ReadFile(int fd, uint8_t *buffer, size_t count) { size_t done = 0; while (done < count) { const int n = read(fd, buffer + done, count - done); if (n <= 0) return -1; done += static_cast<size_t>(n); } return 0; }" },
+      "oracle": { "decision": "conservative", "allowed_units": [] }
+    },
+    {
+      "case_id": "negative_semantic_redaction",
+      "title_zh": "反例：领域语义完全缺失的通用数值循环",
+      "category": "negative_ambiguous",
+      "partition": "holdout",
+      "family_id": "ambiguous_numeric_loop",
+      "variation_axis": "semantic_redaction",
+      "public_input": { "function_hint": "F_0", "code": "void F_0(float *v, size_t n, float a, float b) { for (size_t i = 0; i < n; ++i) v[i] = Limit(v[i] * a + b); }" },
+      "oracle": { "decision": "conservative", "allowed_units": [] }
+    }
+  ]
+}

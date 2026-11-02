@@ -1,0 +1,10 @@
+# PMU source and hash-verified bundle bytes must survive Windows checkouts.
+tools/scenario_capture/thread_pmu_sampler.c text eol=lf
+tools/scenario_capture/prebuilt/** -text
+# The calibration manifest covers the receipt byte-for-byte.  In particular,
+# Git must never rewrite its LF bytes to CRLF on a Windows checkout, and the
+# adjacent ELF must always remain opaque binary data.
+tools/parallel_calibration/prebuilt/** -text
+# Reproducible examples are verified byte-for-byte on all deployment hosts.
+data/parallel-modeling/*.json -text
+data/parallel-modeling/raw/*.zip -text

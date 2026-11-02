@@ -1,0 +1,272 @@
+{
+  "summary": {
+    "total_stages": 8
+  },
+  "stages": [
+    {
+      "id": "input_event_dispatch",
+      "name": "Input Event Dispatch",
+      "order": 1,
+      "start_ns": 323193413750,
+      "end_ns": null,
+      "start_ms": 323193.41375,
+      "end_ms": null,
+      "duration_ms": null,
+      "event_count": 0,
+      "total_event_duration_ms": 0,
+      "start_event": null,
+      "end_event": null,
+      "top_events": []
+    },
+    {
+      "id": "aidataservice_startup",
+      "name": "Aidataservice Startup",
+      "order": 2,
+      "start_ns": 323215511719,
+      "end_ns": 323679878750,
+      "start_ms": 323215.511719,
+      "end_ms": 323679.87875,
+      "duration_ms": 464.367031,
+      "event_count": 1,
+      "total_event_duration_ms": 0.733282,
+      "start_event": {
+        "name": "binder reply",
+        "ts_ms": 323215.523125,
+        "dur_ms": 0.733282,
+        "process_name": "s.aidataservice",
+        "pid": 3599,
+        "thread_name": "OS_IPC_11_15879",
+        "tid": 15879,
+        "itid": 794
+      },
+      "end_event": {
+        "name": "binder reply",
+        "ts_ms": 323215.523125,
+        "dur_ms": 0.733282,
+        "process_name": "s.aidataservice",
+        "pid": 3599,
+        "thread_name": "OS_IPC_11_15879",
+        "tid": 15879,
+        "itid": 794
+      },
+      "top_events": [
+        {
+          "name": "binder reply",
+          "ts_ms": 323215.523125,
+          "dur_ms": 0.733282,
+          "process_name": "s.aidataservice",
+          "pid": 3599,
+          "thread_name": "OS_IPC_11_15879",
+          "tid": 15879,
+          "itid": 794
+        }
+      ]
+    },
+    {
+      "id": "msdp_collection",
+      "name": "MSDP Data Collection",
+      "order": 3,
+      "start_ns": null,
+      "end_ns": null,
+      "start_ms": null,
+      "end_ms": null,
+      "duration_ms": null,
+      "event_count": 0,
+      "total_event_duration_ms": 0,
+      "start_event": null,
+      "end_event": null,
+      "top_events": []
+    },
+    {
+      "id": "text_classification",
+      "name": "Text Classification",
+      "order": 5,
+      "start_ns": 323301968438,
+      "end_ns": 323335548907,
+      "start_ms": 323301.968438,
+      "end_ms": 323335.548907,
+      "duration_ms": 33.580469,
+      "event_count": 0,
+      "total_event_duration_ms": 0,
+      "start_event": null,
+      "end_event": null,
+      "top_events": []
+    },
+    {
+      "id": "intent_summary",
+      "name": "Intent Recognition/Summary",
+      "order": 7,
+      "start_ns": 323338741407,
+      "end_ns": 323548725157,
+      "start_ms": 323338.741407,
+      "end_ms": 323548.725157,
+      "duration_ms": 209.98375,
+      "event_count": 27,
+      "total_event_duration_ms": 175.942499,
+      "start_event": {
+        "name": "H:GeneralCompiledModel::ParseGraph|I38",
+        "ts_ms": 323340.243594,
+        "dur_ms": 0.370781,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 17037,
+        "itid": 1457
+      },
+      "end_event": {
+        "name": "H:HclModelExecutorImpl::DeInit-modelName[default_ge_default]-modelPath[|I38",
+        "ts_ms": 323548.546094,
+        "dur_ms": 0.001406,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 17037,
+        "itid": 1457
+      },
+      "top_events": [
+        {
+          "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+          "ts_ms": 323440.211094,
+          "dur_ms": 100.046563,
+          "process_name": "hiaiserver",
+          "pid": 1104,
+          "thread_name": "hiaiserver",
+          "tid": 17037,
+          "itid": 1457
+        }
+      ]
+    },
+    {
+      "id": "inference_initialization",
+      "name": "Inference Initialization",
+      "order": 9,
+      "start_ns": 323354494844,
+      "end_ns": 323409140938,
+      "start_ms": 323354.494844,
+      "end_ms": 323409.140938,
+      "duration_ms": 54.646094,
+      "event_count": 1,
+      "total_event_duration_ms": 54.646094,
+      "start_event": {
+        "name": "H:HIAI_HCL_ModelManager_InitWeights|I38",
+        "ts_ms": 323354.494844,
+        "dur_ms": 54.646094,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 17037,
+        "itid": 1457
+      },
+      "end_event": {
+        "name": "H:HIAI_HCL_ModelManager_InitWeights|I38",
+        "ts_ms": 323354.494844,
+        "dur_ms": 54.646094,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 17037,
+        "itid": 1457
+      },
+      "top_events": [
+        {
+          "name": "H:HIAI_HCL_ModelManager_InitWeights|I38",
+          "ts_ms": 323354.494844,
+          "dur_ms": 54.646094,
+          "process_name": "hiaiserver",
+          "pid": 1104,
+          "thread_name": "hiaiserver",
+          "tid": 17037,
+          "itid": 1457
+        }
+      ]
+    },
+    {
+      "id": "prefill",
+      "name": "Prefill",
+      "order": 10,
+      "start_ns": 323679878750,
+      "end_ns": 323928540000,
+      "start_ms": 323679.87875,
+      "end_ms": 323928.54,
+      "duration_ms": 248.66125,
+      "event_count": 5,
+      "total_event_duration_ms": 246.446406,
+      "start_event": {
+        "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+        "ts_ms": 323679.87875,
+        "dur_ms": 49.380625,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 16965,
+        "itid": 1218
+      },
+      "end_event": {
+        "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+        "ts_ms": 323877.793438,
+        "dur_ms": 50.746562,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 16965,
+        "itid": 1218
+      },
+      "top_events": [
+        {
+          "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+          "ts_ms": 323877.793438,
+          "dur_ms": 50.746562,
+          "process_name": "hiaiserver",
+          "pid": 1104,
+          "thread_name": "hiaiserver",
+          "tid": 16965,
+          "itid": 1218
+        }
+      ]
+    },
+    {
+      "id": "decode",
+      "name": "Decode",
+      "order": 11,
+      "start_ns": 323930357188,
+      "end_ns": 324556019844,
+      "start_ms": 323930.357188,
+      "end_ms": 324556.019844,
+      "duration_ms": 625.662656,
+      "event_count": 37,
+      "total_event_duration_ms": 616.845781,
+      "start_event": {
+        "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+        "ts_ms": 323930.357188,
+        "dur_ms": 18.069844,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 16965,
+        "itid": 1218
+      },
+      "end_event": {
+        "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+        "ts_ms": 324539.811094,
+        "dur_ms": 16.20875,
+        "process_name": "hiaiserver",
+        "pid": 1104,
+        "thread_name": "hiaiserver",
+        "tid": 16965,
+        "itid": 1218
+      },
+      "top_events": [
+        {
+          "name": "H:HIAI_HCL_ModelManager_RunV3|I38",
+          "ts_ms": 323930.357188,
+          "dur_ms": 18.069844,
+          "process_name": "hiaiserver",
+          "pid": 1104,
+          "thread_name": "hiaiserver",
+          "tid": 16965,
+          "itid": 1218
+        }
+      ]
+    }
+  ]
+}

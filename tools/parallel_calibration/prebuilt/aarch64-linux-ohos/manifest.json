@@ -1,0 +1,8 @@
+{
+  "binary": "versions/7c1140062b4c6a0f2d4ec234c1784877a393df84ef14333982f55c4fe56a09c2/parallel_calibration_benchmark",
+  "binary_bytes": 69480,
+  "binary_sha256": "7c1140062b4c6a0f2d4ec234c1784877a393df84ef14333982f55c4fe56a09c2",
+  "receipt": "versions/7c1140062b4c6a0f2d4ec234c1784877a393df84ef14333982f55c4fe56a09c2/receipt.json",
+  "receipt_sha256": "4a89683868ed670f58dc9650ab5838f9a7c581b8e214204c38ad9a26644fa84f",
+  "schema_version": "parallel_calibration_benchmark_bundle/v1"
+}

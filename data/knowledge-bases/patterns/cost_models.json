@@ -1,0 +1,92 @@
+[
+  {
+    "cost_model_id": "codec_decode_cost",
+    "category": "cost_model",
+    "applies_to": [
+      "JPEG_HW_DECODER",
+      "ISP_CODEC"
+    ],
+    "positive_factors": [
+      "large_image",
+      "batch_decode",
+      "hardware_decoder_available",
+      "zero_copy_possible"
+    ],
+    "negative_factors": [
+      "small_image",
+      "format_convert_required",
+      "extra_copy_required",
+      "unsupported_color_space"
+    ],
+    "decision_rules": [
+      "prefer if image is large and hardware capability check passes",
+      "avoid if input requires extra conversion before hardware decode"
+    ],
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "cost_model_id": "gpu_image_filter_cost",
+    "category": "cost_model",
+    "applies_to": [
+      "GPU_SHADER",
+      "Hianimation",
+      "AAE",
+      "AAE_ARSR"
+    ],
+    "positive_factors": [
+      "large_image",
+      "frame_critical_path",
+      "surface_buffer_reusable",
+      "zero_copy_possible"
+    ],
+    "negative_factors": [
+      "small_image",
+      "cpu_gpu_copy",
+      "format_convert",
+      "sync_wait",
+      "high_branch_density"
+    ],
+    "decision_rules": [
+      "prefer if source already lives in GPU/SurfaceBuffer path",
+      "avoid if CPU to GPU copy dominates compute time"
+    ],
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "cost_model_id": "npu_tensor_cost",
+    "category": "cost_model",
+    "applies_to": [
+      "NPU",
+      "GPU_COMPUTE"
+    ],
+    "positive_factors": [
+      "large_tensor",
+      "batch_available",
+      "fp16_or_int8",
+      "model_runtime_already_active"
+    ],
+    "negative_factors": [
+      "small_tensor",
+      "dynamic_shape",
+      "layout_convert_required",
+      "host_device_sync"
+    ],
+    "decision_rules": [
+      "prefer if tensor dimensions are large enough to amortize dispatch",
+      "avoid if layout conversion is required on every call"
+    ],
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  }
+]

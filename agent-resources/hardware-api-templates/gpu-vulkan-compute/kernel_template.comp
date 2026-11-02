@@ -1,0 +1,39 @@
+#version 310 es
+
+// Curated adaptation point: preserve the buffer/dispatch contract, but replace
+// the per-element operation and push constants with the current hotspot's
+// semantics. The paired host template must keep a CPU oracle for comparison.
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Src {
+    uint data[];
+} src;
+
+layout(std430, binding = 1) writeonly buffer Dst {
+    uint data[];
+} dst;
+
+layout(push_constant) uniform Params {
+    float bias;
+    uint count;
+} params;
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+    if (index >= params.count) {
+        return;
+    }
+
+    uint pixel = src.data[index];
+    uint red = pixel & 0xffu;
+    uint green = (pixel >> 8u) & 0xffu;
+    uint blue = (pixel >> 16u) & 0xffu;
+    uint alpha = (pixel >> 24u) & 0xffu;
+
+    red = uint(clamp(float(red) + params.bias, 0.0, 255.0));
+    green = uint(clamp(float(green) + params.bias, 0.0, 255.0));
+    blue = uint(clamp(float(blue) + params.bias, 0.0, 255.0));
+    dst.data[index] = red | (green << 8u) | (blue << 16u) | (alpha << 24u);
+}

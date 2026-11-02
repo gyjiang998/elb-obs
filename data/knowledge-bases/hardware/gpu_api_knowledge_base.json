@@ -1,0 +1,1359 @@
+{
+  "accelerator_unit": "gpu",
+  "artifact_type": "accelerator_api_knowledge_base",
+  "content_sha256": "aff895dd2a2cb48e87a4a6e2ed8c98cc28d23081b6f63c0c5520a4abe4c51746",
+  "evidence_boundary": {
+    "performance": "not_provided until an end-to-end benchmark is attached",
+    "source_interface": "confirmed from versioned workspace files",
+    "target_device": "evidence_required via the unit-specific runtime protocol"
+  },
+  "input_provenance": [
+    {
+      "path": "docs_ffrt/tools/optimization_kb/optimization_knowledge_base.json",
+      "sha256": "221bf3b58a92b1fdd7906dee44301b026c8756bc58b25af7602b8c73c83a2903"
+    },
+    {
+      "path": "openharmony/foundation/arkui/ace_engine/frameworks/core/image/image_compressor.cpp",
+      "sha256": "c5a7ea01bc14221f51d86ae5f5b6fda836a8cb424ce0e1252cad4635e4afe854"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/gpu_brightness_algo.cpp",
+      "sha256": "3baacaf8a2c6090e2a1fdc653c06a7e715f9d29eaee6963e6fbc3b867beac1c6"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/gpu_contrast_algo.cpp",
+      "sha256": "8573cad721defcaf10a66f35fe6da815c2a488ca9c42c3e1099772c2e6d35333"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp",
+      "sha256": "a7acaa39b6cc4dd56f920b081e36b706e95793a4dc122f768d027fbc493fa498"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp",
+      "sha256": "c284fe3dc7bbcbdf408617647f5362dfd896da81d3a260298ce04154377f6730"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+      "sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+      "sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_ohos.h",
+      "sha256": "eefb2fbe54a5cbcad9ef74b160cfa57783a4be65ad38153ea9fbfc3fcf4a06e0"
+    }
+  ],
+  "kb_id": "openharmony_gpu_api_knowledge",
+  "kb_version": "1.0.0",
+  "records": [
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA8888 或像素 buffer",
+          "逐像素颜色/几何变换",
+          "图像尺寸与 stride",
+          "图像效果或压缩语义"
+        ],
+        "expected_data_forms": [
+          "RGBA 像素块",
+          "Image/PixelMap/Bitmap",
+          "输入输出 buffer 和显式格式"
+        ],
+        "operator_aliases": [
+          "astc",
+          "opencl_encode",
+          "texture_encode",
+          "tryastcencbasedoncl"
+        ],
+        "standalone_offload_note": "这些是系统源码集成路径，不等于第三方应用可直接链接的公共 SDK；需先确认所属模块和可用图形上下文。"
+      },
+      "detailed_description_zh": "该系统集成路径创建 ASTC CL encoder、填充图像描述、执行编码并关闭 handle。它与软件编码存在严格回退 pair，但底层 AstcCl ABI 的应用侧公开合同未由当前工作区建立。",
+      "name_zh": "ASTC OpenCL 编码路径",
+      "one_line_abstract_zh": "调用当前源码中的 ASTC GPU/OpenCL 编码 wrapper。",
+      "record_id": "gpu_api:AstcCodec::TryAstcEncBasedOnCl",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "OpenHarmony 源码中已存在的 GPU 图像处理集成入口，例如亮度、对比度、缩放旋转和纹理编码。",
+        "id": "gpu_image_effect",
+        "label_zh": "GPU 图像效果路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "#ifdef ENABLE_ASTC_ENCODE_BASED_GPU\nbool AstcCodec::TryAstcEncBasedOnCl(TextureEncodeOptions &param, uint8_t *inData,\n    uint8_t *buffer, const std::string &clBinPath)\n{\n    ClAstcHandle *astcClEncoder = nullptr;",
+        "exposure": "system_source_integration",
+        "library": "image framework internal integration",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp",
+        "source_line": 500,
+        "source_sha256": "c284fe3dc7bbcbdf408617647f5362dfd896da81d3a260298ce04154377f6730",
+        "source_symbol": "AstcCodec::TryAstcEncBasedOnCl",
+        "system_capability": "not asserted for application SDK"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "AstcCodec::TryAstcEncBasedOnCl"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA8888 或像素 buffer",
+          "逐像素颜色/几何变换",
+          "图像尺寸与 stride",
+          "图像效果或压缩语义"
+        ],
+        "expected_data_forms": [
+          "RGBA 像素块",
+          "Image/PixelMap/Bitmap",
+          "输入输出 buffer 和显式格式"
+        ],
+        "operator_aliases": [
+          "brightness",
+          "gpubrightnessalgo",
+          "image_effect",
+          "rgba8888"
+        ],
+        "standalone_offload_note": "这些是系统源码集成路径，不等于第三方应用可直接链接的公共 SDK；需先确认所属模块和可用图形上下文。"
+      },
+      "detailed_description_zh": "这是用户看到的已有 GPU 实现路径。它对应明确的 RGBA 输入/输出 effect buffer；推荐复用时必须继续验证该模块、图形 context 和输入 format，而非自行假定可调用。",
+      "name_zh": "GPU RGBA8888 亮度处理",
+      "one_line_abstract_zh": "使用当前 image effect 的 GPU 算法处理 RGBA8888 亮度。",
+      "record_id": "gpu_api:GpuBrightnessAlgo::OnApplyRGBA8888",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "OpenHarmony 源码中已存在的 GPU 图像处理集成入口，例如亮度、对比度、缩放旋转和纹理编码。",
+        "id": "gpu_image_effect",
+        "label_zh": "GPU 图像效果路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "ErrorCode GpuBrightnessAlgo::OnApplyRGBA8888(EffectBuffer *src, EffectBuffer *dst,\n    std::map<std::string, Any> &value, const std::shared_ptr<EffectContext> &context)\n{\n    EFFECT_LOGI(\"GpuBrightnessFilterOperator::OnApplyRGBA8888 enter!\");",
+        "exposure": "system_source_integration",
+        "library": "image effect internal integration",
+        "source_file": "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/gpu_brightness_algo.cpp",
+        "source_line": 112,
+        "source_sha256": "3baacaf8a2c6090e2a1fdc653c06a7e715f9d29eaee6963e6fbc3b867beac1c6",
+        "source_symbol": "GpuBrightnessAlgo::OnApplyRGBA8888",
+        "system_capability": "not asserted for application SDK"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "efilter_brightness_gpu_cpu_mapping"
+        ],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "GpuBrightnessAlgo::OnApplyRGBA8888"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA8888 或像素 buffer",
+          "逐像素颜色/几何变换",
+          "图像尺寸与 stride",
+          "图像效果或压缩语义"
+        ],
+        "expected_data_forms": [
+          "RGBA 像素块",
+          "Image/PixelMap/Bitmap",
+          "输入输出 buffer 和显式格式"
+        ],
+        "operator_aliases": [
+          "contrast",
+          "gpucontrastalgo",
+          "image_effect",
+          "rgba8888"
+        ],
+        "standalone_offload_note": "这些是系统源码集成路径，不等于第三方应用可直接链接的公共 SDK；需先确认所属模块和可用图形上下文。"
+      },
+      "detailed_description_zh": "该路径是当前源码中的对比度 GPU/CPU 对照实现。它给出可复用的效果级语义，但不证明任意颜色循环都能接入该内部算法。",
+      "name_zh": "GPU RGBA8888 对比度处理",
+      "one_line_abstract_zh": "使用当前 image effect 的 GPU 算法处理 RGBA8888 对比度。",
+      "record_id": "gpu_api:GpuContrastAlgo::OnApplyRGBA8888",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "OpenHarmony 源码中已存在的 GPU 图像处理集成入口，例如亮度、对比度、缩放旋转和纹理编码。",
+        "id": "gpu_image_effect",
+        "label_zh": "GPU 图像效果路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "ErrorCode GpuContrastAlgo::OnApplyRGBA8888(EffectBuffer *src, EffectBuffer *dst,\n    std::map<std::string, Any> &value, const std::shared_ptr<EffectContext> &context)\n{\n    EFFECT_LOGI(\"GpuContrastFilter::OnApplyRGBA8888 enter!\");",
+        "exposure": "system_source_integration",
+        "library": "image effect internal integration",
+        "source_file": "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/gpu_contrast_algo.cpp",
+        "source_line": 113,
+        "source_sha256": "8573cad721defcaf10a66f35fe6da815c2a488ca9c42c3e1099772c2e6d35333",
+        "source_symbol": "GpuContrastAlgo::OnApplyRGBA8888",
+        "system_capability": "not asserted for application SDK"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "efilter_contrast_gpu_cpu_mapping"
+        ],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "GpuContrastAlgo::OnApplyRGBA8888"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA8888 或像素 buffer",
+          "逐像素颜色/几何变换",
+          "图像尺寸与 stride",
+          "图像效果或压缩语义"
+        ],
+        "expected_data_forms": [
+          "RGBA 像素块",
+          "Image/PixelMap/Bitmap",
+          "输入输出 buffer 和显式格式"
+        ],
+        "operator_aliases": [
+          "arkui_image",
+          "gpucompress",
+          "image_compress",
+          "rsbitmap"
+        ],
+        "standalone_offload_note": "这些是系统源码集成路径，不等于第三方应用可直接链接的公共 SDK；需先确认所属模块和可用图形上下文。"
+      },
+      "detailed_description_zh": "该入口面向 ArkUI/RSBitmap 数据路径；严格案例证明它可回退到 raster，但不证明它是任意应用可调用的通用压缩 API。",
+      "name_zh": "ArkUI GPU 图像压缩",
+      "one_line_abstract_zh": "使用 ArkUI 源码中的 GPU 图像压缩路径。",
+      "record_id": "gpu_api:ImageCompressor::GpuCompress",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "OpenHarmony 源码中已存在的 GPU 图像处理集成入口，例如亮度、对比度、缩放旋转和纹理编码。",
+        "id": "gpu_image_effect",
+        "label_zh": "GPU 图像效果路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "std::shared_ptr<RSData> ImageCompressor::GpuCompress(std::string key, RSBitmap& bitmap, int32_t width, int32_t height)\n{\n#ifdef ENABLE_OPENCL\n    std::lock_guard<std::mutex> lock(instanceMutex_);",
+        "exposure": "system_source_integration",
+        "library": "ArkUI internal integration",
+        "source_file": "openharmony/foundation/arkui/ace_engine/frameworks/core/image/image_compressor.cpp",
+        "source_line": 161,
+        "source_sha256": "c5a7ea01bc14221f51d86ae5f5b6fda836a8cb424ce0e1252cad4635e4afe854",
+        "source_symbol": "ImageCompressor::GpuCompress",
+        "system_capability": "not asserted for application SDK"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "image_compress_gpu_to_raster_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "ImageCompressor::GpuCompress"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA8888 或像素 buffer",
+          "逐像素颜色/几何变换",
+          "图像尺寸与 stride",
+          "图像效果或压缩语义"
+        ],
+        "expected_data_forms": [
+          "RGBA 像素块",
+          "Image/PixelMap/Bitmap",
+          "输入输出 buffer 和显式格式"
+        ],
+        "operator_aliases": [
+          "gl_resize",
+          "pixelmap",
+          "pixelmappostprocwithgl",
+          "rotate",
+          "scale"
+        ],
+        "standalone_offload_note": "这些是系统源码集成路径，不等于第三方应用可直接链接的公共 SDK；需先确认所属模块和可用图形上下文。"
+      },
+      "detailed_description_zh": "源码路径检查 PixelMap 形态、DMA 写回限制、RGBA format、GL context 和 shader program；这正是图像 GPU 候选需要先评估数据通路的证据。",
+      "name_zh": "PixelMap OpenGL 后处理",
+      "one_line_abstract_zh": "对 PixelMap 执行 OpenGL 缩放/旋转等后处理并支持 CPU 回退。",
+      "record_id": "gpu_api:PixelMapPostProcWithGL",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "OpenHarmony 源码中已存在的 GPU 图像处理集成入口，例如亮度、对比度、缩放旋转和纹理编码。",
+        "id": "gpu_image_effect",
+        "label_zh": "GPU 图像效果路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "static bool PixelMapPostProcWithGL(PixelMap &sourcePixelMap, GPUTransformData &trans, bool needHighQuality)\n{\n    Size &desiredSize = trans.targetInfo_.size;\n    if (!CheckPixelMapSLR(sourcePixelMap, trans.targetInfo_.size, trans)) {",
+        "exposure": "system_source_integration",
+        "library": "image framework internal integration",
+        "source_file": "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp",
+        "source_line": 915,
+        "source_sha256": "a7acaa39b6cc4dd56f920b081e36b706e95793a4dc122f768d027fbc493fa498",
+        "source_symbol": "PixelMapPostProcWithGL",
+        "system_capability": "not asserted for application SDK"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "PixelMapPostProcWithGL"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "compute_shader",
+          "gldispatchcompute",
+          "ssbo",
+          "workgroup"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "这是 OpenGL ES 计算路径的显式执行入口；候选代码仍需提供工作组映射、SSBO/image binding、barrier 和 GPU-CPU 同步设计。",
+      "name_zh": "OpenGL ES 计算 shader 派发",
+      "one_line_abstract_zh": "在支持 ES 3.1 的 context 中派发 compute shader。",
+      "record_id": "gpu_api:glDispatchCompute",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "#if GL_GLES_PROTOTYPES\nGL_APICALL void GL_APIENTRY glDispatchCompute (GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z);\nGL_APICALL void GL_APIENTRY glDispatchComputeIndirect (GLintptr indirect);\nGL_APICALL void GL_APIENTRY glDrawArraysIndirect (GLenum mode, const void *indirect);\nGL_APICALL void GL_APIENTRY glDrawElementsIndirect (GLenum mode, GLenum type, const void *indirect);",
+        "exposure": "third_party_sdk_header",
+        "library": "OpenGL ES loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+        "source_line": 1432,
+        "source_sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16",
+        "source_symbol": "glDispatchCompute",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "glDispatchCompute"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "draw_call",
+          "fragment_shader",
+          "fullscreen_quad",
+          "gldrawarrays"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "对全屏 quad 和 fragment shader 形式的图像效果，该调用是实际 GPU 执行点之一；仍需验证顶点/纹理/输出 framebuffer 全链路。",
+      "name_zh": "OpenGL ES 全屏/几何派发",
+      "one_line_abstract_zh": "以数组顶点提交 draw call，常用于全屏 fragment shader 图像处理。",
+      "record_id": "gpu_api:glDrawArrays",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "GL_APICALL void GL_APIENTRY glDisableVertexAttribArray (GLuint index);\nGL_APICALL void GL_APIENTRY glDrawArrays (GLenum mode, GLint first, GLsizei count);\nGL_APICALL void GL_APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const void *indices);\nGL_APICALL void GL_APIENTRY glEnable (GLenum cap);\nGL_APICALL void GL_APIENTRY glEnableVertexAttribArray (GLuint index);",
+        "exposure": "third_party_sdk_header",
+        "library": "OpenGL ES loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+        "source_line": 547,
+        "source_sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16",
+        "source_symbol": "glDrawArrays",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "glDrawArrays"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "framebuffer",
+          "glframebuffertexture2d",
+          "offscreen",
+          "render_target"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "图像处理通常需要把 GPU 结果写入 offscreen framebuffer；需要检查 framebuffer 完整性、纹理格式和后续 readback/NativeBuffer 路径。",
+      "name_zh": "OpenGL ES 离屏渲染目标",
+      "one_line_abstract_zh": "把纹理附着到 framebuffer 作为 GPU 渲染输出。",
+      "record_id": "gpu_api:glFramebufferTexture2D",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "GL_APICALL void GL_APIENTRY glFramebufferRenderbuffer (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);\nGL_APICALL void GL_APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);\nGL_APICALL void GL_APIENTRY glFrontFace (GLenum mode);\nGL_APICALL void GL_APIENTRY glGenBuffers (GLsizei n, GLuint *buffers);\nGL_APICALL void GL_APIENTRY glGenerateMipmap (GLenum target);",
+        "exposure": "third_party_sdk_header",
+        "library": "OpenGL ES loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+        "source_line": 554,
+        "source_sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16",
+        "source_symbol": "glFramebufferTexture2D",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "glFramebufferTexture2D"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "glteximage2d",
+          "pixel_upload",
+          "rgba_texture",
+          "texture_upload"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "适合 RGBA 图像效果、缩放、旋转和 fragment shader 处理的输入通路；format/type/row layout 与 context 可用性是硬条件。",
+      "name_zh": "OpenGL ES 纹理上传",
+      "one_line_abstract_zh": "把二维像素数据定义或上传为 OpenGL ES texture。",
+      "record_id": "gpu_api:glTexImage2D",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "GL_APICALL void GL_APIENTRY glStencilOpSeparate (GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);\nGL_APICALL void GL_APIENTRY glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);\nGL_APICALL void GL_APIENTRY glTexParameterf (GLenum target, GLenum pname, GLfloat param);\nGL_APICALL void GL_APIENTRY glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params);\nGL_APICALL void GL_APIENTRY glTexParameteri (GLenum target, GLenum pname, GLint param);",
+        "exposure": "third_party_sdk_header",
+        "library": "OpenGL ES loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+        "source_line": 612,
+        "source_sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16",
+        "source_symbol": "glTexImage2D",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "glTexImage2D"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "fragment_shader",
+          "gluseprogram",
+          "gpu_shader",
+          "shader_program"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "GPU 像素效果必须有已链接的 shader program；仅存在 brightness/contrast 算术不说明 shader 编译、uniform 和格式路径都可建立。",
+      "name_zh": "OpenGL ES shader program 绑定",
+      "one_line_abstract_zh": "绑定用于后续 draw/compute 的 shader program。",
+      "record_id": "gpu_api:glUseProgram",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "GL_APICALL void GL_APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);\nGL_APICALL void GL_APIENTRY glUseProgram (GLuint program);\nGL_APICALL void GL_APIENTRY glValidateProgram (GLuint program);\nGL_APICALL void GL_APIENTRY glVertexAttrib1f (GLuint index, GLfloat x);\nGL_APICALL void GL_APIENTRY glVertexAttrib1fv (GLuint index, const GLfloat *v);",
+        "exposure": "third_party_sdk_header",
+        "library": "OpenGL ES loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/openGLES/GLES3/gl31.h",
+        "source_line": 637,
+        "source_sha256": "dfd7a9df7fb16d2c1b1138269e212ae90e3ca70c6e2dc5bffe868dc1edefbc16",
+        "source_symbol": "glUseProgram",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "glUseProgram"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "blit",
+          "resize",
+          "scale_image",
+          "vkcmdblitimage"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "适合现有 image/image 路径中的缩放、旋转前后布局或采样处理；它不是通用图像算法替代，需要确认 filter、format 和 image usage。",
+      "name_zh": "Vulkan 图像 Blit",
+      "one_line_abstract_zh": "在两个 GPU image 间执行缩放或过滤式 blit。",
+      "record_id": "gpu_api:vkCmdBlitImage",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef void (VKAPI_PTR *PFN_vkCmdCopyImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdBlitImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyBufferToImage)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyImageToBuffer)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdUpdateBuffer)(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4281,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkCmdBlitImage",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkCmdBlitImage"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "buffer_to_image",
+          "texture_upload",
+          "upload_texture",
+          "vkcmdbuffertoimage"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "这是将 CPU 像素/张量数据放入 GPU image 的典型路径；必须验证 format、layout、row pitch 和 copy region，并把上传成本计入收益。",
+      "name_zh": "Vulkan Buffer 到图像上传",
+      "one_line_abstract_zh": "把线性 buffer 数据复制到 GPU image。",
+      "record_id": "gpu_api:vkCmdCopyBufferToImage",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef void (VKAPI_PTR *PFN_vkCmdBlitImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyBufferToImage)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyImageToBuffer)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdUpdateBuffer)(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData);\ntypedef void (VKAPI_PTR *PFN_vkCmdFillBuffer)(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize size, uint32_t data);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4282,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkCmdCopyBufferToImage",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkCmdCopyBufferToImage"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "download_texture",
+          "image_to_buffer",
+          "readback",
+          "vkcmdimagetobuffer"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "该路径把 GPU 输出带回 CPU；对只有一次小型图像操作的候选，回读与同步成本常常决定是否不应卸载。",
+      "name_zh": "Vulkan 图像回读",
+      "one_line_abstract_zh": "把 GPU image 复制回线性 buffer。",
+      "record_id": "gpu_api:vkCmdCopyImageToBuffer",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef void (VKAPI_PTR *PFN_vkCmdCopyBufferToImage)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyImageToBuffer)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdUpdateBuffer)(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData);\ntypedef void (VKAPI_PTR *PFN_vkCmdFillBuffer)(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize size, uint32_t data);\ntypedef void (VKAPI_PTR *PFN_vkCmdClearColorImage)(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4283,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkCmdCopyImageToBuffer",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkCmdCopyImageToBuffer"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "compute_shader",
+          "dispatch",
+          "vkcmddispatch",
+          "workgroup"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "该调用只提交已经绑定并构建好的 compute pipeline；候选代码需要可证明的独立数据并行、工作组边界和读写资源，否则无法从 CPU 循环自动转换。",
+      "name_zh": "Vulkan 计算派发",
+      "one_line_abstract_zh": "按三维工作组把 compute shader 派发到 GPU。",
+      "record_id": "gpu_api:vkCmdDispatch",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef void (VKAPI_PTR *PFN_vkCmdDrawIndexedIndirect)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);\ntypedef void (VKAPI_PTR *PFN_vkCmdDispatch)(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);\ntypedef void (VKAPI_PTR *PFN_vkCmdDispatchIndirect)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyBuffer)(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions);\ntypedef void (VKAPI_PTR *PFN_vkCmdCopyImage)(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4277,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkCmdDispatch",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkCmdDispatch"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "compute_pipeline",
+          "shader",
+          "spirv",
+          "vkcreatecomputepipelines"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "把已编译 shader 和 descriptor/layout 配置组成计算管线；热点代码必须能收敛成明确的 buffer/image 输入输出和工作组映射，不能仅凭存在循环推断 Vulkan 可用。",
+      "name_zh": "Vulkan 计算管线创建",
+      "one_line_abstract_zh": "创建可提交到 GPU 的 Vulkan compute pipeline。",
+      "record_id": "gpu_api:vkCreateComputePipelines",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef VkResult (VKAPI_PTR *PFN_vkCreateGraphicsPipelines)(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkGraphicsPipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines);\ntypedef VkResult (VKAPI_PTR *PFN_vkCreateComputePipelines)(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkComputePipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines);\ntypedef void (VKAPI_PTR *PFN_vkDestroyPipeline)(VkDevice device, VkPipeline pipeline, const VkAllocationCallbacks* pAllocator);\ntypedef VkResult (VKAPI_PTR *PFN_vkCreatePipelineLayout)(VkDevice device, const VkPipelineLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineLayout* pPipelineLayout);\ntypedef void (VKAPI_PTR *PFN_vkDestroyPipelineLayout)(VkDevice device, VkPipelineLayout pipelineLayout, const VkAllocationCallbacks* pAllocator);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4233,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkCreateComputePipelines",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkCreateComputePipelines"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "memory_nativebuffer",
+          "nativebuffer_export",
+          "vkgetmemorynativebufferohos"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "该入口服务于 Vulkan memory 到 OpenHarmony NativeBuffer 的共享/交接；必须验证 memory allocation、usage、ownership 和消费端格式，不能假定零拷贝。",
+      "name_zh": "Vulkan 导出 OH_NativeBuffer",
+      "one_line_abstract_zh": "从 Vulkan device memory 获取 OH_NativeBuffer。",
+      "record_id": "gpu_api:vkGetMemoryNativeBufferOHOS",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\ntypedef VkResult (VKAPI_PTR *PFN_vkGetMemoryNativeBufferOHOS)(\n    VkDevice                               device,\n    const VkMemoryGetNativeBufferInfoOHOS* pInfo,\n    struct OH_NativeBuffer**               pBuffer",
+        "exposure": "openharmony_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_ohos.h",
+        "source_line": 534,
+        "source_sha256": "eefb2fbe54a5cbcad9ef74b160cfa57783a4be65ad38153ea9fbfc3fcf4a06e0",
+        "source_symbol": "vkGetMemoryNativeBufferOHOS",
+        "system_capability": "OpenHarmony Vulkan platform extension"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkGetMemoryNativeBufferOHOS"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "RGBA/像素/bitmap 数据",
+          "width/height/stride/format",
+          "缩放、旋转、裁剪或颜色变换",
+          "buffer/texture 生命周期"
+        ],
+        "expected_data_forms": [
+          "PixelMap/Bitmap/NativeBuffer",
+          "纹理格式与行跨度",
+          "DMA 或共享 buffer 约束"
+        ],
+        "operator_aliases": [
+          "dma_buffer",
+          "nativebuffer",
+          "oh_nativebuffer",
+          "vkgetnativebufferpropertiesohos"
+        ],
+        "standalone_offload_note": "传输 API 自身不是计算收益证明；必须把 upload/download、布局转换和 fence/sync 纳入基准。"
+      },
+      "detailed_description_zh": "这是 OpenHarmony 特有的 NativeBuffer 互操作入口。它帮助判断外部 buffer 的 memory type/format 路径，但不证明该 buffer 可用于目标 pipeline 或可零拷贝。",
+      "name_zh": "Vulkan OH_NativeBuffer 属性查询",
+      "one_line_abstract_zh": "查询 OH_NativeBuffer 与 Vulkan device 互操作所需的属性。",
+      "record_id": "gpu_api:vkGetNativeBufferPropertiesOHOS",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "在 CPU buffer、GPU buffer 和纹理之间搬运、缩放或 blit 数据，是图像计算端到端代价的关键组成。",
+        "id": "gpu_image_transfer",
+        "label_zh": "GPU 图像/Buffer 传输"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\ntypedef VkResult (VKAPI_PTR *PFN_vkGetNativeBufferPropertiesOHOS)(\n    VkDevice                      device,\n    const struct OH_NativeBuffer* buffer,\n    VkNativeBufferPropertiesOHOS* pProperties",
+        "exposure": "openharmony_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_ohos.h",
+        "source_line": 517,
+        "source_sha256": "eefb2fbe54a5cbcad9ef74b160cfa57783a4be65ad38153ea9fbfc3fcf4a06e0",
+        "source_symbol": "vkGetNativeBufferPropertiesOHOS",
+        "system_capability": "OpenHarmony Vulkan platform extension"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkGetNativeBufferPropertiesOHOS"
+    },
+    {
+      "accelerator_unit": "gpu",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "third_party_sdk_header",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "GPU SDK 头文件或系统源码中的 GPU 路径只证明接口/集成存在；不证明当前设备的驱动、extension、format、shader 或性能可用。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "二维或三维独立循环",
+          "规则数组/图像下标访问",
+          "每像素或每元素独立写回",
+          "可提取为无跨迭代依赖的 kernel"
+        ],
+        "expected_data_forms": [
+          "连续 buffer 或图像纹理",
+          "明确宽高/stride/format",
+          "可描述的输入输出边界"
+        ],
+        "operator_aliases": [
+          "fence",
+          "queue_submit",
+          "semaphore",
+          "vkqueuesubmit"
+        ],
+        "standalone_offload_note": "必须先建立 shader、pipeline 和同步边界；小任务或频繁 CPU-GPU 往返通常不值得独立卸载。"
+      },
+      "detailed_description_zh": "队列提交划定 CPU-GPU 异步执行与同步边界；它对吞吐和延迟影响很大，但不是数据并行计算本身的证据。",
+      "name_zh": "Vulkan 队列提交",
+      "one_line_abstract_zh": "把命令缓冲及同步对象提交给 GPU queue。",
+      "record_id": "gpu_api:vkQueueSubmit",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+        "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+        "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+        "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "将规则并行计算编译为 GPU shader/compute pipeline，并按工作组提交执行。",
+        "id": "gpu_compute_pipeline",
+        "label_zh": "GPU 计算管线"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "typedef void (VKAPI_PTR *PFN_vkGetDeviceQueue)(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue);\ntypedef VkResult (VKAPI_PTR *PFN_vkQueueSubmit)(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);\ntypedef VkResult (VKAPI_PTR *PFN_vkQueueWaitIdle)(VkQueue queue);\ntypedef VkResult (VKAPI_PTR *PFN_vkDeviceWaitIdle)(VkDevice device);\ntypedef VkResult (VKAPI_PTR *PFN_vkAllocateMemory)(VkDevice device, const VkMemoryAllocateInfo* pAllocateInfo, const VkAllocationCallbacks* pAllocator, VkDeviceMemory* pMemory);",
+        "exposure": "third_party_sdk_header",
+        "library": "Vulkan loader（目标镜像验证）",
+        "source_file": "openharmony/interface/sdk_c/third_party/vulkan-headers/vulkan/vulkan_core.h",
+        "source_line": 4185,
+        "source_sha256": "431293dbe0f3760c8f190bab10b91334151f27e216b23e6a80194e0233afe494",
+        "source_symbol": "vkQueueSubmit",
+        "system_capability": "not asserted by third-party header"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "astc_opencl_encode_to_cpu_software_fallback",
+          "display_screenshot_gpu_to_cpu_fallback",
+          "efilter_brightness_gpu_cpu_mapping",
+          "efilter_contrast_gpu_cpu_mapping",
+          "image_compress_gpu_to_raster_fallback",
+          "pixelmap_gpu_rotate_to_cpu_fallback",
+          "pixelmap_gpu_scale_to_cpu_fallback"
+        ]
+      },
+      "symbol": "vkQueueSubmit"
+    }
+  ],
+  "runtime_probe_protocol": [
+    "确认目标镜像导出所需 Vulkan/OpenGL ES 库，并创建可用 graphics/compute context、queue 和 surface。",
+    "查询并验证所需 API version、extension、shader language、纹理/buffer format、usage、alignment 和 NativeBuffer/DMA 互操作条件。",
+    "以真实输入尺寸、stride、format 构建 shader/pipeline 与命令缓冲；对 validation/creation/submit 错误保留 CPU fallback。",
+    "在包含纹理上传下载、buffer copy、layout transition、fence/sync、上下文切换和回退的端到端 workload 上 benchmark。"
+  ],
+  "schema_version": "1.0",
+  "scope": {
+    "description_zh": "候选相关的 Vulkan/OpenGL ES SDK 入口，以及当前源码已有的 GPU 图像处理集成路径。它不是完整 Vulkan/OpenGL API 镜像。",
+    "target_units": [
+      "GPU_OPENCL",
+      "GPU_OPENGL",
+      "GPU_SOURCE_PATH"
+    ]
+  },
+  "source_revision": "workspace-unpinned",
+  "summary": {
+    "record_count": 18,
+    "record_direct_strict_link_count": 5,
+    "semantic_family_counts": {
+      "gpu_compute_pipeline": 6,
+      "gpu_image_effect": 5,
+      "gpu_image_transfer": 7
+    },
+    "target_device_availability": "evidence_required",
+    "unit_strict_case_count": 7
+  },
+  "unit_strict_case_inventory": [
+    "astc_opencl_encode_to_cpu_software_fallback",
+    "display_screenshot_gpu_to_cpu_fallback",
+    "efilter_brightness_gpu_cpu_mapping",
+    "efilter_contrast_gpu_cpu_mapping",
+    "image_compress_gpu_to_raster_fallback",
+    "pixelmap_gpu_rotate_to_cpu_fallback",
+    "pixelmap_gpu_scale_to_cpu_fallback"
+  ]
+}

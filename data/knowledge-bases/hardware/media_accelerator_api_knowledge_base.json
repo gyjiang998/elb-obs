@@ -1,0 +1,2429 @@
+{
+  "accelerator_unit": "media",
+  "artifact_type": "accelerator_api_knowledge_base",
+  "content_sha256": "d8572fecd0859afb0741b148ce5c413bf708f997e89b1c9eb0212a86b73d008b",
+  "evidence_boundary": {
+    "performance": "not_provided until an end-to-end benchmark is attached",
+    "source_interface": "confirmed from versioned workspace files",
+    "target_device": "evidence_required via the unit-specific runtime protocol"
+  },
+  "input_provenance": [
+    {
+      "path": "docs_ffrt/tools/optimization_kb/optimization_knowledge_base.json",
+      "sha256": "221bf3b58a92b1fdd7906dee44301b026c8756bc58b25af7602b8c73c83a2903"
+    },
+    {
+      "path": "openharmony/drivers/interface/codec/image/v2_1/ICodecImage.idl",
+      "sha256": "849e0141c20b16923358be8208addaeaf88e6424a8785877fbf6505c534fd8cb"
+    },
+    {
+      "path": "openharmony/drivers/interface/codec/v4_0/ICodecComponentManager.idl",
+      "sha256": "d6b80ab0d523e5a24b8c7b80cc533f07be5f37027e08c2d71594bb26f0072983"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp",
+      "sha256": "7aaa17172051d74bca8a48d115f94dcd4da5e135d68aaf75f1710fbd093fe6f3"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec_loader.cpp",
+      "sha256": "3dffbe0d3e6453f784930c32e8b0bea30c56f1ee2696b6d7755b6db7b605e143"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp",
+      "sha256": "27dba3260a62bc2a08f37f301328ddc5d101c8e32c9562484a1d26d5273a8de5"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/video_decoder_adapter.cpp",
+      "sha256": "e9c0eaeb2b6b005af6808072b2794d2b4e99f28a89539b881e1b0228c365905b"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp",
+      "sha256": "1dedff252137d35cde46e1b4ca2d4b853788a99ad756423ccc9874073d55ad4f"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+      "sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp",
+      "sha256": "ca5491a051de6b6357bc1b55bbf9c43c5c66a1fa35dffe482d7c955e35408844"
+    },
+    {
+      "path": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp",
+      "sha256": "71e7e77512d3dda4af01cbac57acc3cfe315417791e742d266c54b791c2cd113"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcapability.h",
+      "sha256": "c8a09e7601caa19332c0689e63d2ba89494b9885a996e11f7b970d50780b47cf"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+      "sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93"
+    },
+    {
+      "path": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+      "sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733"
+    }
+  ],
+  "kb_id": "openharmony_media_accelerator_api_knowledge",
+  "kb_version": "1.0.0",
+  "records": [
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "video decoder/codec MIME",
+          "HARDWARE/SOFTWARE capability 分支",
+          "width/height、profile、surface 或 AVFormat",
+          "创建失败后 software decoder 回退"
+        ],
+        "expected_data_forms": [
+          "视频 MIME/码流",
+          "width/height/profile",
+          "AVFormat、SurfaceBuffer 或 decoder callback"
+        ],
+        "operator_aliases": [
+          "checkdecodercapability",
+          "decodersurfacefilter_checkdecodercapability",
+          "hardware_software_decoder"
+        ],
+        "standalone_offload_note": "这是系统实现选择逻辑；业务代码应优先通过公开 AVCodec capability 与生命周期 API 获取同等语义，不应依赖 internal filter/factory 符号。"
+      },
+      "detailed_description_zh": "DecoderSurfaceFilter 以 MIME、宽高和 profile 验证硬件 decoder；硬件不满足时调用相同逻辑检查软件 decoder。这是严格硬件到软件能力回退的系统实现证据，而不是应用侧公开 API。",
+      "name_zh": "系统硬件视频解码能力选择",
+      "one_line_abstract_zh": "先检查 HARDWARE decoder capability，再检查 SOFTWARE decoder capability。",
+      "record_id": "media_api:DecoderSurfaceFilter::CheckDecoderCapability",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "以真实 MIME、profile、width/height 查询 HARDWARE decoder capability，并记录不支持原因。",
+        "硬件不满足时验证 SOFTWARE capability、decoder 名称和后续 Init/Configure/Start。",
+        "使用公开 AVCodec NDK 时复现同样的能力选择和软件回退语义，不直接调用 internal filter。"
+      ],
+      "semantic_family": {
+        "description_zh": "系统媒体模块先检查硬件 decoder capability，再回退软件 decoder，或在缩略图路径中按硬件/软件类别创建不同 decoder。",
+        "id": "media_system_video_decoder_fallback",
+        "label_zh": "系统硬件视频解码选择与回退"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "bool DecoderSurfaceFilter::CheckDecoderCapability(bool isHwDecoder, int32_t width, int32_t height,\n    std::string &decoderName)\n{\n    OH_AVCapability *capability = nullptr;",
+        "exposure": "system_source_integration",
+        "library": "AVCodec media engine internal filter",
+        "source_file": "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp",
+        "source_line": 366,
+        "source_sha256": "27dba3260a62bc2a08f37f301328ddc5d101c8e32c9562484a1d26d5273a8de5",
+        "source_symbol": "DecoderSurfaceFilter::CheckDecoderCapability",
+        "system_capability": "system media service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "video_decoder_surface_hardware_to_software_capability_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "DecoderSurfaceFilter::CheckDecoderCapability"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 解码",
+          "压缩 bitstream 与输出 PixelMap/NativeBuffer",
+          "sample size、颜色格式、宽高/对齐或 DMA buffer",
+          "ICodecImage/DoJpegDecode 与软件解码回退"
+        ],
+        "expected_data_forms": [
+          "CodecImageBuffer 输入/输出",
+          "CodecJpegDecInfo",
+          "DMA/NativeBuffer、sample size、YUV/RGBA 输出"
+        ],
+        "operator_aliases": [
+          "dohardwaredecode",
+          "hardware_decode_jpeg",
+          "jpeg_hw_decode"
+        ],
+        "standalone_offload_note": "ICodecImage 是系统/驱动 HDI 合同；调用侧还必须满足实际 capability、buffer allocator、对齐、颜色格式和服务可用性，不能视为普通 NDK。"
+      },
+      "detailed_description_zh": "ExtDecoder 仅在 JPEG_HW_DECODE_ENABLE、系统开关、JPEG 格式、allocator 和 JpegHardwareDecoder capability 均通过时调用该入口；失败后继续 SkCodec::getPixels 等软件解码路径。",
+      "name_zh": "JPEG 硬件解码调度",
+      "one_line_abstract_zh": "在 JPEG、allocator 与硬件能力门禁满足时调度 Image Codec 硬件解码。",
+      "record_id": "media_api:ExtDecoder::DoHardWareDecode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 JPEG_HW_DECODE_ENABLE、系统开关、JPEG bitstream、allocator/DMA 条件、尺寸和对齐约束。",
+        "验证 InitDecoder、DoJpegDecode、色彩空间处理和输出 buffer 更新均成功。",
+        "失败后验证 Skia Decode/getPixels 仍提供等价输出，并测量准备/复制/回退成本。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 通过 JpegHardwareDecoder 和 ICodecImage HDI 将 JPEG bitstream 及输出 buffer 交给图像 codec 服务，失败后使用 Skia 软件解码。",
+        "id": "media_jpeg_hardware_decode",
+        "label_zh": "JPEG 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "#ifdef JPEG_HW_DECODE_ENABLE\nuint32_t ExtDecoder::DoHardWareDecode(DecodeContext &context)\n{\n    if (HardWareDecode(context) == SUCCESS) {\n        return SUCCESS;",
+        "exposure": "system_source_integration",
+        "library": "image framework internal decoder",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp",
+        "source_line": 1204,
+        "source_sha256": "1dedff252137d35cde46e1b4ca2d4b853788a99ad756423ccc9874073d55ad4f",
+        "source_symbol": "ExtDecoder::DoHardWareDecode",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_hardware_decode_to_skia_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ExtDecoder::DoHardWareDecode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 编码",
+          "PixelMap/Bitmap/图像像素数据",
+          "NV12/NV21/RGBA 与 width/height/quality",
+          "硬件优先并有软件编码回退"
+        ],
+        "expected_data_forms": [
+          "image/jpeg",
+          "NV12、NV21 或受约束 RGBA PixelMap",
+          "偶数宽高、质量、输出 stream/EXIF"
+        ],
+        "operator_aliases": [
+          "dohardwareencode",
+          "extencoder_dohardwareencode",
+          "image_fwk_ext_native_so"
+        ],
+        "standalone_offload_note": "当前可见源码通过 ImageFwkExtNativeSo 的 dlsym 委派编码；未在工作区建立可供普通应用直接调用的 JPEG 编码 HDI/NDK 合同。"
+      },
+      "detailed_description_zh": "该入口是当前源码可见的 JPEG 硬件编码委派边界：dlsym 到内部 native extension 后传入 SkWStream、编码选项和 PixelMap。工作区未提供该二进制 ABI 的应用侧公开合同，因此它只能作为系统实现参考。",
+      "name_zh": "JPEG 硬件编码内部委派",
+      "one_line_abstract_zh": "通过 ImageFwkExtNativeSo 动态解析 DoHardwareEncode 并提交 PixelMap。",
+      "record_id": "media_api:ExtEncoder::DoHardWareEncode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 ImageFwkExtNativeSo 可加载且 DoHardwareEncode 符号存在；这不是应用侧 SDK 可用性证明。",
+        "对 PixelMap 格式、尺寸、quality、输出 stream、返回码和故障 telemetry 建立证据。",
+        "delegate 加载或编码失败时验证 ExtEncoder 的 Skia/软件回退完整执行。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 在满足格式、尺寸、质量和开关约束时，将 JPEG PixelMap 编码请求委派给内部硬件编码扩展；失败后回到 Skia/软件路径。",
+        "id": "media_jpeg_hardware_encode",
+        "label_zh": "JPEG 硬件编码系统路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "uint32_t ExtEncoder::DoHardWareEncode(SkWStream* skStream)\n{\n    static ImageFwkExtManager imageFwkExtManager;\n    if (imageFwkExtManager.doHardWareEncodeFunc_ != nullptr || imageFwkExtManager.LoadImageFwkExtNativeSo()) {",
+        "exposure": "system_source_integration",
+        "library": "image framework internal native extension",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+        "source_line": 600,
+        "source_sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c",
+        "source_symbol": "ExtEncoder::DoHardWareEncode",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_hardware_encode_to_skia_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ExtEncoder::DoHardWareEncode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 编码",
+          "PixelMap/Bitmap/图像像素数据",
+          "NV12/NV21/RGBA 与 width/height/quality",
+          "硬件优先并有软件编码回退"
+        ],
+        "expected_data_forms": [
+          "image/jpeg",
+          "NV12、NV21 或受约束 RGBA PixelMap",
+          "偶数宽高、质量、输出 stream/EXIF"
+        ],
+        "operator_aliases": [
+          "hardware_encode_jpeg",
+          "hardwareencode",
+          "image_jpeg_hardware_encode"
+        ],
+        "standalone_offload_note": "当前可见源码通过 ImageFwkExtNativeSo 的 dlsym 委派编码；未在工作区建立可供普通应用直接调用的 JPEG 编码 HDI/NDK 合同。"
+      },
+      "detailed_description_zh": "ExtEncoder 仅对 image/jpeg、质量、偶数尺寸、NV12/NV21 或受约束 RGBA PixelMap 等条件开启该路径；硬件调用失败后上层继续走 Hispeed/Skia 软件编码。该符号属于 Image Framework 内部实现。",
+      "name_zh": "JPEG 硬件编码调度",
+      "one_line_abstract_zh": "在 JPEG PixelMap 满足约束时优先委派内部硬件编码扩展。",
+      "record_id": "media_api:ExtEncoder::HardwareEncode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 image/jpeg、quality、偶数宽高、PixelMap format 和 ImageSystemProperties 开关满足硬件路径要求。",
+        "验证内部 delegate 完成输出并且 EXIF/stream 处理正确；失败必须继续软件编码。",
+        "在包含格式转换、委派加载和软件回退的端到端编码 workload 上测量吞吐、时延和功耗。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 在满足格式、尺寸、质量和开关约束时，将 JPEG PixelMap 编码请求委派给内部硬件编码扩展；失败后回到 Skia/软件路径。",
+        "id": "media_jpeg_hardware_encode",
+        "label_zh": "JPEG 硬件编码系统路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "bool ExtEncoder::HardwareEncode(SkWStream &skStream, bool needExif)\n{\n    uint32_t retCode = ERR_IMAGE_ENCODE_FAILED;\n    if (IsHardwareEncodeSupported(opts_, pixelmap_)) {",
+        "exposure": "system_source_integration",
+        "library": "image framework internal integration",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+        "source_line": 698,
+        "source_sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c",
+        "source_symbol": "ExtEncoder::HardwareEncode",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_hardware_encode_to_skia_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ExtEncoder::HardwareEncode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 编码",
+          "PixelMap/Bitmap/图像像素数据",
+          "NV12/NV21/RGBA 与 width/height/quality",
+          "硬件优先并有软件编码回退"
+        ],
+        "expected_data_forms": [
+          "image/jpeg",
+          "NV12、NV21 或受约束 RGBA PixelMap",
+          "偶数宽高、质量、输出 stream/EXIF"
+        ],
+        "operator_aliases": [
+          "hardware_encode_picture",
+          "jpeg_picture_encode",
+          "tryhardwareencodepicture"
+        ],
+        "standalone_offload_note": "当前可见源码通过 ImageFwkExtNativeSo 的 dlsym 委派编码；未在工作区建立可供普通应用直接调用的 JPEG 编码 HDI/NDK 合同。"
+      },
+      "detailed_description_zh": "相机场景会先检查主图/辅助图尺寸、质量和系统开关，然后委派 DoHardwareEncodePicture；JPEG 委派失败时明确调用 EncodeJpegPicture 软件路径。该路径不建立普通应用可直接调用的硬件 JPEG API。",
+      "name_zh": "相机 JPEG 硬件编码尝试",
+      "one_line_abstract_zh": "为带主图和辅助图的 Picture 请求内部硬件编码扩展。",
+      "record_id": "media_api:ExtEncoder::TryHardwareEncodePicture",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 Picture 主图/辅助图、JPEG 质量、偶数尺寸和系统硬件编码开关。",
+        "验证 DoHardwareEncodePicture delegate 可加载、输出元数据正确并记录具体失败原因。",
+        "硬件 Picture 编码失败时验证 EncodeJpegPicture 软件回退和输出兼容性。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 在满足格式、尺寸、质量和开关约束时，将 JPEG PixelMap 编码请求委派给内部硬件编码扩展；失败后回到 Skia/软件路径。",
+        "id": "media_jpeg_hardware_encode",
+        "label_zh": "JPEG 硬件编码系统路径"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "uint32_t ExtEncoder::TryHardwareEncodePicture(SkWStream& skStream, std::string& errorMsg)\n{\n    errorMsg = \"Hardware encode picture failed\";\n    if (picture_ == nullptr) {",
+        "exposure": "system_source_integration",
+        "library": "image framework internal native extension",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp",
+        "source_line": 2447,
+        "source_sha256": "b90256ed74862488b5889ef983f5f2bfe315df514b78c3960431894c51dc870c",
+        "source_symbol": "ExtEncoder::TryHardwareEncodePicture",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_picture_hardware_encode_to_software_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ExtEncoder::TryHardwareEncodePicture"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HCodec/CodecComponentManager/Capability 语义",
+          "codec MIME、role、profile、width/height 或 pixel format",
+          "硬件 component 名称与 capability 查询",
+          "硬件优先、软件 factory 回退控制流"
+        ],
+        "expected_data_forms": [
+          "CodecCompCapability",
+          "MIME/role/profile/level",
+          "宽高、对齐、帧率、bitrate、pixel format"
+        ],
+        "operator_aliases": [
+          "codeccompcapability",
+          "hcodeccreate",
+          "hdecoder",
+          "hencoder"
+        ],
+        "standalone_offload_note": "HCodec/HDI 能力项来自设备运行时；源码中的 component 名称、枚举接口或 HCodec factory 不能作为某设备支持某格式的证明。"
+      },
+      "detailed_description_zh": "HCodec::Create 遍历当前设备的 CodecCompCapability，按 component 名称和 role 将视频 decoder/encoder 映射为 HDecoder/HEncoder。这证明 HCodec 是 HDI component 的系统封装，不是面向业务代码的独立硬件 API。",
+      "name_zh": "HCodec 硬件视频 codec 对象创建",
+      "one_line_abstract_zh": "根据 HDI component capability 创建 HDecoder 或 HEncoder 对象。",
+      "record_id": "media_api:HCodec::Create",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "读取实际 CodecCompCapability，确认 component 名称、VIDEO_DECODER/VIDEO_ENCODER role、MIME/profile/size/format 约束。",
+        "验证 HCodec::Create 返回的对象可完成 Init、Configure、Start，且应用实例限制没有触发。",
+        "任一 capability 或生命周期门禁失败时转向 FCodec/software，比较功能和端到端时延。"
+      ],
+      "semantic_family": {
+        "description_zh": "通过 Codec Component HDI 枚举设备实际视频编解码 component capability，并由 HCodec 将受支持能力转换为系统 codec 列表。",
+        "id": "media_hcodec_capability",
+        "label_zh": "HCodec 硬件视频能力发现"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "std::shared_ptr<HCodec> HCodec::Create(const std::string &name)\n{\n    vector<CodecCompCapability> capList = GetCapList();\n    shared_ptr<HCodec> codec;",
+        "exposure": "system_source_integration",
+        "library": "AVCodec service internal HCodec",
+        "source_file": "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp",
+        "source_line": 55,
+        "source_sha256": "7aaa17172051d74bca8a48d115f94dcd4da5e135d68aaf75f1710fbd093fe6f3",
+        "source_symbol": "HCodec::Create",
+        "system_capability": "system media service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "HCodec::Create"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HCodec/CreateComponent/ICodecComponent",
+          "输入输出 buffer 或 Surface",
+          "codec callback 与状态机",
+          "video encode/decode 生命周期"
+        ],
+        "expected_data_forms": [
+          "CodecCompCapability 和 componentId",
+          "compressed bitstream 或 raw frame",
+          "SurfaceBuffer、DMA buffer、fence 与 callback"
+        ],
+        "operator_aliases": [
+          "createcomponent",
+          "hcodec_hdi",
+          "onallocatecomponent"
+        ],
+        "standalone_offload_note": "组件创建与 buffer 生命周期属于系统媒体栈/HDI 集成；普通热点不能绕过 AVCodec API 直接调用它，且必须保留 FCodec/software 回退。"
+      },
+      "detailed_description_zh": "HCodec 在建立 callback、passthrough/IPC 模式、安全标志和实例计数约束后调用 ICodecComponentManager::CreateComponent。它是实际 HCodec 到 HDI 的创建桥梁，处理失败并不意味着可继续将任务视为硬件执行。",
+      "name_zh": "HCodec HDI 组件分配",
+      "one_line_abstract_zh": "向 Codec Component HDI 创建已选定的硬件视频 component。",
+      "record_id": "media_api:HCodec::OnAllocateComponent",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 component manager、callback、security/passthrough 模式、实例上限及 componentId 创建结果。",
+        "验证输入输出 buffer 或 Surface、fence、回调和状态机在真实码流下工作。",
+        "CreateComponent 或后续状态转换失败时释放资源并执行 FCodec/software 回退。"
+      ],
+      "semantic_family": {
+        "description_zh": "按已验证 component 名称创建 HCodec/Codec HDI 组件，并通过回调、buffer/surface 和状态机驱动视频编解码。",
+        "id": "media_hcodec_component",
+        "label_zh": "HCodec 硬件组件生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "int32_t HCodec::OnAllocateComponent()\n{\n    HitraceMeterFmtScoped trace(HITRACE_TAG_ZMEDIA, \"hcodec %s %s\", __func__, caps_.compName.c_str());\n    compMgr_ = GetManager(false,",
+        "exposure": "system_source_integration",
+        "library": "AVCodec service internal HCodec",
+        "source_file": "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp",
+        "source_line": 1514,
+        "source_sha256": "7aaa17172051d74bca8a48d115f94dcd4da5e135d68aaf75f1710fbd093fe6f3",
+        "source_symbol": "HCodec::OnAllocateComponent",
+        "system_capability": "system media service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "HCodec::OnAllocateComponent"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HCodec/CreateComponent/ICodecComponent",
+          "输入输出 buffer 或 Surface",
+          "codec callback 与状态机",
+          "video encode/decode 生命周期"
+        ],
+        "expected_data_forms": [
+          "CodecCompCapability 和 componentId",
+          "compressed bitstream 或 raw frame",
+          "SurfaceBuffer、DMA buffer、fence 与 callback"
+        ],
+        "operator_aliases": [
+          "avcodec_hcodec",
+          "createhcodecbyname",
+          "hcodecloader"
+        ],
+        "standalone_offload_note": "组件创建与 buffer 生命周期属于系统媒体栈/HDI 集成；普通热点不能绕过 AVCodec API 直接调用它，且必须保留 FCodec/software 回退。"
+      },
+      "detailed_description_zh": "CodecFactory 将识别为 AVCODEC_HCODEC 的名称分派给 HCodecLoader；loader 动态加载 libhcodec.z.so 并调用 CreateHCodecByName。该路径是系统 codec factory 的内部集成，失败后同一 MIME 可继续尝试 FCodec/software factory。",
+      "name_zh": "HCodec 硬件视频 codec 加载",
+      "one_line_abstract_zh": "按 capability 选择的名称加载系统 HCodec 实现。",
+      "record_id": "media_api:HCodecLoader::CreateByName",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "从当前设备 capability 获取 codec 名称，不能使用源码中的 HCodec 名称作为跨设备硬件事实。",
+        "验证 libhcodec.z.so、CreateHCodecByName、Init/Configure/Start 和 service 生命周期均成功。",
+        "HCodec 初始化/配置/启动失败时验证同 MIME FCodec/software factory 的顺序回退和功能一致性。"
+      ],
+      "semantic_family": {
+        "description_zh": "按已验证 component 名称创建 HCodec/Codec HDI 组件，并通过回调、buffer/surface 和状态机驱动视频编解码。",
+        "id": "media_hcodec_component",
+        "label_zh": "HCodec 硬件组件生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "} // namespace\nstd::shared_ptr<CodecBase> HCodecLoader::CreateByName(const std::string &name)\n{\n    HCodecLoader &loader = GetInstance();\n    CHECK_AND_RETURN_RET_LOG(loader.Init() == AVCS_ERR_OK, nullptr, \"Create codec by name failed: init error\");",
+        "exposure": "system_source_integration",
+        "library": "AVCodec service internal HCodec loader",
+        "source_file": "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec_loader.cpp",
+        "source_line": 28,
+        "source_sha256": "3dffbe0d3e6453f784930c32e8b0bea30c56f1ee2696b6d7755b6db7b605e143",
+        "source_symbol": "HCodecLoader::CreateByName",
+        "system_capability": "system media service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "HCodecLoader::CreateByName"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HEIF/HEIC、grid 或 hvc1",
+          "HVCC/bitstream/Ashmem 输入",
+          "NativeBuffer/SurfaceBuffer、YUV/RGBA、tile 宽高",
+          "主图、辅助图或 alpha 合成与软件回退"
+        ],
+        "expected_data_forms": [
+          "Ashmem[] bitstream",
+          "NativeBuffer 输出",
+          "CodecHeifDecInfo、grid 行列/tile、像素格式与色彩空间"
+        ],
+        "operator_aliases": [
+          "fillalphachannel",
+          "heif_alpha_hardware_decode",
+          "hwapplyalphaimage"
+        ],
+        "standalone_offload_note": "该 HDI 合同只证明系统图像框架存在硬件路径；格式、grid 布局、sample size、色彩空间、service/driver 和设备 capability 必须逐项验证。"
+      },
+      "detailed_description_zh": "该入口先验证 alpha 图格式，再通过 HwDecodeImage 获取硬件输出并完成 alpha channel 合成；失败时在默认 sample size 下回退 SwApplyAlphaImage。它是 HEIF 特定系统逻辑，不是通用 GPU/DSP 图像算子。",
+      "name_zh": "HEIF 硬件 alpha 图解码与合成",
+      "one_line_abstract_zh": "使用硬件路径解码 alpha image，再填充主图 alpha channel。",
+      "record_id": "media_api:HeifDecoderImpl::HwApplyAlphaImage",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 alpha 图存在、YUV420/bit-depth/目标 RGBA/BGRA 约束及 sample size。",
+        "验证 alpha 图 HDI 解码、SurfaceBuffer 读写、stride 和 FillAlphaChannel 输出正确性。",
+        "硬件 alpha 解码失败时验证 SwApplyAlphaImage 的功能回退和性能影响。"
+      ],
+      "semantic_family": {
+        "description_zh": "HeifDecoderImpl 将 HEIF grid/hvc1 输入、HVCC/Ashmem 数据和 NativeBuffer 输出交给 ICodecImage::DoHeifDecode；主图、辅助图和 alpha 路径均保留软件回退。",
+        "id": "media_heif_hardware_decode",
+        "label_zh": "HEIF 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "bool HeifDecoderImpl::HwApplyAlphaImage(std::shared_ptr<HeifImage> &masterImage,\n                                        uint8_t *dstMemory, size_t dstRowStride)\n{\n    // check alpha image is available",
+        "exposure": "system_source_integration",
+        "library": "image framework HEIF decoder",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp",
+        "source_line": 1188,
+        "source_sha256": "71e7e77512d3dda4af01cbac57acc3cfe315417791e742d266c54b791c2cd113",
+        "source_symbol": "HeifDecoderImpl::HwApplyAlphaImage",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "heif_hardware_alpha_to_software_alpha_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "HeifDecoderImpl::HwApplyAlphaImage"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HEIF/HEIC、grid 或 hvc1",
+          "HVCC/bitstream/Ashmem 输入",
+          "NativeBuffer/SurfaceBuffer、YUV/RGBA、tile 宽高",
+          "主图、辅助图或 alpha 合成与软件回退"
+        ],
+        "expected_data_forms": [
+          "Ashmem[] bitstream",
+          "NativeBuffer 输出",
+          "CodecHeifDecInfo、grid 行列/tile、像素格式与色彩空间"
+        ],
+        "operator_aliases": [
+          "heif_hw_decode",
+          "heifdecoderimpl_hwdecodeimage",
+          "hwdecodeimage"
+        ],
+        "standalone_offload_note": "该 HDI 合同只证明系统图像框架存在硬件路径；格式、grid 布局、sample size、色彩空间、service/driver 和设备 capability 必须逐项验证。"
+      },
+      "detailed_description_zh": "HeifDecoderImpl 的主图与辅助图路径都调用 HwDecodeImage；它构造 HEIF decode 参数、Ashmem 输入、NativeBuffer 输出，并在失败时调用 SwDecode 或 SwDecodeAuxiliaryImage。",
+      "name_zh": "HEIF 硬件主图/辅助图解码",
+      "one_line_abstract_zh": "将 HEIF grid 或 hvc1 数据组织为 HDI 输入并请求硬件输出 SurfaceBuffer。",
+      "record_id": "media_api:HeifDecoderImpl::HwDecodeImage",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 HEIF 硬件解码开关、grid/hvc1 形态、tile/显示尺寸、sample size、像素格式和 SurfaceBuffer allocator。",
+        "验证 HVCC/bitstream Ashmem、NativeBuffer 输出、ICodecImage 返回码、色彩空间和 cache/fence 同步。",
+        "主图或辅助图硬件失败时验证 SwDecode/SwDecodeAuxiliaryImage 路径和等价性。"
+      ],
+      "semantic_family": {
+        "description_zh": "HeifDecoderImpl 将 HEIF grid/hvc1 输入、HVCC/Ashmem 数据和 NativeBuffer 输出交给 ICodecImage::DoHeifDecode；主图、辅助图和 alpha 路径均保留软件回退。",
+        "id": "media_heif_hardware_decode",
+        "label_zh": "HEIF 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "bool HeifDecoderImpl::HwDecodeImage(std::shared_ptr<HeifImage> &image, GridInfo &gridInfo,\n    sptr<SurfaceBuffer> *outBuffer, bool isPrimary, uint32_t recursionCount)\n{\n    bool cond = (outPixelFormat_ == PixelFormat::UNKNOWN);",
+        "exposure": "system_source_integration",
+        "library": "image framework HEIF decoder",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp",
+        "source_line": 654,
+        "source_sha256": "71e7e77512d3dda4af01cbac57acc3cfe315417791e742d266c54b791c2cd113",
+        "source_symbol": "HeifDecoderImpl::HwDecodeImage",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "HeifDecoderImpl::HwDecodeImage"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HCodec/CreateComponent/ICodecComponent",
+          "输入输出 buffer 或 Surface",
+          "codec callback 与状态机",
+          "video encode/decode 生命周期"
+        ],
+        "expected_data_forms": [
+          "CodecCompCapability 和 componentId",
+          "compressed bitstream 或 raw frame",
+          "SurfaceBuffer、DMA buffer、fence 与 callback"
+        ],
+        "operator_aliases": [
+          "codec_component_hdi",
+          "createcomponent",
+          "icodeccomponentmanager_createcomponent"
+        ],
+        "standalone_offload_note": "组件创建与 buffer 生命周期属于系统媒体栈/HDI 集成；普通热点不能绕过 AVCodec API 直接调用它，且必须保留 FCodec/software 回退。"
+      },
+      "detailed_description_zh": "当前 HCodec::OnAllocateComponent 直接调用该 HDI 创建 component。接口位于驱动合同，不是应用 NDK；componentName、callback、buffer ownership、状态机和销毁都必须由系统媒体栈协调。",
+      "name_zh": "Codec Component HDI 硬件组件创建",
+      "one_line_abstract_zh": "按能力返回的 component 名称创建驱动 codec 组件及回调通道。",
+      "record_id": "media_api:ICodecComponentManager::CreateComponent",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "仅使用经当前设备 capability 验证的 component 名称创建实例，并检查 HDF 返回码和 componentId。",
+        "验证 callback、buffer/surface/fence、状态转换和 DestroyComponent 在错误路径中均可正确回收。",
+        "HDI 创建或运行失败时不重试为假阳性硬件路径，转向系统 software codec 回退。"
+      ],
+      "semantic_family": {
+        "description_zh": "按已验证 component 名称创建 HCodec/Codec HDI 组件，并通过回调、buffer/surface 和状态机驱动视频编解码。",
+        "id": "media_hcodec_component",
+        "label_zh": "HCodec 硬件组件生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    CreateComponent([out] ICodecComponent component, [out] unsigned int componentId, [in] String compName,\n        [in] long appData, [in] ICodecCallback callbacks);\n\t\n\t/**",
+        "exposure": "driver_hdi_contract",
+        "library": "Codec Component HDI v4.0",
+        "source_file": "openharmony/drivers/interface/codec/v4_0/ICodecComponentManager.idl",
+        "source_line": 121,
+        "source_sha256": "d6b80ab0d523e5a24b8c7b80cc533f07be5f37027e08c2d71594bb26f0072983",
+        "source_symbol": "CreateComponent",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ICodecComponentManager::CreateComponent"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HCodec/CodecComponentManager/Capability 语义",
+          "codec MIME、role、profile、width/height 或 pixel format",
+          "硬件 component 名称与 capability 查询",
+          "硬件优先、软件 factory 回退控制流"
+        ],
+        "expected_data_forms": [
+          "CodecCompCapability",
+          "MIME/role/profile/level",
+          "宽高、对齐、帧率、bitrate、pixel format"
+        ],
+        "operator_aliases": [
+          "codec_component_hdi",
+          "codeccompcapability",
+          "getcomponentcapabilitylist"
+        ],
+        "standalone_offload_note": "HCodec/HDI 能力项来自设备运行时；源码中的 component 名称、枚举接口或 HCodec factory 不能作为某设备支持某格式的证明。"
+      },
+      "detailed_description_zh": "HCodecList 先获取 component 数量再读取 CodecCompCapability 列表，并仅将受支持视频 role 暴露给上层。此 HDI 合同是设备能力证据的来源，但位于系统媒体栈/驱动集成边界。",
+      "name_zh": "Codec Component HDI 能力枚举",
+      "one_line_abstract_zh": "读取驱动提供的视频编解码 component 能力列表。",
+      "record_id": "media_api:ICodecComponentManager::GetComponentCapabilityList",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "在目标设备上成功取得 component 数量和 capability list，并保存 vendor/component 名称、role、profile、尺寸、对齐和 instance limit。",
+        "把 capability 记录与真实输入 MIME/profile/size/format 做交集，不得把单个 component 的存在泛化为所有视频格式可用。",
+        "能力为空、服务不可用或约束不满足时进入 FCodec/software codec 选择。"
+      ],
+      "semantic_family": {
+        "description_zh": "通过 Codec Component HDI 枚举设备实际视频编解码 component capability，并由 HCodec 将受支持能力转换为系统 codec 列表。",
+        "id": "media_hcodec_capability",
+        "label_zh": "HCodec 硬件视频能力发现"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    GetComponentCapabilityList([out] struct CodecCompCapability[] capList, [in] int count);\n\t\n    /**\n     * @brief Creates a codec component instance.",
+        "exposure": "driver_hdi_contract",
+        "library": "Codec Component HDI v4.0",
+        "source_file": "openharmony/drivers/interface/codec/v4_0/ICodecComponentManager.idl",
+        "source_line": 98,
+        "source_sha256": "d6b80ab0d523e5a24b8c7b80cc533f07be5f37027e08c2d71594bb26f0072983",
+        "source_symbol": "GetComponentCapabilityList",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ICodecComponentManager::GetComponentCapabilityList"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "HEIF/HEIC、grid 或 hvc1",
+          "HVCC/bitstream/Ashmem 输入",
+          "NativeBuffer/SurfaceBuffer、YUV/RGBA、tile 宽高",
+          "主图、辅助图或 alpha 合成与软件回退"
+        ],
+        "expected_data_forms": [
+          "Ashmem[] bitstream",
+          "NativeBuffer 输出",
+          "CodecHeifDecInfo、grid 行列/tile、像素格式与色彩空间"
+        ],
+        "operator_aliases": [
+          "codec_image_heif",
+          "doheifdecode",
+          "icodecimage_doheifdecode"
+        ],
+        "standalone_offload_note": "该 HDI 合同只证明系统图像框架存在硬件路径；格式、grid 布局、sample size、色彩空间、service/driver 和设备 capability 必须逐项验证。"
+      },
+      "detailed_description_zh": "Image Codec HDI v2.1 定义 HEIF 解码合同，HeifDecoderImpl 已直接调用该接口处理 grid/hvc1 场景。它是系统/驱动层 API，应用不可将其当作公开 HEIF NDK。",
+      "name_zh": "Image Codec HDI HEIF 解码",
+      "one_line_abstract_zh": "将 HEIF Ashmem bitstream、NativeBuffer 输出和 CodecHeifDecInfo 提交给图像 codec 驱动服务。",
+      "record_id": "media_api:ICodecImage::DoHeifDecode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 ICodecImage 服务、HEIF driver capability、Ashmem 输入、NativeBuffer 输出和 CodecHeifDecInfo。",
+        "检查 grid/hvc1、tile、尺寸、像素格式、色彩空间、cache/fence 与 HDI 返回值。",
+        "HDI/driver/格式失败时回到 HeifDecoderImpl 的软件主图或辅助图解码。"
+      ],
+      "semantic_family": {
+        "description_zh": "HeifDecoderImpl 将 HEIF grid/hvc1 输入、HVCC/Ashmem 数据和 NativeBuffer 输出交给 ICodecImage::DoHeifDecode；主图、辅助图和 alpha 路径均保留软件回退。",
+        "id": "media_heif_hardware_decode",
+        "label_zh": "HEIF 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    DoHeifDecode([in] Ashmem[] inputs, [in] NativeBuffer output, [in] struct CodecHeifDecInfo decInfo);\n}",
+        "exposure": "driver_hdi_contract",
+        "library": "Image Codec HDI v2.1",
+        "source_file": "openharmony/drivers/interface/codec/image/v2_1/ICodecImage.idl",
+        "source_line": 213,
+        "source_sha256": "849e0141c20b16923358be8208addaeaf88e6424a8785877fbf6505c534fd8cb",
+        "source_symbol": "DoHeifDecode",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ICodecImage::DoHeifDecode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "driver_hdi_contract",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 解码",
+          "压缩 bitstream 与输出 PixelMap/NativeBuffer",
+          "sample size、颜色格式、宽高/对齐或 DMA buffer",
+          "ICodecImage/DoJpegDecode 与软件解码回退"
+        ],
+        "expected_data_forms": [
+          "CodecImageBuffer 输入/输出",
+          "CodecJpegDecInfo",
+          "DMA/NativeBuffer、sample size、YUV/RGBA 输出"
+        ],
+        "operator_aliases": [
+          "codec_image_jpeg",
+          "dojpegdecode",
+          "icodecimage_dojpegdecode"
+        ],
+        "standalone_offload_note": "ICodecImage 是系统/驱动 HDI 合同；调用侧还必须满足实际 capability、buffer allocator、对齐、颜色格式和服务可用性，不能视为普通 NDK。"
+      },
+      "detailed_description_zh": "Image Codec HDI v2.1 定义 JPEG 硬件解码合同；JpegHardwareDecoder::DoDecode 已直接调用该接口。它是系统/驱动边界，普通应用不能仅因 IDL 存在而直接依赖。",
+      "name_zh": "Image Codec HDI JPEG 解码",
+      "one_line_abstract_zh": "将 JPEG 输入/输出 CodecImageBuffer 与解码参数提交给图像 codec 驱动服务。",
+      "record_id": "media_api:ICodecImage::DoJpegDecode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "验证 ICodecImage 服务、Init(CODEC_IMAGE_JPEG)、driver capability 和 HDF 返回值。",
+        "验证 CodecImageBuffer、CodecJpegDecInfo、Native/DMA buffer、fence、尺寸/对齐和输出像素格式。",
+        "服务不可用、格式不支持或 HDI 调用失败时转向 ExtDecoder/Skia 软件解码。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 通过 JpegHardwareDecoder 和 ICodecImage HDI 将 JPEG bitstream 及输出 buffer 交给图像 codec 服务，失败后使用 Skia 软件解码。",
+        "id": "media_jpeg_hardware_decode",
+        "label_zh": "JPEG 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\n    DoJpegDecode([in] struct CodecImageBuffer inBuffer, [in] struct CodecImageBuffer outBuffer,\n                 [in] struct CodecJpegDecInfo decInfo);\n\n    /**",
+        "exposure": "driver_hdi_contract",
+        "library": "Image Codec HDI v2.1",
+        "source_file": "openharmony/drivers/interface/codec/image/v2_1/ICodecImage.idl",
+        "source_line": 131,
+        "source_sha256": "849e0141c20b16923358be8208addaeaf88e6424a8785877fbf6505c534fd8cb",
+        "source_symbol": "DoJpegDecode",
+        "system_capability": "system driver integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_hardware_decode_to_skia_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "ICodecImage::DoJpegDecode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "JPEG/JPG 解码",
+          "压缩 bitstream 与输出 PixelMap/NativeBuffer",
+          "sample size、颜色格式、宽高/对齐或 DMA buffer",
+          "ICodecImage/DoJpegDecode 与软件解码回退"
+        ],
+        "expected_data_forms": [
+          "CodecImageBuffer 输入/输出",
+          "CodecJpegDecInfo",
+          "DMA/NativeBuffer、sample size、YUV/RGBA 输出"
+        ],
+        "operator_aliases": [
+          "codecimagebuffer",
+          "jpeg_hw_decoder",
+          "jpeghardwaredecoder"
+        ],
+        "standalone_offload_note": "ICodecImage 是系统/驱动 HDI 合同；调用侧还必须满足实际 capability、buffer allocator、对齐、颜色格式和服务可用性，不能视为普通 NDK。"
+      },
+      "detailed_description_zh": "该系统 wrapper 以 CodecImageBuffer、CodecJpegDecInfo、sample size 和输出 buffer 组织硬件解码；它展示了 bitstream 拷贝、DMA pool、颜色格式和资源回收的真实成本，不能只将 JPEG 解码当作零开销硬件调用。",
+      "name_zh": "JPEG 硬件解码框架桥接",
+      "one_line_abstract_zh": "准备 JPEG 输入 buffer、检查 HDI capability 并调用 Image Codec HDI。",
+      "record_id": "media_api:JpegHardwareDecoder::Decode",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "检查 ICodecImage 获取、JPEG capability、输入颜色格式、sample size、输入/输出 CodecImageBuffer 和 native/DMA buffer 生命周期。",
+        "分别测量 bitstream header/复制、HDI decode、色彩转换与输出同步，避免把准备开销遗漏。",
+        "HDI 返回失败或服务死亡后释放已分配资源并执行软件解码。"
+      ],
+      "semantic_family": {
+        "description_zh": "Image Framework 通过 JpegHardwareDecoder 和 ICodecImage HDI 将 JPEG bitstream 及输出 buffer 交给图像 codec 服务，失败后使用 Skia 软件解码。",
+        "id": "media_jpeg_hardware_decode",
+        "label_zh": "JPEG 硬件解码与 Image Codec HDI"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "uint32_t JpegHardwareDecoder::Decode(SkCodec *codec, ImagePlugin::InputDataStream *srcStream,\n                                     OHOS::Media::Size srcImgSize, uint32_t sampleSize, CodecImageBuffer& outputBuffer)\n{\n    Media::ImageTrace imageTrace(\"JpegHardwareDecoder::Decode\");",
+        "exposure": "system_source_integration",
+        "library": "image framework JPEG hardware decoder",
+        "source_file": "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp",
+        "source_line": 177,
+        "source_sha256": "ca5491a051de6b6357bc1b55bbf9c43c5c66a1fa35dffe482d7c955e35408844",
+        "source_symbol": "JpegHardwareDecoder::Decode",
+        "system_capability": "system image framework integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "jpeg_hardware_decode_to_skia_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "JpegHardwareDecoder::Decode"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "not_established_or_system_integration_only",
+        "exposure": "system_source_integration",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "video decoder/codec MIME",
+          "HARDWARE/SOFTWARE capability 分支",
+          "width/height、profile、surface 或 AVFormat",
+          "创建失败后 software decoder 回退"
+        ],
+        "expected_data_forms": [
+          "视频 MIME/码流",
+          "width/height/profile",
+          "AVFormat、SurfaceBuffer 或 decoder callback"
+        ],
+        "operator_aliases": [
+          "createbymime",
+          "hardware_video_decoder",
+          "videodecoderfactory_createbymime"
+        ],
+        "standalone_offload_note": "这是系统实现选择逻辑；业务代码应优先通过公开 AVCodec capability 与生命周期 API 获取同等语义，不应依赖 internal filter/factory 符号。"
+      },
+      "detailed_description_zh": "AVThumbnailGenerator 通过 CreateByMime 走硬件 decoder，软件分支基于 SOFTWARE capability 的 codecName 调用 CreateByName。该工厂属于系统内部，但展示了正确的硬件/软件选择顺序。",
+      "name_zh": "系统视频 decoder 工厂创建",
+      "one_line_abstract_zh": "在缩略图等系统路径中按 MIME 创建硬件 decoder，并在回退时按软件能力名称创建 decoder。",
+      "record_id": "media_api:MediaAVCodec::VideoDecoderFactory::CreateByMime",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "检查目标 MIME 的 hardware capability、CreateByMime、Configure/Start 和输入输出 buffer/surface。",
+        "当硬件实例化或运行失败时，按 SOFTWARE capability 返回的准确 codecName 创建软件 decoder。",
+        "针对缩略图或真实视频 workload 比较初始化开销、首帧时延、解码吞吐和回退正确性。"
+      ],
+      "semantic_family": {
+        "description_zh": "系统媒体模块先检查硬件 decoder capability，再回退软件 decoder，或在缩略图路径中按硬件/软件类别创建不同 decoder。",
+        "id": "media_system_video_decoder_fallback",
+        "label_zh": "系统硬件视频解码选择与回退"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "if (isMimeType) {\n        ret = MediaAVCodec::VideoDecoderFactory::CreateByMime(name, format, mediaCodec_);\n        MEDIA_LOG_I(\"VideoDecoderAdapter::Init CreateByMime errorCode %{public}d\", ret);\n    } else {\n        ret = MediaAVCodec::VideoDecoderFactory::CreateByName(name, format, mediaCodec_);",
+        "exposure": "system_source_integration",
+        "library": "AVCodec media engine internal factory",
+        "source_file": "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/video_decoder_adapter.cpp",
+        "source_line": 152,
+        "source_sha256": "e9c0eaeb2b6b005af6808072b2794d2b4e99f28a89539b881e1b0228c365905b",
+        "source_symbol": "MediaAVCodec::VideoDecoderFactory::CreateByMime",
+        "system_capability": "system media service integration"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "thumbnail_hardware_decoder_to_software_reinitialization"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "MediaAVCodec::VideoDecoderFactory::CreateByMime"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "video/codec/encode/decode 调用",
+          "MIME 类型",
+          "分辨率、profile、bitrate 或 surface",
+          "硬件/软件回退分支"
+        ],
+        "expected_data_forms": [
+          "OH_AVFormat",
+          "codec capability",
+          "输入输出 frame 或 surface"
+        ],
+        "operator_aliases": [
+          "hardware_codec",
+          "mime",
+          "oh_avcodec_getcapabilitybycategory",
+          "software_codec"
+        ],
+        "standalone_offload_note": "能力查询必须先于按名称创建；硬件 category 命中仍需配置、启动和实测，失败时保留 software codec。"
+      },
+      "detailed_description_zh": "这是公共 AVCodec 硬件选择的首要门禁。只有返回非空 capability 才能继续按名称创建；它还不能证明具体 profile、format、surface 或运行时资源可用。",
+      "name_zh": "按硬件/软件类别查询 Codec",
+      "one_line_abstract_zh": "按 MIME、编解码方向和 HARDWARE/SOFTWARE 类别查询 codec capability。",
+      "record_id": "media_api:OH_AVCodec_GetCapabilityByCategory",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "按 MIME、编码/解码方向和 HARDWARE/SOFTWARE 类别查询真实可用 codec，再据结果创建实例。",
+        "id": "media_capability_selection",
+        "label_zh": "媒体硬件能力选择"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVCapability *OH_AVCodec_GetCapabilityByCategory(const char *mime, bool isEncoder, OH_AVCodecCategory category);\n\n/**\n * @brief Obtains a list of codec capabilities for a specified codec type.",
+        "exposure": "openharmony_ndk",
+        "library": "AVCodec NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcapability.h",
+        "source_line": 168,
+        "source_sha256": "c8a09e7601caa19332c0689e63d2ba89494b9885a996e11f7b970d50780b47cf",
+        "source_symbol": "OH_AVCodec_GetCapabilityByCategory",
+        "system_capability": "SystemCapability.Multimedia.Media.CodecBase"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_AVCodec_GetCapabilityByCategory"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "avformat",
+          "oh_videodecoder_configure",
+          "pixel_format",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "硬件可用性在 Configure/Prepare 才会受到真实 profile、level、size、pixel format 和 surface/buffer 约束；能力查询成功不免除这一步。",
+      "name_zh": "配置视频解码器",
+      "one_line_abstract_zh": "以 OH_AVFormat 配置 decoder 的实际输入输出参数。",
+      "record_id": "media_api:OH_VideoDecoder_Configure",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoDecoder_Configure(OH_AVCodec *codec, OH_AVFormat *format);\n\n/**\n * @brief Prepares internal resources for a video decoder. This function must be called after",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 178,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_Configure",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_Configure"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "decode",
+          "mime",
+          "oh_videodecoder_createbymime",
+          "video_decoder"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "推荐的创建入口会由系统选择可用 decoder；若目标是明确硬件路径，应先用 capability category 查询并基于返回名称创建，同时准备 software fallback。",
+      "name_zh": "按 MIME 创建视频解码器",
+      "one_line_abstract_zh": "基于 MIME 创建视频解码器实例。",
+      "record_id": "media_api:OH_VideoDecoder_CreateByMime",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVCodec *OH_VideoDecoder_CreateByMime(const char *mime);\n\n/**\n * @brief Creates a video decoder instance based on a decoder name. To use this function, you must know the exact name",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 58,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_CreateByMime",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_CreateByMime"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "codec_name",
+          "hardware_decoder",
+          "oh_videodecoder_createbyname",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "这是硬件/软件选择后建立 decoder 的关键入口；名称必须来自当前设备 capability，不能把源码中的 HCodec 名称硬编码为跨设备事实。",
+      "name_zh": "按能力名称创建视频解码器",
+      "one_line_abstract_zh": "使用 capability 查询返回的准确名称创建视频解码器。",
+      "record_id": "media_api:OH_VideoDecoder_CreateByName",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVCodec *OH_VideoDecoder_CreateByName(const char *name);\n\n/**\n * @brief Clears the internal resources of a video decoder and destroys the decoder instance. You only need to call the",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 71,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_CreateByName",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_CreateByName"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "codec_destroy",
+          "oh_videodecoder_destroy",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "资源释放需要在同一 codec 状态机中执行；它是可实施性/稳定性条件，不是加速候选的正向证据。",
+      "name_zh": "销毁视频解码器",
+      "one_line_abstract_zh": "释放 decoder 内部资源与实例。",
+      "record_id": "media_api:OH_VideoDecoder_Destroy",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoDecoder_Destroy(OH_AVCodec *codec);\n\n/**\n * @brief Sets an asynchronous callback so that your application can respond to events generated by a video decoder.",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 85,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_Destroy",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_Destroy"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "codec_prepare",
+          "oh_videodecoder_prepare",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "Prepare 之后才能可靠地发现部分 runtime/service 失败；应把失败转入软件 codec 或上层降级，不能把 create 成功当作硬件稳定可用。",
+      "name_zh": "准备视频解码器",
+      "one_line_abstract_zh": "完成 decoder 初始化并进入可启动状态。",
+      "record_id": "media_api:OH_VideoDecoder_Prepare",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "* @brief Sets an asynchronous callback so that your application can respond to events generated by a video decoder.\n * This function must be called prior to {@link OH_VideoDecoder_Prepare}.\n *\n * @param codec Pointer to a video decoder instance.\n * @param callback All callback functions.",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 89,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_Prepare",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_Prepare"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "codec_start",
+          "oh_videodecoder_start",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "Start 后需要通过 callback、buffer/surface 交接和实际 workload 验证吞吐与时延；不要只依据接口成功返回估计帧率收益。",
+      "name_zh": "启动视频解码器",
+      "one_line_abstract_zh": "开始 decoder 的异步/缓冲处理。",
+      "record_id": "media_api:OH_VideoDecoder_Start",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoDecoder_Start(OH_AVCodec *codec);\n\n/**\n * @brief Stops a video decoder and releases the input and output buffers. After the video decoder is stopped, you can",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 211,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_Start",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_Start"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "压缩视频码流",
+          "decode callback/surface",
+          "frame buffer 或 surface",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "MIME/profile/width/height",
+          "OH_AVFormat",
+          "输入码流与输出 surface/buffer"
+        ],
+        "operator_aliases": [
+          "codec_stop",
+          "oh_videodecoder_stop",
+          "video_decode"
+        ],
+        "standalone_offload_note": "生命周期 API 不会把任意图像循环变为硬件解码；必须存在受支持压缩码流和 capability 证据。"
+      },
+      "detailed_description_zh": "停止/flush 生命周期是硬件与软件 codec 切换、资源回收和失败恢复的一部分；不参与候选计算形态判断。",
+      "name_zh": "停止视频解码器",
+      "one_line_abstract_zh": "停止 decoder 并结束当前处理会话。",
+      "record_id": "media_api:OH_VideoDecoder_Stop",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频解码器，实际实现可能由硬件或软件能力选择决定。",
+        "id": "media_decoder_lifecycle",
+        "label_zh": "硬件视频解码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoDecoder_Stop(OH_AVCodec *codec);\n\n/**\n * @brief Clears the input and output data and parameters, for example, H.264 PPS/SPS, cached in a video decoder.",
+        "exposure": "openharmony_ndk",
+        "library": "video decoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videodecoder.h",
+        "source_line": 228,
+        "source_sha256": "1c0066c57b0c448a9eda38490a8b566ecc0e3b03f7b58b85cf2eba81d7f71b93",
+        "source_symbol": "OH_VideoDecoder_Stop",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoDecoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoDecoder_Stop"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "avformat",
+          "bitrate",
+          "oh_videoencoder_configure",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "硬件编码能否建立取决于输入 pixel format、size、bitrate、profile、surface/buffer 和驱动资源；Configure 失败必须回退。",
+      "name_zh": "配置视频编码器",
+      "one_line_abstract_zh": "以 OH_AVFormat 配置 encoder 的实际格式与编码参数。",
+      "record_id": "media_api:OH_VideoEncoder_Configure",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "* generated by a video encoder. In surface encoding mode, this function must be called when frame parameters need to\n * be set, and it must be called before {@link OH_VideoEncoder_Configure}.\n *\n * @param codec Pointer to a video encoder instance.\n * @param onInputParameter Pointer to the input parameter callback.",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 208,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_Configure",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_Configure"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "encode",
+          "mime",
+          "oh_videoencoder_createbymime",
+          "video_encoder"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "该创建入口不承诺硬件实现；应先查询 HARDWARE category 并处理不支持的 mime/profile/分辨率，保留软件编码器回退。",
+      "name_zh": "按 MIME 创建视频编码器",
+      "one_line_abstract_zh": "基于 MIME 创建视频编码器实例。",
+      "record_id": "media_api:OH_VideoEncoder_CreateByMime",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVCodec *OH_VideoEncoder_CreateByMime(const char *mime);\n\n/**\n * @brief Creates a video encoder instance based on an encoder name. To use this function, you must know the exact name",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 72,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_CreateByMime",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_CreateByMime"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "codec_name",
+          "hardware_encoder",
+          "oh_videoencoder_createbyname",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "按名称创建是把运行时 capability 和 codec 实例连接起来的步骤；没有当前设备 capability 证据时不能假定名称对应硬件编码器。",
+      "name_zh": "按能力名称创建视频编码器",
+      "one_line_abstract_zh": "使用 capability 查询返回的准确名称创建视频编码器。",
+      "record_id": "media_api:OH_VideoEncoder_CreateByName",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVCodec *OH_VideoEncoder_CreateByName(const char *name);\n\n/**\n * @brief Creates a primary video encoder with preprocessor.",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 85,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_CreateByName",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_CreateByName"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "codec_destroy",
+          "oh_videoencoder_destroy",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "资源销毁属于生命周期契约，必须和异常回退、surface/buffer 释放和下一次 hardware/software 创建协调。",
+      "name_zh": "销毁视频编码器",
+      "one_line_abstract_zh": "释放 encoder 内部资源与实例。",
+      "record_id": "media_api:OH_VideoEncoder_Destroy",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*              Cannot be NULL. If creation is successful, the encoder needs to be released\n *              by calling {@link OH_VideoEncoder_Destroy}.\n *\n * @return Returns {@link AV_ERR_OK} if the execution is successful.\n *         For other error codes, refer to {@link OH_AVErrCode}.",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 99,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_Destroy",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_Destroy"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "codec_prepare",
+          "oh_videoencoder_prepare",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "Prepare 是 profile/format/资源约束继续生效的阶段；需结合 callback 与真实帧输入检验实际结果。",
+      "name_zh": "准备视频编码器",
+      "one_line_abstract_zh": "完成 encoder 初始化并进入可启动状态。",
+      "record_id": "media_api:OH_VideoEncoder_Prepare",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "* @brief Sets an OH_AVCodecCallback callback so that your application can respond to events generated by a video\n * encoder. This function must be called prior to {@link OH_VideoEncoder_Prepare}.\n *\n * @param codec Pointer to a video encoder instance.\n * @param callback Callback function.",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 171,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_Prepare",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_Prepare"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "codec_start",
+          "oh_videoencoder_start",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "只有在真实输入帧、回调、surface/buffer 交接和 drain 完整参与时，才能评价硬件编码路径的吞吐、功耗和时延。",
+      "name_zh": "启动视频编码器",
+      "one_line_abstract_zh": "开始 encoder 的异步/缓冲处理。",
+      "record_id": "media_api:OH_VideoEncoder_Start",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoEncoder_Start(OH_AVCodec *codec);\n\n/**\n * @brief Stops a video encoder and releases the input and output buffers. After the video encoder is stopped, you can",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 317,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_Start",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_Start"
+    },
+    {
+      "accelerator_unit": "media",
+      "capability_boundary": {
+        "application_direct_use": "requires_sdk_and_device_validation",
+        "exposure": "openharmony_ndk",
+        "source_interface": "confirmed_from_workspace",
+        "statement_zh": "AVCodec 的 HARDWARE category、HCodec Component HDI 与 Image Codec HDI 都仅证明源码/合同存在；只有当前设备的 runtime capability、服务/驱动、格式与 buffer 路径验证成功后才是可用候选，且仍不证明收益。",
+        "target_device_availability": "evidence_required"
+      },
+      "code_feature_match": {
+        "ast_signals": [
+          "raw video frame",
+          "encode callback/surface",
+          "bitrate/GOP/profile",
+          "codec state machine"
+        ],
+        "expected_data_forms": [
+          "像素格式与分辨率",
+          "OH_AVFormat",
+          "输入 frame/surface 与压缩输出码流"
+        ],
+        "operator_aliases": [
+          "codec_stop",
+          "oh_videoencoder_stop",
+          "video_encode"
+        ],
+        "standalone_offload_note": "硬件编码需要真实支持的 profile、分辨率、format 和 surface/buffer 路径；不可仅凭图像数据循环推断。"
+      },
+      "detailed_description_zh": "停止与 drain/flush/资源回收共同决定 codec 切换是否正确；它不作为发现热点可卸载性的正向证据。",
+      "name_zh": "停止视频编码器",
+      "one_line_abstract_zh": "停止 encoder 并结束当前处理会话。",
+      "record_id": "media_api:OH_VideoEncoder_Stop",
+      "record_type": "accelerator_api_entrypoint",
+      "runtime_verification": [
+        "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+        "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+        "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+        "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+        "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+        "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+        "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+      ],
+      "semantic_family": {
+        "description_zh": "创建、配置、准备、启动、停止和销毁视频编码器，实际实现需要按 capability 选择硬件或软件实现。",
+        "id": "media_encoder_lifecycle",
+        "label_zh": "硬件视频编码生命周期"
+      },
+      "source_contract": {
+        "declaration_or_usage_excerpt": "*/\nOH_AVErrCode OH_VideoEncoder_Stop(OH_AVCodec *codec);\n\n/**\n * @brief Clears the input and output data and parameters, for example, H.264 PPS/SPS, cached in a video encoder.",
+        "exposure": "openharmony_ndk",
+        "library": "video encoder NDK",
+        "source_file": "openharmony/interface/sdk_c/multimedia/av_codec/native_avcodec_videoencoder.h",
+        "source_line": 333,
+        "source_sha256": "c750f9d0934dd937f221a813821ad18223a5def673dfe0639d2bea2cca112733",
+        "source_symbol": "OH_VideoEncoder_Stop",
+        "system_capability": "SystemCapability.Multimedia.Media.VideoEncoder"
+      },
+      "source_integration_evidence": {
+        "statement_zh": "strict_case_ids 是与此源码入口直接关联的现有异构 + CPU/software fallback 案例；unit_strict_case_ids 仅表示同一硬件单元已有案例，不能自动推导为此 API 的直接实现关系。",
+        "strict_case_ids": [],
+        "unit_strict_case_ids": [
+          "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+          "heif_hardware_alpha_to_software_alpha_fallback",
+          "heif_hardware_auxiliary_decode_to_software_fallback",
+          "heif_hardware_primary_decode_to_software_fallback",
+          "jpeg_hardware_decode_to_skia_fallback",
+          "jpeg_hardware_encode_to_skia_fallback",
+          "jpeg_picture_hardware_encode_to_software_fallback",
+          "thumbnail_hardware_decoder_to_software_reinitialization",
+          "video_decoder_surface_hardware_to_software_capability_fallback",
+          "webview_video_decoder_hardware_to_software_creation_fallback"
+        ]
+      },
+      "symbol": "OH_VideoEncoder_Stop"
+    }
+  ],
+  "runtime_probe_protocol": [
+    "先用 OH_AVCodec_GetCapabilityByCategory 以真实 MIME、编解码方向和 HARDWARE 类别查询 capability；空结果必须转向 software fallback。",
+    "按 capability 返回的名称创建 codec，并以真实 profile、level、width、height、pixel format、bitrate、surface/buffer 配置 Prepare/Start。",
+    "对 HCodec，查询 ICodecComponentManager 的 component capability，并对 component 名称、role、profile、对齐、buffer/surface、回调和实例上限建立运行时证据；失败时保持 FCodec/software 回退。",
+    "对 JPEG/HEIF Image Codec 路径，验证系统开关、ICodecImage 服务、输入格式/尺寸/采样率、Ashmem 或 DMA/NativeBuffer allocator、色彩空间与 HDI 返回值；失败时保持 Skia/软件回退。",
+    "JPEG 硬件编码还必须验证 ImageFwkExtNativeSo 可加载及内部委派函数存在；当前工作区没有建立应用侧可直接调用的 JPEG 硬件编码 ABI。",
+    "处理 runtime error、service died、格式不支持和 drain/stop 生命周期；保持可回退的软件 codec。",
+    "在包含帧转换、surface/buffer 交接、队列延迟和回退的端到端 workload 上 benchmark。"
+  ],
+  "schema_version": "1.0",
+  "scope": {
+    "description_zh": "公开 AVCodec NDK 的硬件/软件视频 codec 选择与生命周期入口，以及源码已证实的 HCodec Codec HDI、JPEG 硬件编码/解码、HEIF 硬件解码系统集成和 Image Codec HDI 合同。每条记录明确暴露层级；内部路径和 HDI 均不伪装为应用 NDK。",
+    "target_units": [
+      "HCODEC_HDI",
+      "HEIF_HW_DECODER",
+      "JPEG_HW_DECODER",
+      "JPEG_HW_ENCODER",
+      "VIDEO_DECODER_HARDWARE"
+    ]
+  },
+  "source_revision": "workspace-unpinned",
+  "summary": {
+    "record_count": 31,
+    "record_direct_strict_link_count": 18,
+    "semantic_family_counts": {
+      "media_capability_selection": 1,
+      "media_decoder_lifecycle": 7,
+      "media_encoder_lifecycle": 7,
+      "media_hcodec_capability": 2,
+      "media_hcodec_component": 3,
+      "media_heif_hardware_decode": 3,
+      "media_jpeg_hardware_decode": 3,
+      "media_jpeg_hardware_encode": 3,
+      "media_system_video_decoder_fallback": 2
+    },
+    "target_device_availability": "evidence_required",
+    "unit_strict_case_count": 10
+  },
+  "unit_strict_case_inventory": [
+    "avcodec_hcodec_to_fcodec_ordered_factory_fallback",
+    "heif_hardware_alpha_to_software_alpha_fallback",
+    "heif_hardware_auxiliary_decode_to_software_fallback",
+    "heif_hardware_primary_decode_to_software_fallback",
+    "jpeg_hardware_decode_to_skia_fallback",
+    "jpeg_hardware_encode_to_skia_fallback",
+    "jpeg_picture_hardware_encode_to_software_fallback",
+    "thumbnail_hardware_decoder_to_software_reinitialization",
+    "video_decoder_surface_hardware_to_software_capability_fallback",
+    "webview_video_decoder_hardware_to_software_creation_fallback"
+  ]
+}

@@ -1,0 +1,254 @@
+{
+  "schema_version": "parallel_modeling_bundle/v1",
+  "sources": {
+    "service_dag.py": "8b7f0a3c7562fac3b22fcb4eb41058ebcf7c9066a3718414f1ee3f80d9f7ac16",
+    "analyze_gallery_jank.py": "efd8c243dc9f661ffc89ccad17691a1a7b914533d3868ead197849889c41be8f",
+    "extract.py": "335933740dc323c0b262e15c02ed5064453c3e589be0795f9455d5d687b6e678",
+    "analyze_gallery_edit_focus.py": "49d83c73191754dfb1cc4bc27295e56e08e6f1416e123d445f17ce19a36696bb"
+  },
+  "origin": "ui_builditem_model_20261014; vsync 60209; separate from historical 90.409 ms vsync 28031",
+  "files": {
+    "gallery-edit-pmu-20261014.json": "783828526239af6b13ec88db89ceb4f0575d38f56c200f0e639ba1b2e8234702",
+    "gallery-native-transfer-v1.json": "41976dc19c15d437b11478baeb5aa750029cbc5886030733d91e56d782c143a9",
+    "gallery-edit-all-pmu-20261023.json": "53c3047035153d58f8564b69c93fbc1aceb6977241251c2727c3c10c95cbce5f",
+    "raw/gallery-edit-all-pmu-20261023.zip": "b3c6928f1c8329bca52ed8f9ff3885218aade40cf68c3e1b7910d9af258769be",
+    "gallery-edit-all-pmu-hardware-20261023.json": "ed8e7d13c237d96257137776101aae006bd30cb01ebd02ac30558742e05b4b92"
+  },
+  "datasets": {
+    "gallery-edit-all-pmu-20261023": {
+      "capture_date": "2026-10-23",
+      "run_id": "capture_348284f1089804c8666a5ef2",
+      "step_id": "step_07",
+      "target_tid": 21701,
+      "target_vsync_id": 663634,
+      "sample_identity": "136.517 ms UI callback, 26 BuildItem, 73 synchronous service calls",
+      "raw_files_included": true,
+      "input_kind": "same_capture_trace_and_grouped_pmu_parsed_evidence",
+      "raw_source_files": {
+        "trace.ftrace": {
+          "sha256": "7aac4be321671a26f5ee96f5f87fa92e31f041978dc1c6f13e8d4b42b8daa7a5",
+          "size_bytes": 66385366
+        },
+        "pmu.csv": {
+          "sha256": "7af252c9b719288af2e657d9fcf74224e17ae1147a14bf336c98416ab7e62354",
+          "size_bytes": 4574485
+        },
+        "pmu.json": {
+          "sha256": "aeeea77201306068201dee3616551bf0aa3c0d47afa5f0edee551e34c00dfdbc",
+          "size_bytes": 2528
+        }
+      },
+      "clock_verified_with_marker": true,
+      "capture_status": "partial",
+      "pmu_quality_complete": false,
+      "requested_event_count": 14,
+      "opened_and_read_event_count": 14,
+      "nonzero_event_count_entire_capture": 13,
+      "zero_increment_entire_capture": [
+        "branch_instructions"
+      ],
+      "zero_increment_selected_callback": [
+        "branch_instructions",
+        "llc_read_misses"
+      ],
+      "sampling_quality_entire_capture": {
+        "effective_period_us": 41.725,
+        "maximum_interval_us": 15877.656,
+        "observed_median_interval_us": 159.063,
+        "observed_p95_interval_us": 507.812,
+        "requested_period_us": 10.0,
+        "running_ratio_min": 0.16572847383154896,
+        "skipped_deadlines": 37125,
+        "status": "degraded"
+      },
+      "event_groups": [
+        {
+          "id": "base",
+          "event_names": [
+            "cycles",
+            "instructions"
+          ],
+          "running_ratio": 1.0,
+          "quality_complete": true,
+          "unavailable_events": []
+        },
+        {
+          "id": "cache",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "generic_cache_references",
+            "generic_cache_misses"
+          ],
+          "running_ratio": 0.16625410244481922,
+          "quality_complete": false,
+          "unavailable_events": []
+        },
+        {
+          "id": "branch",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "branch_instructions",
+            "branch_misses"
+          ],
+          "running_ratio": 0.16583917938343257,
+          "quality_complete": false,
+          "unavailable_events": []
+        },
+        {
+          "id": "stall",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "stalled_frontend",
+            "stalled_backend"
+          ],
+          "running_ratio": 0.1670258648114828,
+          "quality_complete": true,
+          "unavailable_events": []
+        },
+        {
+          "id": "l1d",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "l1d_read_access",
+            "l1d_read_misses"
+          ],
+          "running_ratio": 0.16575860406746784,
+          "quality_complete": true,
+          "unavailable_events": []
+        },
+        {
+          "id": "llc",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "llc_read_access",
+            "llc_read_misses"
+          ],
+          "running_ratio": 0.16572847383154896,
+          "quality_complete": true,
+          "unavailable_events": []
+        },
+        {
+          "id": "dtlb",
+          "event_names": [
+            "cycles",
+            "instructions",
+            "dtlb_read_access",
+            "dtlb_read_misses"
+          ],
+          "running_ratio": 0.16939377546124865,
+          "quality_complete": true,
+          "unavailable_events": []
+        }
+      ],
+      "raw_counter_deltas_entire_capture": {
+        "base": {
+          "cycles": 790299373,
+          "instructions": 904895198
+        },
+        "cache": {
+          "cycles": 136760567,
+          "instructions": 153551632,
+          "generic_cache_references": 64903360,
+          "generic_cache_misses": 2399379
+        },
+        "branch": {
+          "cycles": 124743186,
+          "instructions": 147330246,
+          "branch_instructions": 0,
+          "branch_misses": 1180900
+        },
+        "stall": {
+          "cycles": 128771858,
+          "instructions": 156151163,
+          "stalled_frontend": 65036700,
+          "stalled_backend": 19804484
+        },
+        "l1d": {
+          "cycles": 127310983,
+          "instructions": 139995386,
+          "l1d_read_access": 56951172,
+          "l1d_read_misses": 2287053
+        },
+        "llc": {
+          "cycles": 145879314,
+          "instructions": 168624699,
+          "llc_read_access": 2937281,
+          "llc_read_misses": 101896
+        },
+        "dtlb": {
+          "cycles": 127079855,
+          "instructions": 139242072,
+          "dtlb_read_access": 68239767,
+          "dtlb_read_misses": 2023667
+        }
+      },
+      "limitations": [
+        "The archive includes parsed callback evidence only; original Trace, PMU CSV, HiLog and UI dumps are not included.",
+        "Target-main-thread user-mode counts only; child threads, kernel execution and system services are outside PMU scope.",
+        "All seven groups opened and produced readings; 14 requested event types do not imply 14 verified hardware mappings.",
+        "Extended groups use kernel multiplexing with approximately one-sixth counter runtime; stage estimates retain coverage and missing windows.",
+        "The requested 10 us interval was raised to 41.725 us by the 128 MiB buffer budget; observed whole-capture median interval was 159.063 us, not 10 us.",
+        "branch_instructions remains zero while branch_misses increases; branch-event semantics require independent validation.",
+        "llc_read_misses increases over the whole capture but is zero in the selected callback; LLC hardware mapping remains unverified.",
+        "No hardware profile is bound and no calibrated chip identity is claimed; this archive is analysis_only.",
+        "Missing metrics and zero deltas are preserved. Uniform wall-time allocation and multiplex scaling are estimates, not exact per-stage measurements."
+      ],
+      "raw_archive": {
+        "file": "raw/gallery-edit-all-pmu-20261023.zip",
+        "size_bytes": 5815241,
+        "sha256": "b3c6928f1c8329bca52ed8f9ff3885218aade40cf68c3e1b7910d9af258769be",
+        "files": {
+          "trace.ftrace": {
+            "size_bytes": 66385366,
+            "sha256": "7aac4be321671a26f5ee96f5f87fa92e31f041978dc1c6f13e8d4b42b8daa7a5"
+          },
+          "pmu.csv": {
+            "size_bytes": 4574485,
+            "sha256": "7af252c9b719288af2e657d9fcf74224e17ae1147a14bf336c98416ab7e62354"
+          },
+          "pmu.json": {
+            "size_bytes": 2528,
+            "sha256": "aeeea77201306068201dee3616551bf0aa3c0d47afa5f0edee551e34c00dfdbc"
+          },
+          "clock_before.txt": {
+            "size_bytes": 45,
+            "sha256": "5f23af7fdc2256a4f09fb412979ed05571d2a8a1265cb4a1538b13c4e77a1bb5"
+          },
+          "clock_after.txt": {
+            "size_bytes": 45,
+            "sha256": "01c6e5d2dd71b402807fc86ea111e42a8d2731847a923791a7bf3897c847b720"
+          },
+          "trace_clock.txt": {
+            "size_bytes": 12,
+            "sha256": "81ad2d6af5221b405abc9101b2ca49fdedce61dc628515ff534376278e4107b0"
+          },
+          "hitrace_begin.log": {
+            "size_bytes": 323,
+            "sha256": "dbc7ab004803ae4d5e34e7f0300665f93e5c0948511e25de4b8a161fa93ab487"
+          },
+          "hitrace_finish.log": {
+            "size_bytes": 207,
+            "sha256": "21f49fb9794e035b624a8ee2675d4ec11a3f7530e05239f0d971d1469a9ec2c3"
+          },
+          "raw-event-deltas.json": {
+            "size_bytes": 3172,
+            "sha256": "267a6defdf81a3d19a611c26d5c5c02d4d363c8184647e3aac0a97d108c03227"
+          },
+          "trace_validation.json": {
+            "size_bytes": 1132,
+            "sha256": "304377fd4cd87e2d5c5a51e849c6c71b9bafaa7378ae8d2472076e4e1fb4c633"
+          }
+        },
+        "manifest_file": "manifest.json"
+      }
+    }
+  },
+  "hardware_bindings": [
+    "gallery-edit-all-pmu-hardware-20261023.json"
+  ]
+}

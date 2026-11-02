@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>Heterogeneous Workbench</title>
+  <script src="./theme-bootstrap.js"></script>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./migrated-web.css">
+  <link rel="stylesheet" href="./renderer.css">
+  <link rel="stylesheet" href="./workbench-theme.css">
+  <link rel="stylesheet" href="./theme-variants.css">
+</head>
+<body>
+  <div id="workbench-notification-root" class="workbench-notification-viewport" aria-label="工作台通知"></div>
+  <header id="desktop-titlebar" class="desktop-titlebar" aria-label="工作台标题栏">
+    <nav id="titlebar-menu" class="titlebar-menu" aria-label="工作台菜单">
+      <img id="titlebar-app-icon" class="titlebar-app-icon" src="../assets/icon.png" alt="" aria-hidden="true">
+      <button id="titlebar-edit-menu" class="titlebar-menu-trigger" type="button" data-titlebar-menu="edit" aria-haspopup="menu">编辑</button>
+      <button id="titlebar-view-menu" class="titlebar-menu-trigger" type="button" data-titlebar-menu="view" aria-haspopup="menu">视图</button>
+      <button id="titlebar-theme-menu" class="titlebar-menu-trigger" type="button" data-titlebar-menu="theme" aria-haspopup="menu">主题</button>
+      <button id="titlebar-layout-menu" class="titlebar-menu-trigger" type="button" data-titlebar-menu="layout" aria-haspopup="menu">布局</button>
+      <button id="titlebar-connection-menu" class="titlebar-menu-trigger" type="button" data-titlebar-menu="connection" aria-haspopup="menu">连接配置</button>
+    </nav>
+    <div class="titlebar-drag-region" aria-hidden="true"></div>
+  </header>
+  <div class="app-shell">
+    <aside id="sidebar-panel" class="sidebar" aria-label="活动栏">
+      <div class="activity-rail-flyout-surface" aria-hidden="true"></div>
+      <div class="nav-label sr-only">工作空间</div>
+      <nav class="nav-items" aria-label="主导航">
+        <button class="nav-item" data-page="dpvs-performance" aria-label="DPVS 性能分析" title="DPVS 性能分析"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 15.5h14M4.5 13V9M8.2 13V5.5M11.8 13V8M15.5 13V3.5"/><path d="m4 6 3-2 3 1.5 4-3"/></svg><span class="nav-text">DPVS 性能分析</span></button>
+        <button class="nav-item" data-page="capture" aria-label="负载采样" title="负载采样"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2"/><path d="M10 1.8v2M10 16.2v2M1.8 10h2M16.2 10h2"/></svg><span class="nav-text">负载采样</span></button>
+        <button class="nav-item" data-page="workload-features" aria-label="负载特征" title="负载特征"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 15.5h14M4.5 13V8.5M8.2 13V5.5M11.8 13V9.5M15.5 13V3.5"/></svg><span class="nav-text">负载特征</span></button>
+        <button class="nav-item" data-page="hardware-models" aria-label="硬件模型" title="硬件模型"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="1"/><path d="M8 8h4v4H8zM7 2.5V5M10 2.5V5M13 2.5V5M7 15v2.5M10 15v2.5M13 15v2.5M2.5 7H5M2.5 10H5M2.5 13H5M15 7h2.5M15 10h2.5M15 13h2.5"/></svg><span class="nav-text">硬件模型</span></button>
+        <button class="nav-item" data-page="optimization-calibration" aria-label="寻优校准" title="寻优校准"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h10M7 3.5v4l-3 6.2a1.8 1.8 0 0 0 1.6 2.8h8.8a1.8 1.8 0 0 0 1.6-2.8L13 7.5v-4M6.2 12h7.6"/></svg><span class="nav-text">寻优校准</span></button>
+        <button class="nav-item" data-page="parallel-modeling" aria-label="并行建模" title="并行建模"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h5v4H3zM12 3h5v4h-5zM12 13h5v4h-5zM8 7h2.5a2 2 0 0 1 2 2v4M8 7v6a2 2 0 0 0 2 2h2"/></svg><span class="nav-text">并行建模</span></button>
+        <button class="nav-item" data-page="application-flow" aria-label="应用流程" title="应用流程"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/><circle cx="10" cy="15" r="1.5"/><path d="M5.5 5h9M4.8 6.3l4.4 7.4M15.2 6.3l-4.4 7.4"/></svg><span class="nav-text">应用流程</span></button>
+        <button class="nav-item" data-page="opportunity-reasoning" aria-label="机会推理" title="机会推理"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3.5a3 3 0 0 0-2.8 4.1A3.2 3.2 0 0 0 5.5 14H8M13 3.5a3 3 0 0 1 2.8 4.1A3.2 3.2 0 0 1 14.5 14H12M10 3v14M7.5 8.5H10M10 12h2.5"/></svg><span class="nav-text">机会推理</span></button>
+        <button class="nav-item" data-page="source-repositories" aria-label="代码仓" title="代码仓"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.3h5l1.5 1.8h7.9v9.2H2.8zM2.8 5.3V3.7h5l1.5 1.6"/><path d="M7 10h6M7 13h4"/></svg><span class="nav-text">代码仓</span></button>
+        <button class="nav-item" data-page="code-knowledge" aria-label="代码知识库" title="代码知识库"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h9l3 3v10H4zM13 3.5v3h3M7 9h6M7 12h6"/></svg><span class="nav-text">代码知识库</span></button>
+        <button class="nav-item" data-page="optimization-knowledge" aria-label="优化知识库" title="优化知识库"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="5" rx="6" ry="2.5"/><path d="M4 5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V5M4 10v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"/></svg><span class="nav-text">优化知识库</span></button>
+        <button id="remote-explorer-activity" class="nav-item active" data-page="workbench" aria-controls="remote-explorer" aria-label="资源管理器" title="资源管理器"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.8 5.3h5l1.5 1.8h7.9v9.2H2.8zM2.8 5.3V3.7h5l1.5 1.6"/></svg><span class="nav-text">资源管理器</span></button>
+        <button class="nav-item" data-page="server-profile" aria-label="服务器环境" title="服务器环境"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="5" rx="1"/><rect x="3" y="12" width="14" height="5" rx="1"/><path d="M6 5.5h.01M6 14.5h.01M9 5.5h5M9 14.5h5"/></svg><span class="nav-text">服务器环境</span></button>
+        <button class="nav-item" data-page="devices" aria-label="本地设备" title="本地设备"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="6" y="2.5" width="8" height="15" rx="1.5"/><path d="M8.5 5h3M9 15h2"/></svg><span class="nav-text">本地设备</span><span id="device-count" class="nav-count">—</span></button>
+        <button class="nav-item" data-page="skills" aria-label="技能列表" title="技能列表"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h12v13H4zM7 7h6M7 10h6M7 13h4"/><path d="M2.5 6h3M2.5 10h3M2.5 14h3"/></svg><span class="nav-text">技能列表</span></button>
+        <button class="nav-item" data-page="traces" aria-label="Trace 管理" title="Trace 管理"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h12v13H4zM7 7h6M7 10h6M7 13h4"/></svg><span class="nav-text">Trace 管理</span></button>
+        <button class="nav-item" data-page="experience" aria-label="经验演进" title="经验演进"><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5a5.5 5.5 0 0 0-3 10.1V15h6v-2.4A5.5 5.5 0 0 0 10 2.5zM7.5 17h5M8 11h4"/></svg><span class="nav-text">经验演进</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="local-label" aria-label="本机执行环境"><span class="status-dot good"></span><span class="sr-only">本机执行环境</span></div>
+        <div id="platform-label" class="platform-label sr-only">读取环境中…</div>
+        <button id="connection-settings-nav" class="nav-item settings-nav" aria-label="连接配置" title="连接配置"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.73v.52a2 2 0 0 1-1 1.73l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.73v-.52a2 2 0 0 1 1-1.73l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-text">连接配置</span></button>
+      </div>
+    </aside>
+    <div id="sidebar-splitter" class="sidebar-divider" aria-hidden="true"></div>
+    <main class="main-shell">
+      <div id="notice" class="notice" role="status" hidden></div>
+      <div class="workspace-layout">
+        <div class="workspace-top">
+          <div id="workspace-content" class="workspace-content">
+      <section id="dpvs-performance-page" class="page shared-react-page" hidden><div id="dpvs-performance-root"></div></section>
+      <section id="capture-page" class="page capture-page" hidden></section>
+      <section id="workload-features-page" class="page shared-react-page" hidden><div id="workload-features-root"></div></section>
+      <section id="hardware-models-page" class="page shared-react-page" hidden><div id="hardware-models-root"></div></section>
+      <section id="optimization-calibration-page" class="page shared-react-page" hidden><div id="optimization-calibration-root"></div></section>
+      <section id="parallel-modeling-page" class="page shared-react-page" hidden><div id="parallel-modeling-root"></div></section>
+      <section id="application-flow-page" class="page shared-react-page" hidden><div id="application-flow-root"></div></section>
+      <section id="opportunity-reasoning-page" class="page shared-react-page" hidden><div id="opportunity-reasoning-root"></div></section>
+      <section id="source-repositories-page" class="page shared-react-page" hidden><div id="source-repositories-root"></div></section>
+      <section id="code-knowledge-page" class="page shared-react-page" hidden><div id="code-knowledge-root"></div></section>
+      <section id="optimization-knowledge-page" class="page shared-react-page" hidden><div id="optimization-knowledge-root"></div></section>
+      <section id="skills-page" class="page shared-react-page" hidden><div id="skills-root"></div></section>
+      <section id="traces-page" class="page traces-page" hidden></section>
+      <section id="experience-page" class="page shared-react-page" hidden><div id="experience-root"></div></section>
+      <section id="server-profile-page" class="page server-profile-page" hidden></section>
+      <section id="workbench-page" class="page active-page explorer-page" aria-label="工作区资源管理器">
+        <section id="remote-workspace" class="remote-workspace" aria-label="文件工作区">
+          <aside id="remote-explorer" class="remote-explorer" aria-label="文件资源管理器">
+            <header class="remote-explorer-header">
+              <div><span class="remote-section-label">资源管理器</span><strong id="workspace-source-title">远程工作区</strong></div>
+              <div class="remote-explorer-actions"><button id="local-workspace-select" class="remote-icon-button" type="button" title="选择本地工作区" aria-label="选择本地工作区" hidden>⌁</button><button id="remote-files-refresh" class="remote-icon-button" type="button" title="刷新文件" aria-label="刷新文件">↻</button></div>
+            </header>
+            <nav class="workspace-source-tabs" role="tablist" aria-label="工作区来源"><button id="workspace-source-remote" class="workspace-source-tab active" type="button" role="tab" aria-selected="true">远程工作区</button><button id="workspace-source-local" class="workspace-source-tab" type="button" role="tab" aria-selected="false">本地工作区</button></nav>
+            <section class="workspace-search" aria-label="工作区搜索与替换">
+              <div class="workspace-search-row"><input id="workspace-search-query" type="search" autocomplete="off" spellcheck="false" placeholder="搜索"><button id="workspace-search-case" class="workspace-search-option" type="button" aria-pressed="false" title="区分大小写">Aa</button><button id="workspace-search-replace-toggle" class="workspace-search-option" type="button" aria-expanded="false" title="展开替换">↔</button><button id="workspace-search-cancel" class="workspace-search-option" type="button" title="取消搜索" aria-label="取消搜索" hidden>×</button></div>
+              <div id="workspace-replace-row" class="workspace-search-row replace-row" hidden><input id="workspace-replace-value" autocomplete="off" spellcheck="false" placeholder="替换"><button id="workspace-replace-all" class="workspace-search-action" type="button" disabled>全部替换</button></div>
+              <div id="workspace-search-status" class="workspace-search-status" aria-live="polite"></div>
+            </section>
+            <div id="workspace-search-results" class="workspace-search-results" aria-label="搜索结果" hidden></div>
+            <div id="remote-root" class="remote-root" title="工作目录"><span aria-hidden="true">⌂</span><span id="remote-root-label">尚未连接 SSH</span></div>
+            <div id="remote-upload-status" class="remote-upload-status" role="status" aria-live="polite" hidden></div>
+            <div id="remote-file-tree" class="remote-file-tree" role="tree" aria-label="工作区文件列表">
+              <div class="remote-tree-empty">连接 SSH 后显示工作目录中的文件。</div>
+            </div>
+          </aside>
+          <div id="remote-explorer-splitter" class="remote-explorer-splitter" role="separator" aria-orientation="vertical" aria-label="调整资源管理器宽度" aria-controls="remote-explorer" aria-valuemin="180" aria-valuemax="420" tabindex="0" title="拖动调整资源管理器宽度；双击恢复默认"></div>
+          <section class="remote-editor" aria-label="工作区文件编辑器">
+            <header class="remote-editor-header">
+              <div id="remote-editor-tabs" class="remote-editor-tabs" role="tablist" aria-label="已打开的工作区文件"><div class="remote-editor-tab-placeholder"><span class="remote-editor-kind" aria-hidden="true">◇</span><span>未打开文件</span></div></div>
+              <div class="remote-editor-actions"><span id="remote-editor-state">请选择左侧文件</span><button id="remote-markdown-toggle" class="button small-button" type="button" hidden>编辑</button><button id="remote-file-save" class="button small-button primary-button" type="button" disabled>保存</button></div>
+            </header>
+            <div id="remote-editor-path" class="remote-editor-path">工作目录</div>
+            <div class="remote-editor-body">
+              <div id="remote-file-editor" class="remote-file-editor" aria-label="工作区文件编辑器"></div>
+              <div id="remote-markdown-preview" class="remote-markdown-preview migrated-web-page" aria-label="Markdown 安全预览" hidden></div>
+              <div id="remote-editor-empty" class="remote-editor-empty"><span aria-hidden="true">&lt;/&gt;</span><strong>打开文件开始编辑</strong><p>选择远程或本地工作区中的文本文件。</p></div>
+            </div>
+            <footer class="remote-editor-footer"><span id="remote-editor-position">Ln 1, Col 1</span><span id="remote-editor-meta">UTF-8 · 工作区</span></footer>
+          </section>
+        </section>
+      </section>
+      <section id="devices-page" class="page" hidden>
+        <div class="page-heading"><div><h1 class="page-title-tip" tabindex="0" title="调用本机 HDC，读取通过 USB 或本地网络连接的设备。">本地设备</h1></div></div>
+        <section class="device-configuration"><div><label for="hdc-path">HDC 可执行文件</label><p>已加入 PATH 时可直接使用 hdc，也可以选择 DevEco SDK 中的 hdc.exe。</p></div><div class="input-action"><input id="hdc-path" value="hdc" placeholder="hdc 或 C:\SDK\toolchains\hdc.exe"><button id="browse-hdc" class="button">选择文件</button><button id="discover-devices" class="button primary-button">读取设备</button></div></section>
+        <div id="device-notice" class="notice" hidden role="status"></div>
+        <section class="devices-card"><header><h2>已连接设备</h2><span id="device-scan-time">尚未读取</span></header><div id="device-list" class="device-list"><div class="device-empty"><span class="device-empty-icon">▣</span><h3>读取本机设备列表</h3><p>连接手机并授权 USB 调试后，点击“读取设备”。</p></div></div></section>
+      </section>
+          </div>
+          <div id="agent-splitter" class="layout-splitter vertical-splitter" role="separator" aria-orientation="vertical" aria-label="调整助手宽度" aria-controls="agent-panel" tabindex="0" title="拖动调整助手宽度；双击恢复默认"></div>
+          <aside id="agent-panel" class="terminal-card agent-card" aria-label="Code Agent 助手">
+            <header class="panel-heading"><div><span class="panel-icon agent-icon">A</span><div><h2>Code Agent <span id="agent-status" class="state-badge">未启动</span></h2><span id="agent-executable-label">本地可执行程序 / CLI</span></div></div><div class="panel-actions"><button id="agent-initialize" class="icon-button agent-initialize-button" type="button" title="初始化 Code Agent" aria-label="初始化 Code Agent" aria-busy="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 5.3A5.6 5.6 0 1 0 13.5 10"/><path d="M13.2 2.3v3h-3"/></svg></button><button id="agent-settings" class="icon-button" title="Agent 配置" aria-label="Agent 配置">⚙</button></div></header>
+            <div class="terminal-area"><div id="agent-terminal" class="terminal-host" aria-label="Code Agent 终端" title="选中文本后 Ctrl+C 复制；Ctrl+V 粘贴；无选区时 Ctrl+C 中断命令"></div></div>
+          </aside>
+        </div>
+        <div id="terminal-splitter" class="layout-splitter horizontal-splitter" role="separator" aria-orientation="horizontal" aria-label="调整终端高度" aria-controls="terminal-panel" tabindex="0" title="拖动调整终端高度；双击恢复默认"></div>
+          <section id="terminal-panel" class="terminal-card ssh-card" aria-label="SSH 终端">
+            <header class="panel-heading"><div><span class="panel-icon ssh-icon">&gt;_</span><div><h2>SSH Terminal <span id="ssh-status" class="state-badge">未连接</span></h2><span id="ssh-location-label">远程服务器 / 交互式终端</span></div></div><div class="panel-actions"><button id="ssh-settings" class="icon-button" title="SSH 配置" aria-label="SSH 配置">⚙</button><button id="collapse-terminal" class="icon-button collapse-terminal" title="收起终端" aria-label="收起 SSH 终端"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button></div></header>
+            <div id="ssh-terminal-tabs" class="ssh-terminal-tabs"><button id="new-ssh-terminal" class="ssh-terminal-add" type="button" aria-label="新建 SSH 终端" title="新建终端；SSH 未连接时将自动连接">＋</button></div>
+            <div class="terminal-area ssh-terminal-area"><div id="ssh-terminal" class="terminal-host ssh-terminal-panes" aria-label="SSH 终端工作区"></div></div>
+          </section>
+      </div>
+    </main>
+  </div>
+  <div id="settings-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="settings-drawer" class="settings-drawer" hidden aria-labelledby="settings-title" role="dialog" aria-modal="true">
+    <header class="drawer-header"><div><h2 id="settings-title">连接配置</h2></div><button id="close-settings" class="icon-button" aria-label="关闭配置">✕</button></header>
+    <div class="settings-tabs" role="tablist"><button id="tab-agent" class="settings-tab active" data-tab="agent" role="tab">Code Agent</button><button id="tab-automation" class="settings-tab" data-tab="automation" role="tab">失败自动重试</button><button id="tab-ssh" class="settings-tab" data-tab="ssh" role="tab">SSH 服务器</button><button id="tab-server-profile" class="settings-tab" data-tab="server-profile" role="tab">服务器环境</button><button id="tab-integration" class="settings-tab" data-tab="integration" role="tab">工具集成</button><button id="tab-interface" class="settings-tab" data-tab="interface" role="tab">界面</button></div>
+    <div class="drawer-content">
+      <section id="settings-agent" class="settings-section">
+        <div class="section-intro"><h3>接入你自己的 Code Agent</h3><p>填写本地启动命令。终端支持交互输入，页面中的 Agent 操作按钮会自动发送并执行任务。</p></div>
+        <button id="import-manifest" class="button import-button">↥ 导入现有 Agent Manifest</button>
+        <label class="field">可执行文件 / 命令<div class="input-action"><input id="agent-executable" placeholder="例如 my-code-agent 或 C:\tools\agent.cmd"><button id="browse-agent" class="button">选择</button></div></label>
+        <label class="field">启动参数 <span class="field-meta">JSON 数组</span><textarea id="agent-args" class="code-input" rows="3" placeholder='["--interactive"]'>[]</textarea></label>
+        <label class="field">本地工作目录<div class="input-action"><input id="agent-cwd" placeholder="选择本地项目或工作目录"><button id="browse-agent-cwd" class="button">选择</button></div></label>
+        <label class="field">环境变量 <span class="field-meta">可选 · JSON 对象</span><textarea id="agent-environment" class="code-input" rows="3" placeholder='{"MY_AGENT_PROFILE": "default"}'>{}</textarea></label>
+        <div class="field-grid"><label class="field">提交方式<select id="agent-submit-mode"><option value="bracketed_paste_cr">粘贴模式 + Enter（CR）</option><option value="bracketed_paste_lf">粘贴模式 + 换行（LF）</option><option value="plain_text_cr">普通输入 + Enter（CR）</option><option value="plain_text_lf">普通输入 + 换行（LF）</option></select></label><label class="field">输入后提交延迟（毫秒）<input id="agent-submit-delay" type="number" min="100" max="5000" value="1000"></label></div>
+        <label class="field">启动就绪等待（毫秒）<input id="agent-startup-delay" type="number" min="0" max="10000" value="800"></label>
+        <section class="agent-memory-card" aria-labelledby="agent-memory-title">
+          <div class="agent-memory-heading"><div><strong id="agent-memory-title">Agent 长期记忆</strong><p>工作台不会向 Agent 对话自动写入准备提示。复制后交给你的 Agent 保存一次。</p></div><button id="copy-agent-memory-prompt" class="button" type="button">复制系统提示</button></div>
+          <details><summary>查看提示内容</summary><pre id="agent-long-term-memory-prompt"></pre></details>
+        </section>
+        <section class="agent-memory-card agent-mcp-configuration-card" aria-labelledby="agent-mcp-configuration-title">
+          <div class="agent-memory-heading"><div><strong id="agent-mcp-configuration-title">原生 MCP 配置</strong><p>让 Code Agent 识别自身的官方接入方式，配置并验证 desktop-ssh 原生工具。</p></div><button id="copy-agent-mcp-configuration-prompt" class="button" type="button">复制配置提示</button></div>
+          <details><summary>查看提示内容</summary><pre id="agent-mcp-configuration-prompt" tabindex="0" aria-label="原生 MCP 配置提示内容"></pre></details>
+        </section>
+        <p class="field-help">MCP 配置与命令行工具入口位于“工具集成”。</p>
+      </section>
+      <section id="settings-ssh" class="settings-section" hidden>
+        <div class="section-intro"><h3>连接你的 Linux 工作空间</h3><p>建立交互式 SSH 终端，同时为本地 Agent 提供远程执行能力。</p></div>
+        <div class="field-grid host-grid"><label class="field">服务器地址<input id="ssh-host" placeholder="192.168.1.100"></label><label class="field">SSH 端口<input id="ssh-port" type="number" min="1" max="65535" value="22"></label></div>
+        <label class="field">用户名<input id="ssh-username" autocomplete="off" placeholder="username"></label>
+        <label class="field">远程工作目录<input id="ssh-cwd" placeholder="/srv/workspace/project"></label>
+        <label class="field">认证方式<select id="ssh-auth"><option value="password">密码</option><option value="key">私钥文件</option><option value="agent">系统 SSH Agent</option></select></label>
+        <div id="ssh-password-fields"><label class="field">登录密码<input id="ssh-password" type="password" autocomplete="new-password" placeholder="输入密码"></label><div class="credential-status-row"><p id="ssh-password-status" class="field-help" role="status">密码由操作系统安全存储加密保存在本机，不会回显。</p><button id="forget-ssh-password" class="button small-button" type="button" disabled>忘记当前密码</button></div></div>
+        <div id="ssh-key-fields" hidden><label class="field">私钥文件<div class="input-action"><input id="ssh-key-path" placeholder="C:\Users\you\.ssh\id_ed25519"><button id="browse-ssh-key" class="button">选择</button></div></label><label class="field">私钥口令 <span class="field-meta">可选</span><input id="ssh-passphrase" type="password" autocomplete="new-password" placeholder="仅用于当前会话"></label></div>
+        <p class="field-help">服务器地址、端口、用户名和目录可保存。密码由当前系统账户的安全存储加密保存；私钥口令仍仅保留在当前会话。</p>
+      </section>
+      <section id="settings-server-profile" class="settings-section" hidden>
+        <div class="section-intro"><h3>定义远程编译与代码分析环境</h3><p>填写服务器已有的源码、SDK 与工具链位置。目录和文件使用远端绝对路径并支持 ~/；运行状态、缓存和运行资产目录由工作台统一管理。</p></div>
+        <label class="field">环境名称<input id="server-profile-id" placeholder="例如 default 或 rk3568-validation"></label>
+        <label class="field">异构使能仓根目录 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-worker-repo-root" placeholder="/srv/workspace/heterogeneous-enable"></label>
+        <label class="field">代码分析源码根 <span class="field-meta">每行一个远端绝对路径</span><textarea id="server-source-roots" class="code-input" rows="3" placeholder="/srv/source/openharmony&#10;~/source/product"></textarea></label>
+        <label class="field">OpenHarmony SDK / Third-party 资源根 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-openharmony-sdk-root" placeholder="/opt/hetero-sdk/openharmony-sdk"></label>
+        <p class="server-sdk-hint">该目录统一提供 EGL、OpenGLES、Vulkan Headers、musl、Graphic、Multimedia 与 AI 头文件资源。</p>
+        <div class="field-grid"><label class="field">LLVM bin 目录 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-llvm-bin-root" placeholder="/opt/llvm/bin"></label><label class="field">glslang 可执行文件 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-glslang-bin" placeholder="/opt/glslang/bin/glslangValidator"></label></div>
+        <label class="field">TraceStreamer 可执行文件 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-trace-streamer" placeholder="/opt/trace_streamer/trace_streamer"></label>
+        <label class="field">真机运行库根目录 <span class="field-meta">远端绝对路径，支持 ~/</span><input id="server-runtime-library-root" placeholder="/opt/hetero-runtime-libs"></label>
+        <label class="field">Python 可执行文件 <span class="field-meta">PATH 命令或 /、~/ 路径</span><input id="server-python-bin" placeholder="python3"></label>
+        <p class="field-help">工作台只保存目录和可执行文件位置；SSH 密码仍由操作系统安全存储单独管理。</p>
+      </section>
+      <section id="settings-integration" class="settings-section" hidden>
+        <div class="section-intro"><h3>把工作台能力交给 Agent</h3><p>本地 Agent 可通过工具管理采集计划、读取记录，也可使用已连接的 SSH 执行远程操作。</p></div>
+        <div class="integration-diagram"><span>本地 Code Agent</span><b>→</b><span>MCP / CLI</span><b>→</b><span>本机 HDC / SSH</span></div>
+        <div class="integration-tools"><div><strong>desktop_tool_describe</strong><span>按需读取单个工具的完整参数合同</span></div><div><strong>capture_catalog</strong><span>读取模板、动作与采集参数契约</span></div><div><strong>capture_save_plan</strong><span>校验并保存完整采集计划</span></div><div><strong>capture_update_plan</strong><span>按版本差量补全页面计划</span></div><div><strong>capture_start</strong><span>在明确选择的本机设备执行计划</span></div><div><strong>trace_list</strong><span>读取已登记的采集记录</span></div><div><strong>remote_exec</strong><span>在远程工作目录执行命令并返回输出</span></div><div><strong>remote_status</strong><span>获取当前服务器连接状态</span></div></div>
+        <label class="field">MCP 配置文件<div class="input-action"><input id="integration-config-path" readonly placeholder="正在准备…"><button id="open-mcp-config" class="button">打开</button></div></label>
+        <label class="field">CLI 工具入口<div class="input-action"><input id="integration-cli-path" readonly placeholder="正在准备…"><button id="open-integration-folder" class="button">打开目录</button></div></label>
+        <pre id="integration-details" class="integration-details"></pre>
+        <button id="copy-integration" class="button">复制集成信息</button>
+        <div class="demo-note"><strong>连接演示说明</strong><p>内置演示客户端会调用远程工具执行 pwd、uname 与 ls，用于验证接入链路。它是连接测试客户端，不是 AI Agent。</p><button id="run-demo" class="button primary-button" type="button"><span>▷</span>运行连接演示</button></div>
+      </section>
+      <section id="settings-automation" class="settings-section" hidden>
+        <div class="section-intro"><h3>失败自动重试与操作授权</h3><p>对已接入恢复合同的步骤，工作台可以将脱敏错误自动发送给 Code Agent；助手完成修复并回传结果后，工作台只重试原来失败的步骤一次。</p></div>
+        <label class="settings-preference-row" for="automation-auto-recover-errors">
+          <span><strong>出错自动发送助手解决并重试</strong><small>完成握手前不重试；同一次操作最多自动重试一次，避免循环执行。</small></span>
+          <input id="automation-auto-recover-errors" type="checkbox">
+        </label>
+        <label class="settings-preference-row" for="automation-allow-device-operations">
+          <span><strong>授权全部手机操作</strong><small>允许自动恢复任务通过工作台工具读取和操作当前选中的手机；切换设备后本次授权不会跨设备沿用。</small></span>
+          <input id="automation-allow-device-operations" type="checkbox">
+        </label>
+        <label class="settings-preference-row" for="automation-allow-server-operations">
+          <span><strong>授权全部服务器操作</strong><small>允许自动恢复任务通过工作台工具读写当前绑定的 SSH 工作区并执行命令；切换 SSH 目标后需要新的恢复任务。</small></span>
+          <input id="automation-allow-server-operations" type="checkbox">
+        </label>
+        <p class="field-help">这些授权只约束工作台发起的无人值守恢复任务和 desktop-ssh 工具；用户亲自点击的操作仍按本次明确指令执行。</p>
+      </section>
+      <section id="settings-interface" class="settings-section" hidden>
+        <div class="section-intro"><h3>界面行为</h3><p>设置工作台导航的显示方式。界面偏好仅保存在当前电脑。</p></div>
+        <label class="settings-preference-row" for="activity-rail-expand-on-hover">
+          <span><strong>侧边栏悬浮展开</strong><small>鼠标进入活动栏任意位置时，在页面上方展开全部功能名称；关闭后仅提示当前图标名称。</small></span>
+          <input id="activity-rail-expand-on-hover" type="checkbox" checked>
+        </label>
+      </section>
+      <div id="settings-error" class="notice error" hidden role="alert"></div>
+    </div>
+    <footer class="drawer-footer"><span id="settings-save-status">配置保存在当前用户的本地目录</span><div class="drawer-footer-actions"><button id="save-settings" class="button primary-button">保存配置</button><button id="settings-start-agent" class="button">启动 Agent</button></div></footer>
+  </aside>
+  <script src="./renderer.js"></script>
+</body>
+</html>

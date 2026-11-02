@@ -1,0 +1,3414 @@
+{
+  "artifact_type": "hardware_kb_strategy_skill_evaluation_suite",
+  "schema_version": "hardware_kb_strategy_skill_evaluation/v1",
+  "suite_id": "openharmony_hardware_kb_context_skill",
+  "suite_version": "2.0.0",
+  "strategy_contract": {
+    "skill_id": "strategy-hardware-kb",
+    "skill_version": "1.7.0",
+    "prompt_contract_version": "opportunity-reasoning-prompt/v8"
+  },
+  "purpose_zh": "以分层、跨语义族的公开代码/Trace 输入检验 Hardware-KB 策略的相对准确性、校准度与泛化边界；它不把静态命中或单一平均分当作设备可用性结论。",
+  "isolation": {
+    "model_input_rule_zh": "浏览器模型只接收 public_input 经当前知识库构造的 context；oracle 字段永不进入模型 prompt。",
+    "device_fact_rule_zh": "所有样本都没有 device probe。即使静态语义与 API 记录匹配，也只能得出 evidence_required 或 not_recommended，不能声称当前麒麟设备已支持或已有收益。",
+    "holdout_rule_zh": "holdout 是冻结盲测切分：只能用于比较已发布版本，不得依据其逐例结果继续调 Prompt、检索阈值或 KB 后再把同一版本报告称为泛化结果。"
+  },
+  "evaluation_policy": {
+    "primary_metrics_zh": [
+      "硬件选择召回",
+      "硬件拒绝特异度",
+      "CPU 并行召回/特异度",
+      "作用域声明/未展开 callee 边界",
+      "recommendation 校准率",
+      "运行时验证覆盖率",
+      "各切分与语义族的宏平均"
+    ],
+    "diagnostic_metric_zh": "逐例 100 分制只用于定位哪一项约束失效，不作为发布或泛化的单一目标。",
+    "split_policy_zh": "smoke 用于快速回归；development 允许定位问题；validation 用于版本选择；holdout 仅用于冻结比较。"
+  },
+  "cases": [
+    {
+      "case_id": "npu_matmul_fp32",
+      "title_zh": "FP32 三层矩阵乘加",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "MatMulHot",
+        "event_name": "MatMulHot",
+        "module": "AI inference",
+        "code": "void MatMulHot(const float *a, const float *b, float *out, int n) {\n  for (int i = 0; i < n; ++i) {\n    for (int j = 0; j < n; ++j) {\n      float sum = 0.0F;\n      for (int k = 0; k < n; ++k) sum += a[i * n + k] * b[k * n + j];\n      out[i * n + j] = sum;\n    }\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 46.8,
+          "inclusive_total_duration_ms": 49.3,
+          "max_self_time_estimate_duration_ms": 17.6,
+          "max_span_duration_ms": 18.2,
+          "occurrence_count": 3
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_MATMUL"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_MATMUL"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "npu_matrix",
+      "variation_axis": "canonical_matrix"
+    },
+    {
+      "case_id": "npu_conv2d_nhwc_fp32",
+      "title_zh": "NHWC 3x3 卷积核滑窗",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "conv2d",
+        "event_name": "conv2d",
+        "module": "AI vision",
+        "code": "void conv2d(const float *input, const float *kernel, float *output, int width, int height) {\n  for (int y = 1; y < height - 1; ++y) {\n    for (int x = 1; x < width - 1; ++x) {\n      float sum = 0.0F;\n      for (int ky = -1; ky <= 1; ++ky) for (int kx = -1; kx <= 1; ++kx) {\n        sum += input[(y + ky) * width + x + kx] * kernel[(ky + 1) * 3 + kx + 1];\n      }\n      output[y * width + x] = sum;\n    }\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 68.2,
+          "inclusive_total_duration_ms": 70.0,
+          "max_self_time_estimate_duration_ms": 12.5,
+          "max_span_duration_ms": 12.8,
+          "occurrence_count": 6
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_CONV2D"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_CONV2D"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "NHWC",
+              "NCHW",
+              "layout",
+              "shape",
+              "dtype"
+            ],
+            [
+              "搬运",
+              "DMA",
+              "拷贝",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "npu_convolution",
+      "variation_axis": "canonical_conv"
+    },
+    {
+      "case_id": "npu_reduce_sum_axis",
+      "title_zh": "沿明确轴的 FP32 归约",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "reduce_sum",
+        "event_name": "reduce_sum",
+        "module": "AI inference",
+        "code": "void reduce_sum(const float *tensor, float *output, int outer, int axis) {\n  for (int row = 0; row < outer; ++row) {\n    float sum = 0.0F;\n    for (int i = 0; i < axis; ++i) sum += tensor[row * axis + i];\n    output[row] = sum;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 31.2,
+          "inclusive_total_duration_ms": 32.8,
+          "max_self_time_estimate_duration_ms": 3.6,
+          "max_span_duration_ms": 3.9,
+          "occurrence_count": 9
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_REDUCE_SUM"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_REDUCE_SUM"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "axis",
+              "轴",
+              "shape",
+              "维度"
+            ],
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "搬运",
+              "benchmark",
+              "基准",
+              "小归约"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "npu_reduction",
+      "variation_axis": "canonical_reduce"
+    },
+    {
+      "case_id": "gpu_rgba_brightness",
+      "title_zh": "连续 RGBA8888 亮度变换",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "ApplyBrightnessRGBA8888",
+        "event_name": "ApplyBrightnessRGBA8888",
+        "module": "Image effects",
+        "code": "void ApplyBrightnessRGBA8888(uint8_t *rgba, size_t pixels, uint8_t brightness) {\n  for (size_t i = 0; i < pixels * 4; ++i) {\n    rgba[i] = static_cast<uint8_t>(std::min(255, rgba[i] + brightness));\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 55.1,
+          "inclusive_total_duration_ms": 57.0,
+          "max_self_time_estimate_duration_ms": 8.9,
+          "max_span_duration_ms": 9.2,
+          "occurrence_count": 7
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:GpuBrightnessAlgo::OnApplyRGBA8888"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:GpuBrightnessAlgo::OnApplyRGBA8888"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "RGBA",
+              "format",
+              "格式"
+            ],
+            [
+              "上传",
+              "下载",
+              "搬运",
+              "DMA",
+              "NativeBuffer"
+            ],
+            [
+              "同步",
+              "fence",
+              "context",
+              "shader"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "gpu_image_effect",
+      "variation_axis": "canonical_brightness"
+    },
+    {
+      "case_id": "gpu_vulkan_compute_dispatch",
+      "title_zh": "已显式使用 Vulkan compute dispatch 的纹理处理",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "DispatchTextureCompute",
+        "event_name": "DispatchTextureCompute",
+        "module": "Render compute",
+        "code": "void DispatchTextureCompute(VkCommandBuffer commandBuffer, uint32_t workgroups) {\n  vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);\n  vkCmdDispatch(commandBuffer, workgroups, 1, 1);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 18.4,
+          "inclusive_total_duration_ms": 28.0,
+          "max_self_time_estimate_duration_ms": 1.2,
+          "max_span_duration_ms": 2.1,
+          "occurrence_count": 16
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:vkCmdDispatch"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:vkCmdDispatch"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "shader",
+              "pipeline",
+              "workgroup"
+            ],
+            [
+              "同步",
+              "fence",
+              "context"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "NativeBuffer"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "gpu_compute",
+      "variation_axis": "explicit_dispatch"
+    },
+    {
+      "case_id": "dsp_pcm_reverb",
+      "title_zh": "PCM 帧级混响增益处理",
+      "category": "dsp_positive",
+      "public_input": {
+        "function_hint": "ProcessAudioReverb",
+        "event_name": "ProcessAudioReverb",
+        "module": "Audio effect",
+        "code": "void ProcessAudioReverb(float *pcm, uint32_t frameCount, float reverbGain) {\n  for (uint32_t frame = 0; frame < frameCount; ++frame) {\n    pcm[frame] = pcm[frame] * reverbGain;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 39.7,
+          "inclusive_total_duration_ms": 41.0,
+          "max_self_time_estimate_duration_ms": 2.4,
+          "max_span_duration_ms": 2.7,
+          "occurrence_count": 18
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectProcess"
+          ],
+          "forbidden_evidence_prefixes": [
+            "npu_api:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "dsp"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectProcess"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "PCM",
+              "sample",
+              "采样"
+            ],
+            [
+              "frame",
+              "frameCount",
+              "帧"
+            ],
+            [
+              "provider",
+              "HDI",
+              "bypass",
+              "AP fallback",
+              "实时"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "dsp_audio_effect",
+      "variation_axis": "pcm_reverb"
+    },
+    {
+      "case_id": "media_avcodec_h264_decoder",
+      "title_zh": "H.264 硬件视频解码能力查询",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "CreateHardwareAvcDecoder",
+        "event_name": "CreateHardwareAvcDecoder",
+        "module": "Video decode",
+        "code": "bool CreateHardwareAvcDecoder() {\n  const OH_AVCapability *capability = OH_AVCodec_GetCapabilityByCategory(\"video/avc\", false, AVCODEC_HARDWARE);\n  return capability != nullptr;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 11.4,
+          "inclusive_total_duration_ms": 24.2,
+          "max_self_time_estimate_duration_ms": 1.1,
+          "max_span_duration_ms": 2.0,
+          "occurrence_count": 10
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:OH_AVCodec_GetCapabilityByCategory"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:OH_AVCodec_GetCapabilityByCategory"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "profile",
+              "MIME"
+            ],
+            [
+              "Configure",
+              "Prepare",
+              "Start",
+              "surface",
+              "format"
+            ],
+            [
+              "software fallback",
+              "回退",
+              "设备"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "media_video_decoder",
+      "variation_axis": "capability_query"
+    },
+    {
+      "case_id": "media_jpeg_hardware_encode",
+      "title_zh": "PixelMap JPEG 编码入口",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "EncodeJpeg",
+        "event_name": "EncodeJpeg",
+        "module": "Image encode",
+        "code": "bool EncodeJpeg(PixelMap *pixelMap, SkWStream &out) {\n  return EncodeImageByPixelMap(pixelMap, out);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 71.3,
+          "inclusive_total_duration_ms": 74.8,
+          "max_self_time_estimate_duration_ms": 10.7,
+          "max_span_duration_ms": 11.3,
+          "occurrence_count": 7
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ExtEncoder::HardwareEncode"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ExtEncoder::HardwareEncode"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "JPEG",
+              "PixelMap",
+              "bitstream"
+            ],
+            [
+              "Image Codec",
+              "HDI",
+              "内部",
+              "SDK"
+            ],
+            [
+              "格式",
+              "色彩",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "media_jpeg_encode",
+      "variation_axis": "image_encode"
+    },
+    {
+      "case_id": "media_jpeg_hardware_decode",
+      "title_zh": "JPEG bitstream 到 NativeBuffer 解码",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "DecodeJpeg",
+        "event_name": "DecodeJpeg",
+        "module": "Image decode",
+        "code": "bool DecodeJpeg(const uint8_t *jpegBitstream, size_t size, NativeBuffer *output) {\n  return DecodeImage(jpegBitstream, size, output);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 63.0,
+          "inclusive_total_duration_ms": 66.5,
+          "max_self_time_estimate_duration_ms": 9.0,
+          "max_span_duration_ms": 9.6,
+          "occurrence_count": 7
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ExtDecoder::DoHardWareDecode"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ExtDecoder::DoHardWareDecode"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "JPEG",
+              "bitstream"
+            ],
+            [
+              "NativeBuffer",
+              "Ashmem",
+              "DMA",
+              "buffer"
+            ],
+            [
+              "格式",
+              "色彩",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "media_jpeg_decode",
+      "variation_axis": "image_decode"
+    },
+    {
+      "case_id": "media_heif_hardware_decode",
+      "title_zh": "HEIF 图块解码到 NativeBuffer",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "DecodeHeif",
+        "event_name": "DecodeHeif",
+        "module": "HEIF image decode",
+        "code": "bool DecodeHeif(const std::vector<Ashmem> &inputs, NativeBuffer *output) {\n  return DecodeGrid(inputs, output);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 88.1,
+          "inclusive_total_duration_ms": 93.0,
+          "max_self_time_estimate_duration_ms": 14.2,
+          "max_span_duration_ms": 15.6,
+          "occurrence_count": 6
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:HeifDecoderImpl::HwDecodeImage"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:HeifDecoderImpl::HwDecodeImage"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "HEIF",
+              "HEIC",
+              "tile",
+              "grid"
+            ],
+            [
+              "Ashmem",
+              "NativeBuffer",
+              "DMA",
+              "buffer"
+            ],
+            [
+              "格式",
+              "色彩",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "media_heif_decode",
+      "variation_axis": "image_decode"
+    },
+    {
+      "case_id": "media_hcodec_component_capability",
+      "title_zh": "HCodec Component HDI 能力枚举",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "QueryHCodecCapabilities",
+        "event_name": "QueryHCodecCapabilities",
+        "module": "HCodec",
+        "code": "auto QueryHCodecCapabilities() {\n  auto manager = ICodecComponentManager::Get();\n  return manager->GetComponentCapabilityList();\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 16.2,
+          "inclusive_total_duration_ms": 21.0,
+          "max_self_time_estimate_duration_ms": 1.8,
+          "max_span_duration_ms": 2.3,
+          "occurrence_count": 9
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ICodecComponentManager::GetComponentCapabilityList"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ICodecComponentManager::GetComponentCapabilityList"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "Component",
+              "component",
+              "HDI"
+            ],
+            [
+              "callback",
+              "buffer",
+              "surface",
+              "lifecycle"
+            ],
+            [
+              "设备",
+              "capability",
+              "driver",
+              "回退"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "media_hcodec",
+      "variation_axis": "component_capability"
+    },
+    {
+      "case_id": "gpu_small_rgba_cost_boundary",
+      "title_zh": "极小 RGBA 图块的搬运成本边界",
+      "category": "cost_boundary",
+      "public_input": {
+        "function_hint": "ApplyBrightnessRGBA8888",
+        "event_name": "ApplyBrightnessRGBA8888",
+        "module": "Image effects",
+        "code": "void ApplyBrightnessRGBA8888(uint8_t *rgba, size_t pixels, uint8_t brightness) {\n  for (size_t i = 0; i < pixels * 4; ++i) rgba[i] = static_cast<uint8_t>(rgba[i] + brightness);\n}\n// caller always passes one 16x16 icon.",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 0.42,
+          "inclusive_total_duration_ms": 0.46,
+          "max_self_time_estimate_duration_ms": 0.006,
+          "max_span_duration_ms": 0.008,
+          "occurrence_count": 70
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:GpuBrightnessAlgo::OnApplyRGBA8888"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:GpuBrightnessAlgo::OnApplyRGBA8888"
+          ],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "16x16",
+              "小",
+              "粒度",
+              "batch"
+            ],
+            [
+              "搬运",
+              "上传",
+              "同步",
+              "开销"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "阈值"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "gpu_cost_boundary",
+      "variation_axis": "tiny_payload"
+    },
+    {
+      "case_id": "ipc_proxy_sync_negative",
+      "title_zh": "同步 Binder IPC 代理",
+      "category": "negative_ipc",
+      "public_input": {
+        "function_hint": "BundleProxy::GetNameForUid",
+        "event_name": "GetNameForUid",
+        "module": "Bundle manager IPC",
+        "code": "bool BundleProxy::GetNameForUid(int uid) {\n  MessageParcel data;\n  data.WriteInt32(uid);\n  return SendTransactCmd(uid, data);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 13.1,
+          "inclusive_total_duration_ms": 88.8,
+          "max_self_time_estimate_duration_ms": 0.19,
+          "max_span_duration_ms": 1.33,
+          "occurrence_count": 170
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "IPC",
+              "服务端",
+              "等待",
+              "self",
+              "inclusive"
+            ],
+            [
+              "调用方",
+              "批量",
+              "重复",
+              "缓存"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "negative_sync_ipc",
+      "variation_axis": "proxy_wait"
+    },
+    {
+      "case_id": "shared_lock_lookup_negative",
+      "title_zh": "共享锁保护的缓存查询",
+      "category": "negative_lock",
+      "public_input": {
+        "function_hint": "LookupCache",
+        "event_name": "LookupCache",
+        "module": "Service cache",
+        "code": "Value LookupCache(const Key &key) {\n  std::shared_lock lock(cacheMutex);\n  auto found = index.find(key);\n  return found == index.end() ? Value{} : found->second;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 4.5,
+          "inclusive_total_duration_ms": 5.2,
+          "max_self_time_estimate_duration_ms": 0.08,
+          "max_span_duration_ms": 0.12,
+          "occurrence_count": 56
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "锁",
+              "竞争",
+              "shared_lock",
+              "mutex"
+            ],
+            [
+              "命中",
+              "缓存",
+              "调用方",
+              "等待"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "negative_lock",
+      "variation_axis": "shared_lookup"
+    },
+    {
+      "case_id": "file_io_stream_negative",
+      "title_zh": "文件流读取包装函数",
+      "category": "negative_io",
+      "public_input": {
+        "function_hint": "ReadFile",
+        "event_name": "ReadFile",
+        "module": "File I/O",
+        "code": "bool ReadFile(const std::string &path, std::vector<uint8_t> &out) {\n  std::ifstream input(path, std::ios::binary);\n  out.assign(std::istreambuf_iterator<char>(input), {});\n  return input.good();\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 7.2,
+          "inclusive_total_duration_ms": 152.0,
+          "max_self_time_estimate_duration_ms": 0.11,
+          "max_span_duration_ms": 16.0,
+          "occurrence_count": 48
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "I/O",
+              "文件",
+              "磁盘",
+              "等待"
+            ],
+            [
+              "self",
+              "inclusive",
+              "缓存",
+              "批量"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "negative_io",
+      "variation_axis": "stream_read"
+    },
+    {
+      "case_id": "prefix_sum_dependency_negative",
+      "title_zh": "前缀和循环依赖",
+      "category": "negative_dependency",
+      "public_input": {
+        "function_hint": "PrefixSum",
+        "event_name": "PrefixSum",
+        "module": "Data preparation",
+        "code": "void PrefixSum(const int *input, int *output, size_t count) {\n  if (count == 0) return;\n  output[0] = input[0];\n  for (size_t i = 1; i < count; ++i) output[i] = output[i - 1] + input[i];\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 23.0,
+          "inclusive_total_duration_ms": 23.5,
+          "max_self_time_estimate_duration_ms": 5.0,
+          "max_span_duration_ms": 5.3,
+          "occurrence_count": 5
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "依赖",
+              "prefix",
+              "前缀",
+              "scan"
+            ],
+            [
+              "分块",
+              "重写",
+              "算法",
+              "不适合"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "negative_recurrence",
+      "variation_axis": "prefix_scan"
+    },
+    {
+      "case_id": "json_parser_branchy_negative",
+      "title_zh": "分支密集 JSON token 解析",
+      "category": "negative_branchy",
+      "public_input": {
+        "function_hint": "ParseJsonToken",
+        "event_name": "ParseJsonToken",
+        "module": "Parser",
+        "code": "Token ParseJsonToken(const char *text, size_t length) {\n  size_t index = 0;\n  while (index < length && std::isspace(text[index])) ++index;\n  if (index == length) return Token::End();\n  if (text[index] == '{') return Token::ObjectStart();\n  if (text[index] == '[') return Token::ArrayStart();\n  return ParseScalar(text + index, length - index);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 12.8,
+          "inclusive_total_duration_ms": 13.2,
+          "max_self_time_estimate_duration_ms": 0.21,
+          "max_span_duration_ms": 0.24,
+          "occurrence_count": 61
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": [
+            [
+              "分支",
+              "控制流",
+              "token",
+              "解析"
+            ],
+            [
+              "依赖",
+              "粒度",
+              "profil",
+              "调用方"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "negative_branching",
+      "variation_axis": "parser"
+    },
+    {
+      "case_id": "cpu_independent_record_normalization",
+      "title_zh": "独立记录归一化循环",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "NormalizeRecords",
+        "event_name": "NormalizeRecords",
+        "module": "Data preparation",
+        "code": "void NormalizeRecords(Record *records, size_t count) {\n  for (size_t i = 0; i < count; ++i) {\n    records[i].normalized = Clamp(records[i].raw, 0, 255);\n    records[i].valid = records[i].raw >= 0;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 54.0,
+          "inclusive_total_duration_ms": 55.0,
+          "max_self_time_estimate_duration_ms": 7.1,
+          "max_span_duration_ms": 7.4,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "独立",
+              "无依赖",
+              "per",
+              "每个"
+            ],
+            [
+              "分块",
+              "chunk",
+              "任务",
+              "线程"
+            ],
+            [
+              "数据竞争",
+              "写入",
+              "阈值",
+              "粒度"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "cpu_parallel_map",
+      "variation_axis": "independent_map"
+    },
+    {
+      "case_id": "cpu_histogram_private_bins",
+      "title_zh": "可私有分桶再归并的直方图",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "BuildHistogram",
+        "event_name": "BuildHistogram",
+        "module": "Image statistics",
+        "code": "void BuildHistogram(const uint8_t *values, size_t count, uint32_t *histogram) {\n  uint32_t localBins[256] = {};\n  for (size_t i = 0; i < count; ++i) ++localBins[values[i]];\n  for (size_t bin = 0; bin < 256; ++bin) histogram[bin] += localBins[bin];\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 47.5,
+          "inclusive_total_duration_ms": 48.3,
+          "max_self_time_estimate_duration_ms": 5.9,
+          "max_span_duration_ms": 6.3,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "私有",
+              "local",
+              "bin",
+              "分桶"
+            ],
+            [
+              "归并",
+              "reduce",
+              "merge",
+              "合并"
+            ],
+            [
+              "竞争",
+              "线程",
+              "任务",
+              "缓存"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "cpu_parallel_reduction",
+      "variation_axis": "private_bins"
+    },
+    {
+      "case_id": "cpu_batch_ipc_conditional_parallel",
+      "title_zh": "多个独立 UID 的批量 IPC 查询",
+      "category": "cpu_parallel_boundary",
+      "public_input": {
+        "function_hint": "ResolveBundleNames",
+        "event_name": "ResolveBundleNames",
+        "module": "Bundle manager IPC",
+        "code": "void ResolveBundleNames(const std::vector<int> &uids, std::vector<std::string> *names) {\n  names->resize(uids.size());\n  for (size_t i = 0; i < uids.size(); ++i) {\n    (*names)[i] = BundleProxy::GetNameForUid(uids[i]);\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 12.0,
+          "inclusive_total_duration_ms": 102.0,
+          "max_self_time_estimate_duration_ms": 0.18,
+          "max_span_duration_ms": 1.9,
+          "occurrence_count": 64
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "forbidden",
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "IPC",
+              "服务端",
+              "Binder",
+              "等待"
+            ],
+            [
+              "独立",
+              "uid",
+              "批量",
+              "异步"
+            ],
+            [
+              "并发",
+              "线程池",
+              "串行",
+              "锁"
+            ]
+          ]
+        }
+      },
+      "partition": "smoke",
+      "family_id": "cpu_parallel_boundary",
+      "variation_axis": "conditional_ipc_batch"
+    },
+    {
+      "case_id": "npu_depthwise_conv2d_featuremap",
+      "title_zh": "深度可分离特征图卷积",
+      "partition": "development",
+      "family_id": "npu_convolution",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "depthwise_conv2d",
+        "event_name": "depthwise_conv2d",
+        "module": "AI vision",
+        "code": "void depthwise_conv2d(const float *feature, const float *kernel, float *out,\n    int width, int height, int channels) {\n  for (int y = 1; y < height - 1; ++y) for (int x = 1; x < width - 1; ++x)\n    for (int c = 0; c < channels; ++c) {\n      float acc = 0.0F;\n      for (int ky = -1; ky <= 1; ++ky) for (int kx = -1; kx <= 1; ++kx)\n        acc += feature[((y + ky) * width + x + kx) * channels + c] * kernel[(ky + 1) * 3 + kx + 1];\n      out[(y * width + x) * channels + c] = acc;\n    }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 53.1,
+          "inclusive_total_duration_ms": 57.348,
+          "max_self_time_estimate_duration_ms": 13.275,
+          "max_span_duration_ms": 14.337,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_DEPTHWISE_CONV2D_NATIVE"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_DEPTHWISE_CONV2D_NATIVE"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_avg_pool_image_window",
+      "title_zh": "图像窗口平均池化",
+      "partition": "development",
+      "family_id": "npu_pooling",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "avg_pool",
+        "event_name": "avg_pool",
+        "module": "AI vision",
+        "code": "void avg_pool(const float *image, float *pooled, int width, int height) {\n  for (int y = 0; y < height / 2; ++y) for (int x = 0; x < width / 2; ++x) {\n    float sum = 0.0F;\n    for (int ky = 0; ky < 2; ++ky) for (int kx = 0; kx < 2; ++kx)\n      sum += image[(y * 2 + ky) * width + x * 2 + kx];\n    pooled[y * (width / 2) + x] = sum * 0.25F;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 31.6,
+          "inclusive_total_duration_ms": 34.128,
+          "max_self_time_estimate_duration_ms": 7.9,
+          "max_span_duration_ms": 8.532,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_AVG_POOL"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_AVG_POOL"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_softmax_logits_batch",
+      "title_zh": "批量 logits Softmax",
+      "partition": "development",
+      "family_id": "npu_activation",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "softmax",
+        "event_name": "softmax",
+        "module": "AI inference",
+        "code": "void softmax(const float *tensor, float *probability, int batch, int classes) {\n  for (int b = 0; b < batch; ++b) {\n    float sum = 0.0F;\n    for (int c = 0; c < classes; ++c) {\n      float value = expf(tensor[b * classes + c]);\n      probability[b * classes + c] = value;\n      sum += value;\n    }\n    for (int c = 0; c < classes; ++c) probability[b * classes + c] /= sum;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 42.8,
+          "inclusive_total_duration_ms": 46.224,
+          "max_self_time_estimate_duration_ms": 10.7,
+          "max_span_duration_ms": 11.556,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_SOFTMAX"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_SOFTMAX"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_layer_norm_tensor",
+      "title_zh": "张量 LayerNorm 归一化",
+      "partition": "development",
+      "family_id": "npu_normalization",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "layer_norm",
+        "event_name": "layer_norm",
+        "module": "AI inference",
+        "code": "void layer_norm(const float *tensor, const float *scale, const float *bias,\n    float *out, int rows, int cols) {\n  for (int r = 0; r < rows; ++r) {\n    float mean = 0.0F;\n    for (int c = 0; c < cols; ++c) mean += tensor[r * cols + c];\n    mean /= cols;\n    float variance = 0.0F;\n    for (int c = 0; c < cols; ++c) { float d = tensor[r * cols + c] - mean; variance += d * d; }\n    for (int c = 0; c < cols; ++c) out[r * cols + c] = (tensor[r * cols + c] - mean) / sqrtf(variance / cols + 1e-5F) * scale[c] + bias[c];\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 36.7,
+          "inclusive_total_duration_ms": 39.636,
+          "max_self_time_estimate_duration_ms": 9.175,
+          "max_span_duration_ms": 9.909,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_LAYER_NORM"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_LAYER_NORM"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "gpu_rgba_contrast_pixels",
+      "title_zh": "连续 RGBA 像素对比度变换",
+      "partition": "development",
+      "family_id": "gpu_image_effect",
+      "variation_axis": "semantic_variant",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "ApplyContrastRgba",
+        "event_name": "ApplyContrastRgba",
+        "module": "image processing",
+        "code": "void ApplyContrastRgba(uint8_t *rgba, int pixelCount, float contrast) {\n  for (int i = 0; i < pixelCount * 4; i += 4) {\n    rgba[i] = Clamp((rgba[i] - 128.0F) * contrast + 128.0F);\n    rgba[i + 1] = Clamp((rgba[i + 1] - 128.0F) * contrast + 128.0F);\n    rgba[i + 2] = Clamp((rgba[i + 2] - 128.0F) * contrast + 128.0F);\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 28.4,
+          "inclusive_total_duration_ms": 30.672,
+          "max_self_time_estimate_duration_ms": 7.1,
+          "max_span_duration_ms": 7.668,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:GpuContrastAlgo::OnApplyRGBA8888"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:GpuContrastAlgo::OnApplyRGBA8888"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "context",
+              "extension",
+              "shader",
+              "格式",
+              "format"
+            ],
+            [
+              "上传",
+              "下载",
+              "拷贝",
+              "DMA",
+              "同步"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "gpu_gl_compute_shader_dispatch",
+      "title_zh": "显式 OpenGL 计算 Shader 派发",
+      "partition": "development",
+      "family_id": "gpu_compute",
+      "variation_axis": "semantic_variant",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "glDispatchCompute",
+        "event_name": "glDispatchCompute",
+        "module": "graphics compute",
+        "code": "void RunComputeTexture(GLuint texture, int width, int height) {\n  BindImageTexture(texture);\n  glDispatchCompute((width + 15) / 16, (height + 15) / 16, 1);\n  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 20.5,
+          "inclusive_total_duration_ms": 22.14,
+          "max_self_time_estimate_duration_ms": 5.125,
+          "max_span_duration_ms": 5.535,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:glDispatchCompute"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:glDispatchCompute"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "context",
+              "extension",
+              "shader",
+              "格式",
+              "format"
+            ],
+            [
+              "上传",
+              "下载",
+              "拷贝",
+              "DMA",
+              "同步"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "dsp_effect_process_pcm",
+      "title_zh": "PCM 音效帧处理入口",
+      "partition": "development",
+      "family_id": "dsp_audio_effect",
+      "variation_axis": "semantic_variant",
+      "category": "dsp_positive",
+      "public_input": {
+        "function_hint": "EffectProcess",
+        "event_name": "EffectProcess",
+        "module": "audio effect",
+        "code": "int EffectProcess(IEffectControlVdi *controller, float *pcmIn, float *pcmOut,\n    uint32_t frameCount, uint32_t channels) {\n  AudioEffectProcInfo info = {.frameLen = frameCount, .channels = channels};\n  return controller->EffectProcess(pcmIn, pcmOut, frameCount, info);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 38.2,
+          "inclusive_total_duration_ms": 41.256,
+          "max_self_time_estimate_duration_ms": 9.55,
+          "max_span_duration_ms": 10.314,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectProcess"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "dsp"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectProcess"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "provider",
+              "HDI",
+              "VDI",
+              "controller"
+            ],
+            [
+              "PCM",
+              "sample",
+              "frameCount",
+              "帧"
+            ],
+            [
+              "延迟",
+              "XRUN",
+              "功耗",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_video_decoder_configure_lifecycle",
+      "title_zh": "视频解码器 Configure 生命周期",
+      "partition": "development",
+      "family_id": "media_video_decoder",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "OH_VideoDecoder_Configure",
+        "event_name": "OH_VideoDecoder_Configure",
+        "module": "media codec",
+        "code": "int ConfigureVideoDecoder(OH_VideoDecoder *decoder, OH_AVFormat *format) {\n  OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, 1920);\n  OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, 1080);\n  return OH_VideoDecoder_Configure(decoder, format);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 17.9,
+          "inclusive_total_duration_ms": 19.332,
+          "max_self_time_estimate_duration_ms": 4.475,
+          "max_span_duration_ms": 4.833,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:OH_VideoDecoder_Configure"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:OH_VideoDecoder_Configure"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_jpeg_codec_image_decode",
+      "title_zh": "JPEG 码流到图像 Buffer 解码",
+      "partition": "development",
+      "family_id": "media_jpeg_decode",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "ICodecImage::DoJpegDecode",
+        "event_name": "ICodecImage::DoJpegDecode",
+        "module": "image codec",
+        "code": "int DecodeJpeg(ICodecImage *codecImage, const uint8_t *jpegBitstream,\n    size_t size, SurfaceBuffer *output) {\n  return codecImage->DoJpegDecode(jpegBitstream, size, output);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 54.3,
+          "inclusive_total_duration_ms": 58.644,
+          "max_self_time_estimate_duration_ms": 13.575,
+          "max_span_duration_ms": 14.661,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ICodecImage::DoJpegDecode"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ICodecImage::DoJpegDecode"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "negative_recursive_json_tree",
+      "title_zh": "递归 JSON 树构建",
+      "partition": "development",
+      "family_id": "negative_branching",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_branchy",
+      "public_input": {
+        "function_hint": "ParseJsonTree",
+        "event_name": "ParseJsonTree",
+        "module": "configuration parser",
+        "code": "Node *ParseJsonTree(TokenStream &stream) {\n  if (stream.Peek() == Token::LBRACE) return ParseObject(stream);\n  if (stream.Peek() == Token::LBRACKET) return ParseArray(stream);\n  if (stream.Peek() == Token::STRING) return NewString(stream.Read());\n  return NewNumber(stream.ReadNumber());\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 11.2,
+          "inclusive_total_duration_ms": 19.04,
+          "max_self_time_estimate_duration_ms": 1.4,
+          "max_span_duration_ms": 2.38,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "negative_regex_validation",
+      "title_zh": "规则表达式校验",
+      "partition": "development",
+      "family_id": "negative_branching",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_branchy",
+      "public_input": {
+        "function_hint": "ValidatePackageName",
+        "event_name": "ValidatePackageName",
+        "module": "validation",
+        "code": "bool ValidatePackageName(const std::string &name) {\n  static const std::regex rule(\"[A-Za-z][A-Za-z0-9_.]{1,127}\");\n  return std::regex_match(name, rule) && name.find(\"..\") == std::string::npos;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 8.6,
+          "inclusive_total_duration_ms": 14.62,
+          "max_self_time_estimate_duration_ms": 1.075,
+          "max_span_duration_ms": 1.827,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "negative_directory_walk",
+      "title_zh": "目录递归遍历",
+      "partition": "development",
+      "family_id": "negative_io",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_io",
+      "public_input": {
+        "function_hint": "WalkDirectory",
+        "event_name": "WalkDirectory",
+        "module": "file service",
+        "code": "void WalkDirectory(const std::string &path, std::vector<std::string> &files) {\n  for (const auto &entry : std::filesystem::directory_iterator(path)) {\n    if (entry.is_directory()) WalkDirectory(entry.path().string(), files);\n    else files.push_back(entry.path().string());\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 24.1,
+          "inclusive_total_duration_ms": 40.97,
+          "max_self_time_estimate_duration_ms": 3.013,
+          "max_span_duration_ms": 5.121,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_record_map",
+      "title_zh": "独立记录字段映射",
+      "partition": "development",
+      "family_id": "cpu_parallel_map",
+      "variation_axis": "parallel_decomposition",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "NormalizeRecordBatch",
+        "event_name": "NormalizeRecordBatch",
+        "module": "CPU batch processing",
+        "code": "void NormalizeRecordBatch(const Record *input, Record *output, size_t count) {\n  for (size_t i = 0; i < count; ++i) {\n    output[i].score = input[i].score / 100.0F;\n    output[i].flags = input[i].flags & kAllowedFlags;\n    output[i].timestamp = input[i].timestamp - kEpochOffset;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 63.4,
+          "inclusive_total_duration_ms": 107.78,
+          "max_self_time_estimate_duration_ms": 7.925,
+          "max_span_duration_ms": 13.473,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "切分",
+              "分块",
+              "任务"
+            ],
+            [
+              "归并",
+              "竞争",
+              "同步",
+              "依赖"
+            ],
+            [
+              "粒度",
+              "调度",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_block_reduction",
+      "title_zh": "分块独立累加再归并",
+      "partition": "development",
+      "family_id": "cpu_parallel_reduction",
+      "variation_axis": "parallel_decomposition",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "BlockEnergySum",
+        "event_name": "BlockEnergySum",
+        "module": "CPU batch processing",
+        "code": "double BlockEnergySum(const float *samples, size_t count) {\n  double sum = 0.0;\n  for (size_t i = 0; i < count; ++i) sum += samples[i] * samples[i];\n  return sum;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 78.5,
+          "inclusive_total_duration_ms": 133.45,
+          "max_self_time_estimate_duration_ms": 9.812,
+          "max_span_duration_ms": 16.681,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "切分",
+              "分块",
+              "任务"
+            ],
+            [
+              "归并",
+              "竞争",
+              "同步",
+              "依赖"
+            ],
+            [
+              "粒度",
+              "调度",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_tiny_loop_boundary",
+      "title_zh": "极小数组循环的调度成本边界",
+      "partition": "development",
+      "family_id": "cpu_parallel_boundary",
+      "variation_axis": "negative_or_boundary",
+      "category": "cpu_parallel_boundary",
+      "public_input": {
+        "function_hint": "ClampEightValues",
+        "event_name": "ClampEightValues",
+        "module": "utility",
+        "code": "void ClampEightValues(int *values) {\n  for (int i = 0; i < 8; ++i) values[i] = std::max(0, std::min(255, values[i]));\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 0.09,
+          "inclusive_total_duration_ms": 0.153,
+          "max_self_time_estimate_duration_ms": 0.011,
+          "max_span_duration_ms": 0.019,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_shared_atomic_counter",
+      "title_zh": "共享原子计数器循环",
+      "partition": "development",
+      "family_id": "cpu_parallel_contention",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_lock",
+      "public_input": {
+        "function_hint": "CountReadyTasks",
+        "event_name": "CountReadyTasks",
+        "module": "scheduler",
+        "code": "void CountReadyTasks(const Task *tasks, size_t count, std::atomic<uint32_t> &ready) {\n  for (size_t i = 0; i < count; ++i) if (tasks[i].state == READY) ready.fetch_add(1);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 9.7,
+          "inclusive_total_duration_ms": 16.49,
+          "max_self_time_estimate_duration_ms": 1.212,
+          "max_span_duration_ms": 2.061,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "npu_max_pool_featuremap",
+      "title_zh": "特征图最大池化",
+      "partition": "validation",
+      "family_id": "npu_pooling",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "max_pool",
+        "event_name": "max_pool",
+        "module": "AI vision",
+        "code": "void max_pool(const float *feature, float *out, int width, int height) {\n  for (int y = 0; y < height / 2; ++y) for (int x = 0; x < width / 2; ++x) {\n    float maximum = -FLT_MAX;\n    for (int ky = 0; ky < 2; ++ky) for (int kx = 0; kx < 2; ++kx)\n      maximum = std::max(maximum, feature[(y * 2 + ky) * width + x * 2 + kx]);\n    out[y * (width / 2) + x] = maximum;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 29.5,
+          "inclusive_total_duration_ms": 31.86,
+          "max_self_time_estimate_duration_ms": 7.375,
+          "max_span_duration_ms": 7.965,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_MAX_POOL"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_MAX_POOL"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_transpose_layout_tensor",
+      "title_zh": "张量维度转置",
+      "partition": "validation",
+      "family_id": "npu_shape_layout",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "transpose",
+        "event_name": "transpose",
+        "module": "AI inference",
+        "code": "void transpose(const float *tensor, float *out, int rows, int cols) {\n  for (int r = 0; r < rows; ++r) for (int c = 0; c < cols; ++c)\n    out[c * rows + r] = tensor[r * cols + c];\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 25.2,
+          "inclusive_total_duration_ms": 27.216,
+          "max_self_time_estimate_duration_ms": 6.3,
+          "max_span_duration_ms": 6.804,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_TRANSPOSE"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_TRANSPOSE"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_resize_bilinear_tensor",
+      "title_zh": "张量双线性缩放",
+      "partition": "validation",
+      "family_id": "npu_shape_layout",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "resize_bilinear",
+        "event_name": "resize_bilinear",
+        "module": "AI vision",
+        "code": "void resize_bilinear(const float *image, float *out, int inWidth, int inHeight,\n    int outWidth, int outHeight) {\n  for (int y = 0; y < outHeight; ++y) for (int x = 0; x < outWidth; ++x) {\n    float fx = x * (inWidth - 1.0F) / (outWidth - 1.0F);\n    float fy = y * (inHeight - 1.0F) / (outHeight - 1.0F);\n    out[y * outWidth + x] = SampleBilinear(image, inWidth, inHeight, fx, fy);\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 44.9,
+          "inclusive_total_duration_ms": 48.492,
+          "max_self_time_estimate_duration_ms": 11.225,
+          "max_span_duration_ms": 12.123,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_RESIZE_BILINEAR"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_RESIZE_BILINEAR"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_fully_connected_tensor",
+      "title_zh": "全连接张量层",
+      "partition": "validation",
+      "family_id": "npu_matrix",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "fully_connected",
+        "event_name": "fully_connected",
+        "module": "AI inference",
+        "code": "void fully_connected(const float *tensor, const float *weight, const float *bias,\n    float *out, int inputSize, int outputSize) {\n  for (int o = 0; o < outputSize; ++o) {\n    float sum = bias[o];\n    for (int i = 0; i < inputSize; ++i) sum += tensor[i] * weight[o * inputSize + i];\n    out[o] = sum;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 61.4,
+          "inclusive_total_duration_ms": 66.312,
+          "max_self_time_estimate_duration_ms": 15.35,
+          "max_span_duration_ms": 16.578,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_FULL_CONNECTION"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_FULL_CONNECTION"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "gpu_pixelmap_rotate_postprocess",
+      "title_zh": "PixelMap OpenGL 旋转后处理",
+      "partition": "validation",
+      "family_id": "gpu_image_effect",
+      "variation_axis": "semantic_variant",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "PixelMapPostProcWithGL",
+        "event_name": "PixelMapPostProcWithGL",
+        "module": "graphics image",
+        "code": "bool PixelMapPostProcWithGL(PixelMap &pixelMap, int rotate) {\n  return PostProcessPixelMap(pixelMap, rotate, true);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 24.0,
+          "inclusive_total_duration_ms": 25.92,
+          "max_self_time_estimate_duration_ms": 6.0,
+          "max_span_duration_ms": 6.48,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:PixelMapPostProcWithGL"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:PixelMapPostProcWithGL"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "context",
+              "extension",
+              "shader",
+              "格式",
+              "format"
+            ],
+            [
+              "上传",
+              "下载",
+              "拷贝",
+              "DMA",
+              "同步"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "gpu_vulkan_blit_scale",
+      "title_zh": "Vulkan 图像 Blit 缩放",
+      "partition": "validation",
+      "family_id": "gpu_transfer",
+      "variation_axis": "semantic_variant",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "vkCmdBlitImage",
+        "event_name": "vkCmdBlitImage",
+        "module": "graphics transfer",
+        "code": "void BlitScale(VkCommandBuffer command, VkImage source, VkImage target) {\n  VkImageBlit region = {};\n  vkCmdBlitImage(command, source, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,\n      target, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region, VK_FILTER_LINEAR);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 18.7,
+          "inclusive_total_duration_ms": 20.196,
+          "max_self_time_estimate_duration_ms": 4.675,
+          "max_span_duration_ms": 5.049,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:vkCmdBlitImage"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:vkCmdBlitImage"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "context",
+              "extension",
+              "shader",
+              "格式",
+              "format"
+            ],
+            [
+              "上传",
+              "下载",
+              "拷贝",
+              "DMA",
+              "同步"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "dsp_effect_reverse_pcm",
+      "title_zh": "PCM 音效反向处理入口",
+      "partition": "validation",
+      "family_id": "dsp_audio_effect",
+      "variation_axis": "semantic_variant",
+      "category": "dsp_positive",
+      "public_input": {
+        "function_hint": "EffectReverse",
+        "event_name": "EffectReverse",
+        "module": "audio effect",
+        "code": "int EffectReverse(IEffectControlVdi *controller, float *pcmIn, float *pcmOut,\n    uint32_t frameCount) {\n  return controller->EffectReverse(pcmIn, pcmOut, frameCount);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 19.1,
+          "inclusive_total_duration_ms": 20.628,
+          "max_self_time_estimate_duration_ms": 4.775,
+          "max_span_duration_ms": 5.157,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectReverse"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "dsp"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:dsp_api:IEffectControlVdi::EffectReverse"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "provider",
+              "HDI",
+              "VDI",
+              "controller"
+            ],
+            [
+              "PCM",
+              "sample",
+              "frameCount",
+              "帧"
+            ],
+            [
+              "延迟",
+              "XRUN",
+              "功耗",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_video_encoder_configure_lifecycle",
+      "title_zh": "视频编码器 Configure 生命周期",
+      "partition": "validation",
+      "family_id": "media_video_encoder",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "OH_VideoEncoder_Configure",
+        "event_name": "OH_VideoEncoder_Configure",
+        "module": "media codec",
+        "code": "int ConfigureVideoEncoder(OH_VideoEncoder *encoder, OH_AVFormat *format) {\n  OH_AVFormat_SetIntValue(format, OH_MD_KEY_BITRATE, 4000000);\n  OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, 1280);\n  OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, 720);\n  return OH_VideoEncoder_Configure(encoder, format);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 22.2,
+          "inclusive_total_duration_ms": 23.976,
+          "max_self_time_estimate_duration_ms": 5.55,
+          "max_span_duration_ms": 5.994,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:OH_VideoEncoder_Configure"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:OH_VideoEncoder_Configure"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_hcodec_create_component",
+      "title_zh": "HCodec 硬件组件创建",
+      "partition": "validation",
+      "family_id": "media_hcodec",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "HCodec::Create",
+        "event_name": "HCodec::Create",
+        "module": "media codec",
+        "code": "int CreateHCodec(std::string_view name, std::shared_ptr<HCodec> &codec) {\n  return HCodec::Create(name, codec);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 14.3,
+          "inclusive_total_duration_ms": 15.444,
+          "max_self_time_estimate_duration_ms": 3.575,
+          "max_span_duration_ms": 3.861,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:HCodec::Create"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:HCodec::Create"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_heif_codec_image_decode",
+      "title_zh": "HEIF 图块到 NativeBuffer 解码",
+      "partition": "validation",
+      "family_id": "media_heif_decode",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "ICodecImage::DoHeifDecode",
+        "event_name": "ICodecImage::DoHeifDecode",
+        "module": "image codec",
+        "code": "int DecodeHeif(ICodecImage *codecImage, const uint8_t *heifBitstream,\n    size_t size, SurfaceBuffer *nativeBuffer) {\n  return codecImage->DoHeifDecode(heifBitstream, size, nativeBuffer);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 57.6,
+          "inclusive_total_duration_ms": 62.208,
+          "max_self_time_estimate_duration_ms": 14.4,
+          "max_span_duration_ms": 15.552,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ICodecImage::DoHeifDecode"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ICodecImage::DoHeifDecode"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "negative_bfs_graph_walk",
+      "title_zh": "图搜索队列遍历",
+      "partition": "validation",
+      "family_id": "negative_irregular",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_dependency",
+      "public_input": {
+        "function_hint": "FindReachableNode",
+        "event_name": "FindReachableNode",
+        "module": "graph service",
+        "code": "bool FindReachableNode(const Graph &graph, int start, int target) {\n  std::queue<int> pending;\n  std::unordered_set<int> visited;\n  pending.push(start);\n  while (!pending.empty()) {\n    int node = pending.front(); pending.pop();\n    if (node == target) return true;\n    for (int next : graph.Neighbors(node)) if (visited.insert(next).second) pending.push(next);\n  }\n  return false;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 34.8,
+          "inclusive_total_duration_ms": 59.16,
+          "max_self_time_estimate_duration_ms": 4.35,
+          "max_span_duration_ms": 7.395,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "negative_stable_sort_records",
+      "title_zh": "稳定排序记录",
+      "partition": "validation",
+      "family_id": "negative_ordering",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_dependency",
+      "public_input": {
+        "function_hint": "SortRecordsByPriority",
+        "event_name": "SortRecordsByPriority",
+        "module": "scheduler",
+        "code": "void SortRecordsByPriority(std::vector<Record> &records) {\n  std::stable_sort(records.begin(), records.end(), [](const Record &a, const Record &b) {\n    return a.priority > b.priority;\n  });\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 15.1,
+          "inclusive_total_duration_ms": 25.67,
+          "max_self_time_estimate_duration_ms": 1.887,
+          "max_span_duration_ms": 3.209,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_tile_transform",
+      "title_zh": "无共享写入的分块变换",
+      "partition": "validation",
+      "family_id": "cpu_parallel_map",
+      "variation_axis": "parallel_decomposition",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "TransformTiles",
+        "event_name": "TransformTiles",
+        "module": "CPU batch processing",
+        "code": "void TransformTiles(const Tile *input, Tile *output, size_t tileCount) {\n  for (size_t i = 0; i < tileCount; ++i) {\n    output[i].x = input[i].x * 2.0F;\n    output[i].y = input[i].y * 2.0F;\n    output[i].tag = input[i].tag;\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 69.8,
+          "inclusive_total_duration_ms": 118.66,
+          "max_self_time_estimate_duration_ms": 8.725,
+          "max_span_duration_ms": 14.832,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "切分",
+              "分块",
+              "任务"
+            ],
+            [
+              "归并",
+              "竞争",
+              "同步",
+              "依赖"
+            ],
+            [
+              "粒度",
+              "调度",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_single_lock_boundary",
+      "title_zh": "单锁保护的状态更新",
+      "partition": "validation",
+      "family_id": "cpu_parallel_contention",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_lock",
+      "public_input": {
+        "function_hint": "ApplyStateUpdates",
+        "event_name": "ApplyStateUpdates",
+        "module": "state service",
+        "code": "void ApplyStateUpdates(const std::vector<Update> &updates, State &state, std::mutex &lock) {\n  std::lock_guard<std::mutex> guard(lock);\n  for (const auto &update : updates) state.Apply(update);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 12.8,
+          "inclusive_total_duration_ms": 21.76,
+          "max_self_time_estimate_duration_ms": 1.6,
+          "max_span_duration_ms": 2.72,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "npu_tensor_elementwise_add",
+      "title_zh": "张量逐元素加法",
+      "partition": "holdout",
+      "family_id": "npu_elementwise",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "TensorAdd",
+        "event_name": "TensorAdd",
+        "module": "AI inference",
+        "code": "void TensorAdd(const float *left, const float *right, float *out, size_t count) {\n  for (size_t i = 0; i < count; ++i) out[i] = left[i] + right[i];\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 41.7,
+          "inclusive_total_duration_ms": 45.036,
+          "max_self_time_estimate_duration_ms": 10.425,
+          "max_span_duration_ms": 11.259,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_ADD"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_ADD"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "npu_batch_norm_feature_tensor",
+      "title_zh": "批归一化特征张量",
+      "partition": "holdout",
+      "family_id": "npu_normalization",
+      "variation_axis": "semantic_variant",
+      "category": "npu_positive",
+      "public_input": {
+        "function_hint": "batch_norm",
+        "event_name": "batch_norm",
+        "module": "AI inference",
+        "code": "void batch_norm(const float *tensor, const float *mean, const float *variance,\n    const float *scale, float *out, int count) {\n  for (int i = 0; i < count; ++i) out[i] = (tensor[i] - mean[i]) * scale[i] / sqrtf(variance[i] + 1e-5F);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 45.4,
+          "inclusive_total_duration_ms": 49.032,
+          "max_self_time_estimate_duration_ms": 11.35,
+          "max_span_duration_ms": 12.258,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_BATCH_NORM"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "npu"
+          ],
+          "required_api_evidence_ids": [
+            "npu_api:nnrt_op:OH_NN_OPS_BATCH_NORM"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "设备",
+              "device",
+              "GetAvailableOperations"
+            ],
+            [
+              "shape",
+              "dtype",
+              "layout",
+              "维度",
+              "数据类型"
+            ],
+            [
+              "编译",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "gpu_astc_texture_encode",
+      "title_zh": "ASTC 纹理编码路径",
+      "partition": "holdout",
+      "family_id": "gpu_image_effect",
+      "variation_axis": "semantic_variant",
+      "category": "gpu_positive",
+      "public_input": {
+        "function_hint": "TryAstcEncBasedOnCl",
+        "event_name": "TryAstcEncBasedOnCl",
+        "module": "image encode",
+        "code": "bool TryAstcEncBasedOnCl(TextureEncodeOptions &options, uint8_t *rgba,\n    uint8_t *encoded, const std::string &openclBin) {\n  return EncodeTextureAstc(options, rgba, encoded, openclBin);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 83.9,
+          "inclusive_total_duration_ms": 90.612,
+          "max_self_time_estimate_duration_ms": 20.975,
+          "max_span_duration_ms": 22.653,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:gpu_api:AstcCodec::TryAstcEncBasedOnCl"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "gpu"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:gpu_api:AstcCodec::TryAstcEncBasedOnCl"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "context",
+              "extension",
+              "shader",
+              "格式",
+              "format"
+            ],
+            [
+              "上传",
+              "下载",
+              "拷贝",
+              "DMA",
+              "同步"
+            ],
+            [
+              "benchmark",
+              "基准",
+              "fallback",
+              "回退"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_codec_hardware_capability_query",
+      "title_zh": "硬件与软件视频 Codec 能力查询",
+      "partition": "holdout",
+      "family_id": "media_video_decoder",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "OH_AVCodec_GetCapabilityByCategory",
+        "event_name": "OH_AVCodec_GetCapabilityByCategory",
+        "module": "media codec",
+        "code": "OH_AVCapability *FindDecoder(const char *mime) {\n  return OH_AVCodec_GetCapabilityByCategory(mime, false, AV_CODEC_HARDWARE);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 13.6,
+          "inclusive_total_duration_ms": 14.688,
+          "max_self_time_estimate_duration_ms": 3.4,
+          "max_span_duration_ms": 3.672,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:OH_AVCodec_GetCapabilityByCategory"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:OH_AVCodec_GetCapabilityByCategory"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_codec_component_create",
+      "title_zh": "Codec Component HDI 创建",
+      "partition": "holdout",
+      "family_id": "media_hcodec",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "ICodecComponentManager::CreateComponent",
+        "event_name": "ICodecComponentManager::CreateComponent",
+        "module": "media component",
+        "code": "int CreateComponent(ICodecComponentManager *manager, const std::string &componentName,\n    sptr<ICodecComponent> &component) {\n  return manager->CreateComponent(componentName, component);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 16.2,
+          "inclusive_total_duration_ms": 17.496,
+          "max_self_time_estimate_duration_ms": 4.05,
+          "max_span_duration_ms": 4.374,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ICodecComponentManager::CreateComponent"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ICodecComponentManager::CreateComponent"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "media_jpeg_hardware_encode_dispatch",
+      "title_zh": "JPEG 硬件编码调度",
+      "partition": "holdout",
+      "family_id": "media_jpeg_encode",
+      "variation_axis": "semantic_variant",
+      "category": "media_positive",
+      "public_input": {
+        "function_hint": "ExtEncoder::HardwareEncode",
+        "event_name": "ExtEncoder::HardwareEncode",
+        "module": "image encode",
+        "code": "int HardwareEncode(ExtEncoder *encoder, PixelMap &pixelMap, std::vector<uint8_t> &bitstream) {\n  return encoder->HardwareEncode(pixelMap, bitstream);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 48.7,
+          "inclusive_total_duration_ms": 52.596,
+          "max_self_time_estimate_duration_ms": 12.175,
+          "max_span_duration_ms": 13.149,
+          "occurrence_count": 4
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "required_evidence_ids": [
+            "accelerator_api:media_api:ExtEncoder::HardwareEncode"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required"
+          ],
+          "hardware_mode": "required",
+          "required_units": [
+            "media"
+          ],
+          "required_api_evidence_ids": [
+            "accelerator_api:media_api:ExtEncoder::HardwareEncode"
+          ],
+          "parallel_expectation": "optional",
+          "verification_keyword_groups": [
+            [
+              "capability",
+              "能力",
+              "component",
+              "组件"
+            ],
+            [
+              "format",
+              "格式",
+              "buffer",
+              "码流",
+              "surface"
+            ],
+            [
+              "software",
+              "软件",
+              "fallback",
+              "回退",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "negative_lru_cache_lookup",
+      "title_zh": "LRU 缓存查找与淘汰",
+      "partition": "holdout",
+      "family_id": "negative_lock",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_lock",
+      "public_input": {
+        "function_hint": "LookupOrEvict",
+        "event_name": "LookupOrEvict",
+        "module": "cache service",
+        "code": "Value LookupOrEvict(const Key &key) {\n  std::unique_lock<std::mutex> guard(lock_);\n  auto it = index_.find(key);\n  if (it != index_.end()) { Touch(it->second); return it->second.value; }\n  return EvictOneAndLoad(key);\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 7.8,
+          "inclusive_total_duration_ms": 13.26,
+          "max_self_time_estimate_duration_ms": 0.975,
+          "max_span_duration_ms": 1.657,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "negative_socket_poll_loop",
+      "title_zh": "Socket 轮询与回调分发",
+      "partition": "holdout",
+      "family_id": "negative_io",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_io",
+      "public_input": {
+        "function_hint": "PollSockets",
+        "event_name": "PollSockets",
+        "module": "network service",
+        "code": "void PollSockets(std::vector<Socket> &sockets) {\n  for (auto &socket : sockets) {\n    if (!socket.Ready()) continue;\n    socket.Dispatch(socket.Receive());\n  }\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 27.4,
+          "inclusive_total_duration_ms": 46.58,
+          "max_self_time_estimate_duration_ms": 3.425,
+          "max_span_duration_ms": 5.822,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    },
+    {
+      "case_id": "cpu_parallel_monte_carlo",
+      "title_zh": "独立随机样本统计",
+      "partition": "holdout",
+      "family_id": "cpu_parallel_reduction",
+      "variation_axis": "parallel_decomposition",
+      "category": "cpu_parallel_positive",
+      "public_input": {
+        "function_hint": "EstimateArea",
+        "event_name": "EstimateArea",
+        "module": "CPU batch processing",
+        "code": "uint64_t EstimateArea(uint64_t samples, Random &random) {\n  uint64_t inside = 0;\n  for (uint64_t i = 0; i < samples; ++i) {\n    float x = random.Next(); float y = random.Next();\n    if (x * x + y * y <= 1.0F) ++inside;\n  }\n  return inside;\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 96.3,
+          "inclusive_total_duration_ms": 163.71,
+          "max_self_time_estimate_duration_ms": 12.037,
+          "max_span_duration_ms": 20.464,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "required",
+          "verification_keyword_groups": [
+            [
+              "切分",
+              "分块",
+              "任务"
+            ],
+            [
+              "归并",
+              "竞争",
+              "同步",
+              "依赖"
+            ],
+            [
+              "粒度",
+              "调度",
+              "benchmark",
+              "基准"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "negative_prefix_scan_variant",
+      "title_zh": "状态依赖的累计扫描",
+      "partition": "holdout",
+      "family_id": "negative_recurrence",
+      "variation_axis": "negative_or_boundary",
+      "category": "negative_dependency",
+      "public_input": {
+        "function_hint": "AccumulateOffsets",
+        "event_name": "AccumulateOffsets",
+        "module": "layout",
+        "code": "void AccumulateOffsets(const uint32_t *sizes, uint32_t *offsets, size_t count) {\n  offsets[0] = 0;\n  for (size_t i = 1; i < count; ++i) offsets[i] = offsets[i - 1] + sizes[i - 1];\n}",
+        "trace_metrics": {
+          "self_time_estimate_total_duration_ms": 18.9,
+          "inclusive_total_duration_ms": 32.13,
+          "max_self_time_estimate_duration_ms": 2.362,
+          "max_span_duration_ms": 4.016,
+          "occurrence_count": 8
+        }
+      },
+      "oracle": {
+        "retrieval": {
+          "require_empty_accelerator_context": true,
+          "forbidden_evidence_prefixes": [
+            "npu_api:",
+            "accelerator_api:",
+            "hardware:"
+          ]
+        },
+        "model": {
+          "allowed_recommendations": [
+            "evidence_required",
+            "not_recommended"
+          ],
+          "hardware_mode": "forbidden",
+          "required_units": [],
+          "required_api_evidence_ids": [],
+          "parallel_expectation": "forbidden",
+          "verification_keyword_groups": []
+        }
+      }
+    }
+  ]
+}

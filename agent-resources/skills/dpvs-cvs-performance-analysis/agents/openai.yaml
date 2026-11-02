@@ -1,0 +1,3 @@
+interface:
+  display_name: "CVS / DPVS 性能对比分析"
+  short_description: "对比单节点与十六节点的 perf、sar、NUMA 证据并生成可追溯报告"

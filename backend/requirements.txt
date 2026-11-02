@@ -1,0 +1,16 @@
+fastapi>=0.137,<1.0
+uvicorn[standard]>=0.35,<1.0
+python-multipart>=0.0.20,<1.0
+httpx>=0.28,<1.0
+websockets>=15,<16
+mcp>=1.28,<2
+jsonschema>=4.23,<5
+
+# Optional but required for semantic, libclang-backed AST extraction.
+libclang>=18,<22
+
+# Broad module indexing. Clang remains the precise function-analysis path;
+# Tree-sitter supplies resilient, compile-database-independent navigation facts.
+tree-sitter>=0.25,<0.26
+tree-sitter-c>=0.24,<0.25
+tree-sitter-cpp>=0.23,<0.24

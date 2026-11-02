@@ -1,0 +1,1519 @@
+{
+  "artifact_type": "hardware_knowledge_base",
+  "content_sha256": "8f5a9977940f990751cb40cedd16e63c80b9bc6e4e22a3f493f250061267725d",
+  "input_provenance": [
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/algorithm_hardware_mapping.json",
+      "sha256": "53ba3e4c721bf67bcdd20443c8ceb641fd366724de3429c1b9355546a25d0630"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/code_signature_patterns.json",
+      "sha256": "f90956d3ae5ac897946a1e7a93626daf5bc23256a8eb4ab089e64f83e227ff70"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/cost_models.json",
+      "sha256": "697f5ac5a7b229bed99a52e312390689d3358361b636034b6ba3095778722b1c"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/fallback_pairs.json",
+      "sha256": "59299ff925905b56e6d4ca819469da6bfee41c8b6ab24a7c1dd28ddbc3755e0e"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/hardware_capabilities.json",
+      "sha256": "ac42e1c4fc22986cf32ee5de681f62465aec58d0bfd583e08ad6de0a862569aa"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_cpu_fallback_ast_profiles_framework_additions_v37.json",
+      "sha256": "7717e070968bc17b75832c0e3b522db187883a9132e2d998ace27eedfa16278e"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_cpu_fallback_ast_profiles_mindspore_npu_v38.json",
+      "sha256": "dced39ec83deb83846750b72b934457d6aef11b4f8014780f313762b1e1cc594"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_cpu_fallback_ast_profiles_v1.json",
+      "sha256": "571fa725ae693a602a188228bc8f87aa1ff84a6c57d429b3ce52019dac16145f"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_source_confirmed_cpu_fallback_pairs_v21.json",
+      "sha256": "9135e7313c74b1ef9b95f9eca916f0c86ee62d1b52e3917d83fcb97710bf6e3b"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_source_confirmed_framework_additions_v37.json",
+      "sha256": "624a34ef99bf57350b9d4fa589cc62b97b549f6e37ba938a18fb69ffba0056dc"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/pair_discovery/openharmony_source_confirmed_mindspore_npu_cpu_pairs_v38.json",
+      "sha256": "b56a8248189624bc79bf92b7575cb83f0d918363b0764d424e7533a87e9766c5"
+    },
+    {
+      "path": "docs_ffrt/tools/heterogeneous_kb/runtime_hotspot_rules.json",
+      "sha256": "ea901efdb33cd6b6a18aabbea352292202c1f53659a377f9afd47db68348c667"
+    }
+  ],
+  "kb_id": "openharmony_hardware_knowledge",
+  "kb_version": "1.0.0",
+  "records": [
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "AAE_ARSR",
+      "name": "AAE_ARSR",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "confirmed",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:135",
+          "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:145",
+          "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:237"
+        ]
+      },
+      "record_id": "AAE_ARSR",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "RSImageDetailEnhancerThread::IsTypeSupport",
+          "RSImageDetailEnhancerThread::IsSizeSupport",
+          "dstSurfaceBuffer != nullptr",
+          "newCanvas != nullptr"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "SurfaceBuffer"
+          ],
+          "direction": [
+            "upscale_both_dimensions"
+          ],
+          "input_requirements": [
+            "PixelMap DMA_ALLOC",
+            "PixelMap not editable",
+            "PixelMap not HDR"
+          ],
+          "shape": "2D_image"
+        },
+        "entry_points": [
+          "RSImageDetailEnhancerThread::ScaleByAAE"
+        ],
+        "hardware_id": "AAE_ARSR",
+        "provenance": {
+          "confidence": "confirmed",
+          "file_sha256": {
+            "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp": "c97fe5c632a4667ed680a774f72c73f5b40ecf8c1d4f491fddd728268d886f5d"
+          },
+          "origin": "source_code",
+          "references": [
+            "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:135",
+            "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:145",
+            "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:237"
+          ]
+        },
+        "unit_type": "image_accelerator"
+      },
+      "unit_type": "image_accelerator"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "AUDIO_EFFECT_DSP_HDI",
+      "implementation_paths": [
+        "AudioEffectHdiParam::SetHdiCommand -> IEffectControl::SendCommand"
+      ],
+      "name": "Audio Effect HDI DSP 处理路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 1,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain.cpp:394",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_adapter.cpp:115",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_adapter.cpp:118",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2482",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2485",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2487",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:256",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:258",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:259",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:29",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:30",
+          "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:95"
+        ]
+      },
+      "record_id": "AUDIO_EFFECT_DSP_HDI",
+      "record_type": "hardware_unit",
+      "software_interface": "Audio Effect HDI",
+      "source_references": [
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain.cpp:394",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_adapter.cpp:115",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_adapter.cpp:118",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2482",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2485",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:2487",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:256",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:258",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_chain_manager.cpp:259",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:29",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:30",
+        "openharmony/foundation/multimedia/audio_framework/frameworks/native/audioeffect/src/audio_effect_hdi_param.cpp:95"
+      ],
+      "strict_case_ids": [
+        "audio_effect_dsp_hdi_to_ap_runtime_chain_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "audio_effect_processing"
+      ],
+      "unit_type": "audio_dsp"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_EGL_INTEROP",
+      "name": "GPU_EGL_INTEROP",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:193",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:266",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:336"
+        ]
+      },
+      "record_id": "GPU_EGL_INTEROP",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "valid EGL image",
+          "canvas GPU context",
+          "EGL image and OpenGL build flags"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "SurfaceBuffer",
+            "EGLImageKHR"
+          ],
+          "data_path": "external OpenGL texture backed by native buffer",
+          "texture_target": "GL_TEXTURE_EXTERNAL_OES"
+        },
+        "entry_points": [
+          "EglImageResource::BindToTexture",
+          "RSEglImageManager::MapEglImageFromSurfaceBuffer",
+          "RSEglImageManager::CreateImageFromBuffer"
+        ],
+        "evidence_scope": "EGL/OpenGL buffer interop implementation; driver extension availability requires runtime evidence",
+        "hardware_id": "GPU_EGL_INTEROP",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:193",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:266",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:336"
+          ]
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_GLES_RENDERING",
+      "name": "GPU_GLES_RENDERING",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:142",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:269",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:257",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing/engine_adapter/skia_adapter/skia_gpu_context.cpp:90"
+        ]
+      },
+      "record_id": "GPU_GLES_RENDERING",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "EGL display and context initialization",
+          "GLES interface and extension availability",
+          "render-surface format and swap support"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "backend": "EGL/GLES",
+          "buffer_requirements": [
+            "EGLSurface",
+            "external texture when supported"
+          ],
+          "texture_target": "GL_TEXTURE_EXTERNAL_OES when the external-image path is selected"
+        },
+        "entry_points": [
+          "RenderContextGL::Init",
+          "RenderContextGL::CreateEGLSurface",
+          "RenderContextGL::SwapBuffers",
+          "SkiaGPUContext::BuildFromGL"
+        ],
+        "evidence_scope": "Rosen EGL/GLES rendering integration; actual renderer, extension availability and performance require runtime evidence",
+        "hardware_id": "GPU_GLES_RENDERING",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:142",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:269",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:257",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing/engine_adapter/skia_adapter/skia_gpu_context.cpp:90"
+          ]
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_OPENCL",
+      "implementation_paths": [
+        "AstcCodec::TryAstcEncBasedOnCl"
+      ],
+      "name": "OpenCL 计算路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 1,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:844",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:852",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:853"
+        ]
+      },
+      "record_id": "GPU_OPENCL",
+      "record_type": "hardware_unit",
+      "software_interface": "OpenCL",
+      "source_references": [
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:844",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:852",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/texture_encode/astc_codec.cpp:853"
+      ],
+      "strict_case_ids": [
+        "astc_opencl_encode_to_cpu_software_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "astc_texture_encode"
+      ],
+      "unit_type": "gpu_compute"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_OPENCL_VPE",
+      "name": "GPU_OPENCL_VPE",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:164",
+          "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:274",
+          "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_opencl_wrapper.cpp:108"
+        ]
+      },
+      "record_id": "GPU_OPENCL_VPE",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "OpenCL platform and target-device enumeration",
+          "OpenCL context and command-queue creation",
+          "OpenCL memory-import extension resolution"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "backend": "OpenCL",
+          "data_path": "VPE OpenCL context with imported memory when the extension is available",
+          "runtime": "loadable OpenCL library and a selectable platform/device"
+        },
+        "entry_points": [
+          "SetupOpencl",
+          "CreateContext",
+          "ClImportMemory"
+        ],
+        "evidence_scope": "VPE OpenCL integration; selected device class, extension support and processing benefit require runtime evidence",
+        "hardware_id": "GPU_OPENCL_VPE",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:164",
+            "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:274",
+            "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_opencl_wrapper.cpp:108"
+          ]
+        },
+        "unit_type": "gpu_compute"
+      },
+      "unit_type": "gpu_compute"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_OPENGL",
+      "implementation_paths": [
+        "PixelMapPostProcWithGL"
+      ],
+      "name": "OpenGL GPU 图像处理路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 2,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1019",
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1026",
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1034",
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1053",
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1061",
+          "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:992"
+        ]
+      },
+      "record_id": "GPU_OPENGL",
+      "record_type": "hardware_unit",
+      "software_interface": "OpenGL",
+      "source_references": [
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1019",
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1026",
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1034",
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1053",
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:1061",
+        "openharmony/foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/src/post_proc.cpp:992"
+      ],
+      "strict_case_ids": [
+        "pixelmap_gpu_rotate_to_cpu_fallback",
+        "pixelmap_gpu_scale_to_cpu_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "image_rotate",
+        "image_scale"
+      ],
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_RENDER_SERVICE",
+      "name": "GPU_RENDER_SERVICE",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:53",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:135"
+        ]
+      },
+      "record_id": "GPU_RENDER_SERVICE",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "RSSystemProperties::GetGPUOfflineEnabled",
+          "RSGPUOfflineDevice::CheckCondition",
+          "GPU offline context and timeout state"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "feature_switches": [
+            "GPU offline enabled",
+            "XComponent EDR enabled"
+          ],
+          "input": "eligible HDR SurfaceBuffer with supported transform",
+          "scheduling": "per-vsync cache limit and offline result future"
+        },
+        "entry_points": [
+          "RSGPUOfflineDevice::IsRSOfflineDeviceReady",
+          "RSGPUOfflineDevice::PostOfflineTaskCommon"
+        ],
+        "evidence_scope": "RenderService GPU-offline implementation path; device GPU behavior requires runtime evidence",
+        "hardware_id": "GPU_RENDER_SERVICE",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:53",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:135"
+          ]
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_SHADER",
+      "name": "GPU_SHADER",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": []
+      },
+      "record_id": "GPU_SHADER",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "GPU context available",
+          "render target supports shader path"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "GPU texture",
+            "SurfaceBuffer preferred"
+          ],
+          "data_types": [
+            "float",
+            "half",
+            "uint8"
+          ],
+          "shape": "2D_image"
+        },
+        "entry_points": [
+          "Drawing GPU backend",
+          "Skia shader",
+          "RenderService shader pipeline"
+        ],
+        "hardware_id": "GPU_SHADER",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "seed_example",
+          "references": []
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_SOURCE_PATH",
+      "implementation_paths": [
+        "DisplayManager::GetScreenshotWithOptionUseGpu",
+        "ImageCompressor::GpuCompress",
+        "gpuBrightnessAlgo_->OnApplyRGBA8888",
+        "gpuContrastAlgo_->OnApplyRGBA8888"
+      ],
+      "name": "GPU 图形/图像处理路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 4,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:363",
+          "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:365",
+          "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:371",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:37",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:41",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:53",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:36",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:40",
+          "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:52",
+          "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2925",
+          "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2926",
+          "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2933"
+        ]
+      },
+      "record_id": "GPU_SOURCE_PATH",
+      "record_type": "hardware_unit",
+      "software_interface": "OpenHarmony 图形或图像处理实现",
+      "source_references": [
+        "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:363",
+        "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:365",
+        "openharmony/foundation/arkui/ace_engine/frameworks/core/components_ng/image_provider/image_decoder.cpp:371",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:37",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:41",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/brightness/brightness_efilter.cpp:53",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:36",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:40",
+        "openharmony/foundation/multimedia/image_effect/frameworks/native/efilter/filterimpl/contrast/contrast_efilter.cpp:52",
+        "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2925",
+        "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2926",
+        "openharmony/foundation/window/window_manager/dm/src/display_manager.cpp:2933"
+      ],
+      "strict_case_ids": [
+        "display_screenshot_gpu_to_cpu_fallback",
+        "efilter_brightness_gpu_cpu_mapping",
+        "efilter_contrast_gpu_cpu_mapping",
+        "image_compress_gpu_to_raster_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "image_brightness_adjustment",
+        "image_contrast_adjustment",
+        "image_texture_compression",
+        "screenshot_crop_and_scale"
+      ],
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_VULKAN_INTEROP",
+      "name": "GPU_VULKAN_INTEROP",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:72",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:133",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:351"
+        ]
+      },
+      "record_id": "GPU_VULKAN_INTEROP",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "valid SurfaceBuffer",
+          "valid Vulkan backend texture",
+          "valid canvas GPU context"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "SurfaceBuffer",
+            "NativeWindowBuffer"
+          ],
+          "data_path": "external Vulkan texture backed by native buffer",
+          "synchronization": [
+            "acquire fence",
+            "Vulkan semaphore when available"
+          ]
+        },
+        "entry_points": [
+          "VkImageResource::Create",
+          "RSVkImageManager::MapVkImageFromSurfaceBuffer",
+          "RSVkImageManager::CreateImageFromBuffer"
+        ],
+        "evidence_scope": "Vulkan buffer interop implementation; supported formats and device extension set require runtime evidence",
+        "hardware_id": "GPU_VULKAN_INTEROP",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:72",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:133",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:351"
+          ]
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "GPU_VULKAN_RENDERING",
+      "name": "GPU_VULKAN_RENDERING",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/pipeline/render_thread/rs_uni_render_util.cpp:1081",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos/backend/native_buffer_utils.cpp:66",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_vk.cpp:111"
+        ]
+      },
+      "record_id": "GPU_VULKAN_RENDERING",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "Vulkan backend and GPU context availability",
+          "native-buffer format and memory-type selection",
+          "Vulkan semaphore and fence synchronization"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "backend": "Vulkan",
+          "buffer_requirements": [
+            "NativeWindowBuffer or SurfaceBuffer",
+            "backend texture/image"
+          ],
+          "synchronization": [
+            "acquire fence",
+            "Vulkan semaphore",
+            "GPU context flush/submit"
+          ]
+        },
+        "entry_points": [
+          "RSUniRenderUtil::OptimizedFlushAndSubmit",
+          "NativeBufferUtils::CreateVkImage",
+          "RenderContextVK::QueryMaxGpuBufferSize"
+        ],
+        "evidence_scope": "Rosen Vulkan rendering integration; driver version, enabled extensions and runtime performance require device evidence",
+        "hardware_id": "GPU_VULKAN_RENDERING",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/pipeline/render_thread/rs_uni_render_util.cpp:1081",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos/backend/native_buffer_utils.cpp:66",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_vk.cpp:111"
+          ]
+        },
+        "unit_type": "gpu"
+      },
+      "unit_type": "gpu"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "HCODEC_HDI",
+      "implementation_paths": [
+        "HCodecLoader::CreateByName via CodecServer::InitByMime"
+      ],
+      "name": "HCodec HDI 视频编解码路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 1,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/fcodec/fcodec_capability_register.cpp:426",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec_list.cpp:208",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:70",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:71",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:74",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codeclist_core.cpp:381",
+          "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codeclist_core.cpp:383",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:70",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:71",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:73",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:74",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:202",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:212",
+          "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:213"
+        ]
+      },
+      "record_id": "HCODEC_HDI",
+      "record_type": "hardware_unit",
+      "software_interface": "HCodec HDI",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "CodecListCore codec type classification",
+          "HCodecLoader initialization",
+          "HDI component allocation"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "availability": "component manager and requested codec capability must be available",
+          "buffer_requirements": [
+            "DMA memory FD or SurfaceBuffer"
+          ],
+          "component": "HCodec HDI component"
+        },
+        "entry_points": [
+          "CodecFactory::CreateCodecByName",
+          "HCodecLoader::CreateByName",
+          "HCodec::OnAllocateComponent",
+          "HCodec::AllocateAvHardwareBuffers"
+        ],
+        "evidence_scope": "HCodec/HDI integration implementation; codec profile and actual device support require runtime evidence",
+        "hardware_id": "HCODEC_HDI",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:64",
+            "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec_loader.cpp:28",
+            "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp:707",
+            "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp:1514"
+          ]
+        },
+        "unit_type": "video_codec"
+      },
+      "source_references": [
+        "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/fcodec/fcodec_capability_register.cpp:426",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec_list.cpp:208",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:70",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:71",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codec_ability_singleton.cpp:74",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codeclist_core.cpp:381",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codeclist/codeclist_core.cpp:383",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:70",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:71",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:73",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:74",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:202",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:212",
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_server.cpp:213"
+      ],
+      "strict_case_ids": [
+        "avcodec_hcodec_to_fcodec_ordered_factory_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "video_codec_create_by_mime"
+      ],
+      "unit_type": "video_codec"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "HEIF_HW_DECODER",
+      "implementation_paths": [
+        "HwApplyAlphaImage",
+        "HwDecodeImage"
+      ],
+      "name": "HEIF 硬件解码路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 3,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:537",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:538",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:542",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:543",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:549",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:552",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:553",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:554",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:601",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:605",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:606"
+        ]
+      },
+      "record_id": "HEIF_HW_DECODER",
+      "record_type": "hardware_unit",
+      "software_interface": "HEIF Image Framework 硬件解码分发",
+      "source_references": [
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:537",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:538",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:542",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:543",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:549",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:552",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:553",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:554",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:601",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:605",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/heif_impl/HeifDecoderImpl.cpp:606"
+      ],
+      "strict_case_ids": [
+        "heif_hardware_alpha_to_software_alpha_fallback",
+        "heif_hardware_auxiliary_decode_to_software_fallback",
+        "heif_hardware_primary_decode_to_software_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "heif_alpha_composition",
+        "heif_auxiliary_image_decode",
+        "heif_primary_image_decode"
+      ],
+      "unit_type": "image_codec"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "HPAE_HIANIMATION",
+      "name": "HPAE_HIANIMATION",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:112",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:200",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:296",
+          "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_hpae_offline_device.cpp:357"
+        ]
+      },
+      "record_id": "HPAE_HIANIMATION",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "HianimationManager::HianimationInvalid",
+          "Hianimation device symbol resolution",
+          "HPAE offline pre-process and fence callbacks"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "data_path": "offline SurfaceBuffer input/output with fence synchronization",
+          "library": "libhianimation_client.z.so",
+          "resource": "opened Hianimation device and initialized algorithm"
+        },
+        "entry_points": [
+          "HianimationManager::OpenDevice",
+          "HianimationManager::HianimationAlgoInit",
+          "HianimationManager::HianimationBuildTask",
+          "RSHpaeOfflineDevice::DoProcessOffline"
+        ],
+        "evidence_scope": "source integration and runtime contract; silicon identity and performance envelope require device evidence",
+        "hardware_id": "HPAE_HIANIMATION",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:112",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:200",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:296",
+            "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_hpae_offline_device.cpp:357"
+          ]
+        },
+        "unit_type": "specialized_post_processing"
+      },
+      "unit_type": "specialized_post_processing"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "JPEG_HW_DECODER",
+      "implementation_paths": [
+        "ExtDecoder::DoHardWareDecode"
+      ],
+      "name": "JPEG 硬件解码路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 1,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1764",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1765",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1867"
+        ]
+      },
+      "record_id": "JPEG_HW_DECODER",
+      "record_type": "hardware_unit",
+      "software_interface": "Image Framework 硬件解码分发",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "IsHardwareDecodeSupported",
+          "CheckInputColorFmt"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "color_space": [
+            "JCS_YCbCr"
+          ],
+          "decoder_type": "non-software CODEC_IMAGE_JPEG decoder",
+          "format": [
+            "JPEG_FORMAT_DESC"
+          ],
+          "resolution": "within driver CodecImageCapability min/max"
+        },
+        "entry_points": [
+          "JpegHardwareDecoder::Decode"
+        ],
+        "fallback_behavior": {
+          "on_decode_fail": "software_decode",
+          "on_unsupported": "software_decode"
+        },
+        "hardware_id": "JPEG_HW_DECODER",
+        "provenance": {
+          "confidence": "confirmed",
+          "file_sha256": {
+            "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp": "9e54ab68bd3eb18b632eee431aaa69654608561e5a9a36c8272b4ee8f165ee08"
+          },
+          "origin": "source_code",
+          "references": [
+            "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:107",
+            "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:163",
+            "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:177"
+          ]
+        },
+        "unit_type": "codec"
+      },
+      "source_references": [
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1764",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1765",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_decoder.cpp:1867"
+      ],
+      "strict_case_ids": [
+        "jpeg_hardware_decode_to_skia_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "jpeg_decode"
+      ],
+      "unit_type": "image_codec"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "JPEG_HW_ENCODER",
+      "implementation_paths": [
+        "ExtEncoder::HardwareEncode",
+        "TryHardwareEncodePicture"
+      ],
+      "name": "JPEG 硬件编码路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 2,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1327",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1328",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1357",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2470",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2474",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2476",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:749",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:750",
+          "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:786"
+        ]
+      },
+      "record_id": "JPEG_HW_ENCODER",
+      "record_type": "hardware_unit",
+      "software_interface": "Image Framework 硬件编码分发",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "ExtEncoder::IsHardwareEncodeSupported",
+          "ImageFwkExtManager::LoadImageFwkExtNativeSo"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "format": [
+            "image/jpeg"
+          ],
+          "pixel_format": [
+            "NV12",
+            "NV21",
+            "RGBA_8888 when GPU thumbnail support is enabled"
+          ],
+          "quality": "not below the configured hardware-encode quality boundary",
+          "resolution": "even dimensions and within encoder min/max image size"
+        },
+        "entry_points": [
+          "ExtEncoder::HardwareEncode",
+          "ExtEncoder::DoHardWareEncode"
+        ],
+        "evidence_scope": "source integration and dispatch contract; device-specific availability remains unverified",
+        "hardware_id": "JPEG_HW_ENCODER",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:580",
+            "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:600",
+            "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:698"
+          ]
+        },
+        "unit_type": "codec"
+      },
+      "source_references": [
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1327",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1328",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:1357",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2470",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2474",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:2476",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:749",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:750",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:786"
+      ],
+      "strict_case_ids": [
+        "jpeg_hardware_encode_to_skia_fallback",
+        "jpeg_picture_hardware_encode_to_software_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "camera_picture_jpeg_encode",
+        "jpeg_encode"
+      ],
+      "unit_type": "image_codec"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "KIRIN_NPU_HIAI_DDK",
+      "implementation_paths": [
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_AddFusion",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_DivFusion",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_FloorDiv",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_FloorMod",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_LogicalAnd",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_LogicalOr",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_Maximum",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_Minimum",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_MulFusion",
+        "NPUDelegate::ArithmeticNPUOp for PrimitiveType_SubFusion",
+        "NPUDelegate::BroadcastToNPUOp for PrimitiveType_BroadcastTo",
+        "NPUDelegate::CastNPUOp for PrimitiveType_Cast",
+        "NPUDelegate::DeconvolutionNPUOp for PrimitiveType_Conv2dTransposeFusion",
+        "NPUDelegate::EltwiseNPUOp for PrimitiveType_Eltwise",
+        "NPUDelegate::FullconnectionNPUOp for PrimitiveType_FullConnection",
+        "NPUDelegate::GetNPUConvOp for PrimitiveType_Conv2DFusion",
+        "NPUDelegate::InstanceNormNPUOp for PrimitiveType_InstanceNorm",
+        "NPUDelegate::MatMulNPUOp for PrimitiveType_MatMulFusion",
+        "NPUDelegate::ResizeNPUOp for PrimitiveType_Resize",
+        "NPUDelegate::SplitNPUOp for PrimitiveType_Split",
+        "NPUDelegate::UnpackNPUOp for PrimitiveType_Unstack"
+      ],
+      "name": "Kirin NPU HiAI DDK 路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 21,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:137",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:138",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:139",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:140",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:141",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:142",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:143",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:144",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:145",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:146",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:169",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:171",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:173",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:175",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:177",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:178",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:182",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:186",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:194",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:195",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:200",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:223",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:258",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:271",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:103",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:109",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:20",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:147",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:157",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:159",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:165",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/base/split_base.cc:155",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/base/split_base.cc:180",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/fullconnection_fp16.cc:74",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/fullconnection_fp16.cc:82",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/matmul_fp16.cc:110",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/matmul_fp16.cc:90",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:182",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:185",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:187",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:189",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:193",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:196",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:198",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:199",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:202",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:203",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:207",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:49",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/broadcast_to_fp32.cc:52",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/broadcast_to_fp32.cc:78",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/cast_fp32.cc:211",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/cast_fp32.cc:218",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/convolution_delegate_fp32.cc:391",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/convolution_delegate_fp32.cc:416",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/deconvolution_fp32.cc:361",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/deconvolution_fp32.cc:393",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/instance_norm_fp32.cc:102",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/instance_norm_fp32.cc:142",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/resize_fp32.cc:222",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/resize_fp32.cc:269",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/unstack_fp32.cc:73",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/unstack_fp32.cc:88",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:556",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:557"
+        ]
+      },
+      "record_id": "KIRIN_NPU_HIAI_DDK",
+      "record_type": "hardware_unit",
+      "software_interface": "HiAI DDK / MindSpore Lite delegate",
+      "source_references": [
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:137",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:138",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:139",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:140",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:141",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:142",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:143",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:144",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:145",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:146",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:169",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:171",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:173",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:175",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:177",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:178",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:182",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:186",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:194",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:195",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:200",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:223",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:258",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_delegate.cc:271",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:103",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:109",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/npu_manager.cc:20",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:147",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:157",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:159",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/npu/op/npu_op.h:165",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/base/split_base.cc:155",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/base/split_base.cc:180",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/fullconnection_fp16.cc:74",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/fullconnection_fp16.cc:82",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/matmul_fp16.cc:110",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp16/matmul_fp16.cc:90",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:182",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:185",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:187",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:189",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:193",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:196",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:198",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:199",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:202",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:203",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:207",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/arithmetic_fp32.cc:49",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/broadcast_to_fp32.cc:52",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/broadcast_to_fp32.cc:78",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/cast_fp32.cc:211",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/cast_fp32.cc:218",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/convolution_delegate_fp32.cc:391",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/convolution_delegate_fp32.cc:416",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/deconvolution_fp32.cc:361",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/deconvolution_fp32.cc:393",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/instance_norm_fp32.cc:102",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/instance_norm_fp32.cc:142",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/resize_fp32.cc:222",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/resize_fp32.cc:269",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/unstack_fp32.cc:73",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/kernel/cpu/fp32/unstack_fp32.cc:88",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:556",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:557"
+      ],
+      "strict_case_ids": [
+        "mindspore_kirin_npu_add_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_broadcast_to_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_cast_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_conv2d_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_conv2d_transpose_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_div_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_eltwise_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_floor_div_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_floor_mod_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_full_connection_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_instance_norm_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_logical_and_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_logical_or_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_mat_mul_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_maximum_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_minimum_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_mul_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_resize_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_split_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_sub_fusion_to_cpu_kernel_fallback",
+        "mindspore_kirin_npu_unstack_to_cpu_kernel_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "mindspore_add_fusion",
+        "mindspore_broadcast_to",
+        "mindspore_cast",
+        "mindspore_conv2d_fusion",
+        "mindspore_conv2d_transpose_fusion",
+        "mindspore_div_fusion",
+        "mindspore_eltwise",
+        "mindspore_floor_div",
+        "mindspore_floor_mod",
+        "mindspore_full_connection",
+        "mindspore_instance_norm",
+        "mindspore_logical_and",
+        "mindspore_logical_or",
+        "mindspore_mat_mul_fusion",
+        "mindspore_maximum",
+        "mindspore_minimum",
+        "mindspore_mul_fusion",
+        "mindspore_resize",
+        "mindspore_split",
+        "mindspore_sub_fusion",
+        "mindspore_unstack"
+      ],
+      "unit_type": "npu"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "KIRIN_NPU_NNRT",
+      "implementation_paths": [
+        "NNRTDelegate::BuildNormalModel -> OH_NNCompilation / OH_NNExecutor"
+      ],
+      "name": "Kirin NPU OpenHarmony NNRT 路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 1,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:177",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:403",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:459",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:463",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:49",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:65",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:70",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:556",
+          "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:557"
+        ]
+      },
+      "record_id": "KIRIN_NPU_NNRT",
+      "record_type": "hardware_unit",
+      "software_interface": "OpenHarmony NNRT",
+      "source_references": [
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:177",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:403",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:459",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:463",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:49",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:65",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/delegate/nnrt/nnrt_delegate.cc:70",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:556",
+        "openharmony/third_party/mindspore/mindspore-src/source/mindspore-lite/src/litert/scheduler.cc:557"
+      ],
+      "strict_case_ids": [
+        "mindspore_nnrt_kirin_npu_to_cpu_subgraph_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "inference_subgraph"
+      ],
+      "unit_type": "npu"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "NNRT_HDI_DEVICE",
+      "name": "NNRT_HDI_DEVICE",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": [
+          "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/backend_manager.cpp:106",
+          "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_device_v2_1.cpp:279",
+          "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_prepared_model_v2_1.cpp:209",
+          "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/nnexecutor.cpp:691"
+        ]
+      },
+      "record_id": "NNRT_HDI_DEVICE",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "BackendManager::IsValidBackend",
+          "HDI device model preparation",
+          "input/output tensor FD validation"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "SharedBuffer file descriptors",
+            "mapped device memory when allocated"
+          ],
+          "model": "LiteGraph convertible to an HDI v2.1 model",
+          "runtime": "registered and available NNRT backend device"
+        },
+        "entry_points": [
+          "BackendManager::RegisterBackend",
+          "HDIDeviceV2_1::PrepareModel",
+          "HDIPreparedModelV2_1::Run",
+          "NNExecutor::RunSync"
+        ],
+        "evidence_scope": "NNRuntime HDI device execution implementation; actual accelerator type and operation support require runtime evidence",
+        "hardware_id": "NNRT_HDI_DEVICE",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "source_code",
+          "references": [
+            "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/backend_manager.cpp:106",
+            "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_device_v2_1.cpp:279",
+            "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_prepared_model_v2_1.cpp:209",
+            "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/nnexecutor.cpp:691"
+          ]
+        },
+        "unit_type": "neural_network_device"
+      },
+      "unit_type": "neural_network_device"
+    },
+    {
+      "capability_scope": "source_capability_declaration",
+      "device_availability": "evidence_required",
+      "hardware_id": "NPU",
+      "name": "NPU",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "confidence": "unverified",
+        "origin": "legacy_hardware_capabilities",
+        "references": []
+      },
+      "record_id": "NPU",
+      "record_type": "source_capability_record",
+      "source_capability_evidence": {
+        "capability_checks": [
+          "model op support",
+          "tensor shape support",
+          "dtype support"
+        ],
+        "category": "hardware_capability",
+        "constraints": {
+          "buffer_requirements": [
+            "tensor buffer",
+            "prefer zero-copy"
+          ],
+          "data_types": [
+            "float",
+            "half",
+            "int8"
+          ],
+          "min_dim": 16
+        },
+        "entry_points": [
+          "NNRuntime",
+          "HDI NPU service"
+        ],
+        "hardware_id": "NPU",
+        "provenance": {
+          "confidence": "unverified",
+          "origin": "seed_example",
+          "references": []
+        },
+        "unit_type": "ai_accelerator"
+      },
+      "unit_type": "ai_accelerator"
+    },
+    {
+      "capability_scope": "source_integrated_execution_path",
+      "constraints": [
+        "The source tree proves an integration path and CPU/software fallback relation for the listed cases.",
+        "A device-specific capability query, supported format/shape, driver state, and runtime interface must be verified before recommending this unit for a new hotspot.",
+        "No throughput, latency, power, silicon SKU, or API-availability claim is derived from this record."
+      ],
+      "device_availability": "evidence_required",
+      "hardware_id": "VIDEO_DECODER_HARDWARE",
+      "implementation_paths": [
+        "DecoderSurfaceFilter::CheckDecoderCapability(true)",
+        "MediaAVCodec::VideoDecoderFactory::CreateByMime",
+        "OH_AVCodec_GetCapabilityByCategory(..., HARDWARE) plus OH_VideoDecoder_CreateByName"
+      ],
+      "name": "硬件视频解码路径",
+      "performance_envelope": "not_provided",
+      "provenance": {
+        "case_count": 3,
+        "confidence": "source_confirmed_integration",
+        "origin": "strict_optimization_case_aggregation",
+        "references": [
+          "openharmony/base/web/webview/ohos_adapter/media_adapter/src/media_codec_decoder_adapter_impl.cpp:106",
+          "openharmony/base/web/webview/ohos_adapter/media_adapter/src/media_codec_decoder_adapter_impl.cpp:92",
+          "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp:404",
+          "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp:410",
+          "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:212",
+          "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:266",
+          "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:298"
+        ]
+      },
+      "record_id": "VIDEO_DECODER_HARDWARE",
+      "record_type": "hardware_unit",
+      "software_interface": "AVCodec 硬件解码器选择",
+      "source_references": [
+        "openharmony/base/web/webview/ohos_adapter/media_adapter/src/media_codec_decoder_adapter_impl.cpp:106",
+        "openharmony/base/web/webview/ohos_adapter/media_adapter/src/media_codec_decoder_adapter_impl.cpp:92",
+        "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp:404",
+        "openharmony/foundation/multimedia/av_codec/services/media_engine/filters/decoder_surface_filter.cpp:410",
+        "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:212",
+        "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:266",
+        "openharmony/foundation/multimedia/player_framework/services/engine/histreamer/avmetadatahelper/av_thumbnail_generator.cpp:298"
+      ],
+      "strict_case_ids": [
+        "thumbnail_hardware_decoder_to_software_reinitialization",
+        "video_decoder_surface_hardware_to_software_capability_fallback",
+        "webview_video_decoder_hardware_to_software_creation_fallback"
+      ],
+      "supported_algorithms_from_strict_cases": [
+        "video_decode",
+        "video_thumbnail_decode"
+      ],
+      "unit_type": "video_codec"
+    }
+  ],
+  "schema_version": "1.0",
+  "scope": {
+    "excludes": [
+      "device inventory",
+      "chip SKU and revision guarantees",
+      "device throughput, latency, power, and runtime API availability claims"
+    ],
+    "includes": [
+      "source-integrated hardware execution paths",
+      "software interfaces, source references, constraints, and strict-case operation families"
+    ]
+  },
+  "source_revision": "workspace-unpinned",
+  "summary": {
+    "all_device_availability": "evidence_required",
+    "record_count": 22,
+    "source_capability_only_count": 11,
+    "strict_case_count": 40,
+    "strict_integration_unit_count": 11
+  }
+}

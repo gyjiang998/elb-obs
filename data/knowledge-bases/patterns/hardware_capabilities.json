@@ -1,0 +1,441 @@
+[
+  {
+    "hardware_id": "JPEG_HW_DECODER",
+    "category": "hardware_capability",
+    "unit_type": "codec",
+    "entry_points": [
+      "JpegHardwareDecoder::Decode"
+    ],
+    "capability_checks": [
+      "IsHardwareDecodeSupported",
+      "CheckInputColorFmt"
+    ],
+    "constraints": {
+      "format": [
+        "JPEG_FORMAT_DESC"
+      ],
+      "color_space": [
+        "JCS_YCbCr"
+      ],
+      "resolution": "within driver CodecImageCapability min/max",
+      "decoder_type": "non-software CODEC_IMAGE_JPEG decoder"
+    },
+    "fallback_behavior": {
+      "on_unsupported": "software_decode",
+      "on_decode_fail": "software_decode"
+    },
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:107",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:163",
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp:177"
+      ],
+      "file_sha256": {
+        "source_code/multimedia_image_framework/plugins/common/libs/image/libextplugin/src/hardware/jpeg_hw_decoder.cpp": "9e54ab68bd3eb18b632eee431aaa69654608561e5a9a36c8272b4ee8f165ee08"
+      }
+    }
+  },
+  {
+    "hardware_id": "GPU_SHADER",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "Drawing GPU backend",
+      "Skia shader",
+      "RenderService shader pipeline"
+    ],
+    "capability_checks": [
+      "GPU context available",
+      "render target supports shader path"
+    ],
+    "constraints": {
+      "shape": "2D_image",
+      "data_types": [
+        "float",
+        "half",
+        "uint8"
+      ],
+      "buffer_requirements": [
+        "GPU texture",
+        "SurfaceBuffer preferred"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "hardware_id": "AAE_ARSR",
+    "category": "hardware_capability",
+    "unit_type": "image_accelerator",
+    "entry_points": [
+      "RSImageDetailEnhancerThread::ScaleByAAE"
+    ],
+    "capability_checks": [
+      "RSImageDetailEnhancerThread::IsTypeSupport",
+      "RSImageDetailEnhancerThread::IsSizeSupport",
+      "dstSurfaceBuffer != nullptr",
+      "newCanvas != nullptr"
+    ],
+    "constraints": {
+      "shape": "2D_image",
+      "direction": ["upscale_both_dimensions"],
+      "input_requirements": ["PixelMap DMA_ALLOC", "PixelMap not editable", "PixelMap not HDR"],
+      "buffer_requirements": [
+        "SurfaceBuffer"
+      ]
+    },
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "confirmed",
+      "references": [
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:135",
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:145",
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp:237"
+      ],
+      "file_sha256": {
+        "source_code/graphic_graphic_2d/rosen/modules/render_service_base/src/feature/image_detail_enhancer/rs_image_detail_enhancer_thread.cpp": "c97fe5c632a4667ed680a774f72c73f5b40ecf8c1d4f491fddd728268d886f5d"
+      }
+    }
+  },
+  {
+    "hardware_id": "NPU",
+    "category": "hardware_capability",
+    "unit_type": "ai_accelerator",
+    "entry_points": [
+      "NNRuntime",
+      "HDI NPU service"
+    ],
+    "capability_checks": [
+      "model op support",
+      "tensor shape support",
+      "dtype support"
+    ],
+    "constraints": {
+      "data_types": [
+        "float",
+        "half",
+        "int8"
+      ],
+      "min_dim": 16,
+      "buffer_requirements": [
+        "tensor buffer",
+        "prefer zero-copy"
+      ]
+    },
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "hardware_id": "JPEG_HW_ENCODER",
+    "category": "hardware_capability",
+    "unit_type": "codec",
+    "entry_points": [
+      "ExtEncoder::HardwareEncode",
+      "ExtEncoder::DoHardWareEncode"
+    ],
+    "capability_checks": [
+      "ExtEncoder::IsHardwareEncodeSupported",
+      "ImageFwkExtManager::LoadImageFwkExtNativeSo"
+    ],
+    "constraints": {
+      "format": ["image/jpeg"],
+      "quality": "not below the configured hardware-encode quality boundary",
+      "pixel_format": ["NV12", "NV21", "RGBA_8888 when GPU thumbnail support is enabled"],
+      "resolution": "even dimensions and within encoder min/max image size"
+    },
+    "evidence_scope": "source integration and dispatch contract; device-specific availability remains unverified",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:580",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:600",
+        "openharmony/foundation/multimedia/image_framework/plugins/common/libs/image/libextplugin/src/ext_encoder.cpp:698"
+      ]
+    }
+  },
+  {
+    "hardware_id": "HPAE_HIANIMATION",
+    "category": "hardware_capability",
+    "unit_type": "specialized_post_processing",
+    "entry_points": [
+      "HianimationManager::OpenDevice",
+      "HianimationManager::HianimationAlgoInit",
+      "HianimationManager::HianimationBuildTask",
+      "RSHpaeOfflineDevice::DoProcessOffline"
+    ],
+    "capability_checks": [
+      "HianimationManager::HianimationInvalid",
+      "Hianimation device symbol resolution",
+      "HPAE offline pre-process and fence callbacks"
+    ],
+    "constraints": {
+      "library": "libhianimation_client.z.so",
+      "resource": "opened Hianimation device and initialized algorithm",
+      "data_path": "offline SurfaceBuffer input/output with fence synchronization"
+    },
+    "evidence_scope": "source integration and runtime contract; silicon identity and performance envelope require device evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:112",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:200",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/hpae_base/rs_hpae_hianimation.cpp:296",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_hpae_offline_device.cpp:357"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_RENDER_SERVICE",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "RSGPUOfflineDevice::IsRSOfflineDeviceReady",
+      "RSGPUOfflineDevice::PostOfflineTaskCommon"
+    ],
+    "capability_checks": [
+      "RSSystemProperties::GetGPUOfflineEnabled",
+      "RSGPUOfflineDevice::CheckCondition",
+      "GPU offline context and timeout state"
+    ],
+    "constraints": {
+      "feature_switches": ["GPU offline enabled", "XComponent EDR enabled"],
+      "input": "eligible HDR SurfaceBuffer with supported transform",
+      "scheduling": "per-vsync cache limit and offline result future"
+    },
+    "evidence_scope": "RenderService GPU-offline implementation path; device GPU behavior requires runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:53",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/feature/hwc/hpae_offline/rs_gpu_offline_device.cpp:135"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_VULKAN_INTEROP",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "VkImageResource::Create",
+      "RSVkImageManager::MapVkImageFromSurfaceBuffer",
+      "RSVkImageManager::CreateImageFromBuffer"
+    ],
+    "capability_checks": [
+      "valid SurfaceBuffer",
+      "valid Vulkan backend texture",
+      "valid canvas GPU context"
+    ],
+    "constraints": {
+      "buffer_requirements": ["SurfaceBuffer", "NativeWindowBuffer"],
+      "synchronization": ["acquire fence", "Vulkan semaphore when available"],
+      "data_path": "external Vulkan texture backed by native buffer"
+    },
+    "evidence_scope": "Vulkan buffer interop implementation; supported formats and device extension set require runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:72",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:133",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_vk_image_manager.cpp:351"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_EGL_INTEROP",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "EglImageResource::BindToTexture",
+      "RSEglImageManager::MapEglImageFromSurfaceBuffer",
+      "RSEglImageManager::CreateImageFromBuffer"
+    ],
+    "capability_checks": [
+      "valid EGL image",
+      "canvas GPU context",
+      "EGL image and OpenGL build flags"
+    ],
+    "constraints": {
+      "buffer_requirements": ["SurfaceBuffer", "EGLImageKHR"],
+      "texture_target": "GL_TEXTURE_EXTERNAL_OES",
+      "data_path": "external OpenGL texture backed by native buffer"
+    },
+    "evidence_scope": "EGL/OpenGL buffer interop implementation; driver extension availability requires runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:193",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:266",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/composer/composer_service/external_depend/gpuComposition/rs_egl_image_manager.cpp:336"
+      ]
+    }
+  },
+  {
+    "hardware_id": "HCODEC_HDI",
+    "category": "hardware_capability",
+    "unit_type": "video_codec",
+    "entry_points": [
+      "CodecFactory::CreateCodecByName",
+      "HCodecLoader::CreateByName",
+      "HCodec::OnAllocateComponent",
+      "HCodec::AllocateAvHardwareBuffers"
+    ],
+    "capability_checks": [
+      "CodecListCore codec type classification",
+      "HCodecLoader initialization",
+      "HDI component allocation"
+    ],
+    "constraints": {
+      "component": "HCodec HDI component",
+      "buffer_requirements": ["DMA memory FD or SurfaceBuffer"],
+      "availability": "component manager and requested codec capability must be available"
+    },
+    "evidence_scope": "HCodec/HDI integration implementation; codec profile and actual device support require runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/multimedia/av_codec/services/services/codec/server/video/codec_factory.cpp:64",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec_loader.cpp:28",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp:707",
+        "openharmony/foundation/multimedia/av_codec/services/engine/codec/video/hcodec/hcodec.cpp:1514"
+      ]
+    }
+  },
+  {
+    "hardware_id": "NNRT_HDI_DEVICE",
+    "category": "hardware_capability",
+    "unit_type": "neural_network_device",
+    "entry_points": [
+      "BackendManager::RegisterBackend",
+      "HDIDeviceV2_1::PrepareModel",
+      "HDIPreparedModelV2_1::Run",
+      "NNExecutor::RunSync"
+    ],
+    "capability_checks": [
+      "BackendManager::IsValidBackend",
+      "HDI device model preparation",
+      "input/output tensor FD validation"
+    ],
+    "constraints": {
+      "model": "LiteGraph convertible to an HDI v2.1 model",
+      "buffer_requirements": ["SharedBuffer file descriptors", "mapped device memory when allocated"],
+      "runtime": "registered and available NNRT backend device"
+    },
+    "evidence_scope": "NNRuntime HDI device execution implementation; actual accelerator type and operation support require runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_core/backend_manager.cpp:106",
+        "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_device_v2_1.cpp:279",
+        "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/hdi_prepared_model_v2_1.cpp:209",
+        "openharmony/foundation/ai/neural_network_runtime/frameworks/native/neural_network_runtime/nnexecutor.cpp:691"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_VULKAN_RENDERING",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "RSUniRenderUtil::OptimizedFlushAndSubmit",
+      "NativeBufferUtils::CreateVkImage",
+      "RenderContextVK::QueryMaxGpuBufferSize"
+    ],
+    "capability_checks": [
+      "Vulkan backend and GPU context availability",
+      "native-buffer format and memory-type selection",
+      "Vulkan semaphore and fence synchronization"
+    ],
+    "constraints": {
+      "backend": "Vulkan",
+      "buffer_requirements": ["NativeWindowBuffer or SurfaceBuffer", "backend texture/image"],
+      "synchronization": ["acquire fence", "Vulkan semaphore", "GPU context flush/submit"]
+    },
+    "evidence_scope": "Rosen Vulkan rendering integration; driver version, enabled extensions and runtime performance require device evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service/core/pipeline/render_thread/rs_uni_render_util.cpp:1081",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos/backend/native_buffer_utils.cpp:66",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_vk.cpp:111"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_GLES_RENDERING",
+    "category": "hardware_capability",
+    "unit_type": "gpu",
+    "entry_points": [
+      "RenderContextGL::Init",
+      "RenderContextGL::CreateEGLSurface",
+      "RenderContextGL::SwapBuffers",
+      "SkiaGPUContext::BuildFromGL"
+    ],
+    "capability_checks": [
+      "EGL display and context initialization",
+      "GLES interface and extension availability",
+      "render-surface format and swap support"
+    ],
+    "constraints": {
+      "backend": "EGL/GLES",
+      "buffer_requirements": ["EGLSurface", "external texture when supported"],
+      "texture_target": "GL_TEXTURE_EXTERNAL_OES when the external-image path is selected"
+    },
+    "evidence_scope": "Rosen EGL/GLES rendering integration; actual renderer, extension availability and performance require runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:142",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:269",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/new_render_context/render_context_gl.cpp:257",
+        "openharmony/foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing/engine_adapter/skia_adapter/skia_gpu_context.cpp:90"
+      ]
+    }
+  },
+  {
+    "hardware_id": "GPU_OPENCL_VPE",
+    "category": "hardware_capability",
+    "unit_type": "gpu_compute",
+    "entry_points": [
+      "SetupOpencl",
+      "CreateContext",
+      "ClImportMemory"
+    ],
+    "capability_checks": [
+      "OpenCL platform and target-device enumeration",
+      "OpenCL context and command-queue creation",
+      "OpenCL memory-import extension resolution"
+    ],
+    "constraints": {
+      "backend": "OpenCL",
+      "runtime": "loadable OpenCL library and a selectable platform/device",
+      "data_path": "VPE OpenCL context with imported memory when the extension is available"
+    },
+    "evidence_scope": "VPE OpenCL integration; selected device class, extension support and processing benefit require runtime evidence",
+    "provenance": {
+      "origin": "source_code",
+      "confidence": "unverified",
+      "references": [
+        "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:164",
+        "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_openclsetup.cpp:274",
+        "openharmony/foundation/multimedia/video_processing_engine/framework/algorithm/common/image_opencl_wrapper.cpp:108"
+      ]
+    }
+  }
+]

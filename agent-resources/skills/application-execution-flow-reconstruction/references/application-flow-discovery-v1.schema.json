@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "application-flow-discovery-v1.schema.json",
+  "title": "Application Flow Discovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_connector_id",
+    "source_snapshot_id",
+    "scope",
+    "analysis_summary",
+    "flows",
+    "unknowns"
+  ],
+  "properties": {
+    "schema_version": { "const": "application_flow_discovery/v1" },
+    "source_connector_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "source_snapshot_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "scope": { "type": "string", "maxLength": 2048 },
+    "analysis_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["what", "scope_rationale", "methods"],
+      "properties": {
+        "what": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "scope_rationale": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "methods": {
+          "type": "array",
+          "maxItems": 16,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/flow" }
+    },
+    "unknowns": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "type": "string", "minLength": 1, "maxLength": 2000 }
+    }
+  },
+  "$defs": {
+    "semantic_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,79}$"
+    },
+    "source_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "line_start", "line_end", "symbol", "evidence_kind", "claim"],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "path": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "line_start": { "type": "integer", "minimum": 1 },
+        "line_end": { "type": "integer", "minimum": 1 },
+        "symbol": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "evidence_kind": {
+          "type": "string",
+          "enum": ["entry", "exit", "call", "callback", "ipc", "state_transition", "trace_instrumentation", "configuration", "documentation", "other"]
+        },
+        "claim": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "flow_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "symbol", "kind", "source_evidence_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "symbol": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "source_evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": { "$ref": "#/$defs/semantic_id" }
+        }
+      }
+    },
+    "trace_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "process_name", "source_evidence_ids", "verification_status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "Normalized HiTrace label or a source-proven stable selector for a dynamic label; never a copied function declaration."
+        },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "process_name": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "source_evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": { "$ref": "#/$defs/semantic_id" }
+        },
+        "verification_status": {
+          "type": "string",
+          "enum": ["observed_in_source", "inferred_needs_trace", "user_provided", "unavailable"]
+        },
+        "source_location": { "$ref": "#/$defs/trace_source_location" },
+        "instrumentation": { "$ref": "#/$defs/trace_instrumentation" }
+      }
+    },
+    "trace_source_location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "line": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "trace_instrumentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["macro", "event_label_match", "build_condition"],
+      "properties": {
+        "macro": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,119}$" },
+        "event_label_match": {
+          "type": "string",
+          "enum": ["exact_literal", "wrapper_literal", "function_derived", "static_prefix"]
+        },
+        "build_condition": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "order",
+        "description",
+        "trigger",
+        "completion",
+        "participants",
+        "entry_points",
+        "exit_points",
+        "source_evidence",
+        "trace_anchor_candidates",
+        "confidence",
+        "open_questions"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/semantic_id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "order": { "type": "integer", "minimum": 1 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "trigger": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "completion": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        },
+        "entry_points": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/flow_point" }
+        },
+        "exit_points": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/flow_point" }
+        },
+        "source_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": { "$ref": "#/$defs/source_evidence" }
+        },
+        "trace_anchor_candidates": {
+          "type": "array",
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/trace_anchor" }
+        },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "open_questions": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "type": "string", "minLength": 1, "maxLength": 1600 }
+        }
+      }
+    }
+  }
+}

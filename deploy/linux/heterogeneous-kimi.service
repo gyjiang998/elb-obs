@@ -1,0 +1,19 @@
+[Unit]
+Description=Kimi Code Agent Engine
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hetero
+Group=hetero
+Environment=HOME=/home/hetero
+ExecStart=/home/hetero/.kimi-code/bin/kimi web --no-open --port 58627 --log-level info
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+

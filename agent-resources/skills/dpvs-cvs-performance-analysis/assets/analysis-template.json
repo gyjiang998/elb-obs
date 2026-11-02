@@ -1,0 +1,57 @@
+{
+  "schema_version": null,
+  "analysis_id": null,
+  "manifest": {
+    "scenarios": {
+      "baseline": {
+        "role": "single_node_guest",
+        "deployment_node_count": 1,
+        "observed_node_count": null
+      },
+      "scaled": {
+        "role": "sixteen_node_guest",
+        "deployment_node_count": 16,
+        "observed_node_count": null
+      },
+      "host": {
+        "role": "host_single_node",
+        "deployment_node_count": 1,
+        "observed_node_count": null
+      }
+    },
+    "files": []
+  },
+  "coverage": {
+    "status": "not_assessed",
+    "missing_evidence": [],
+    "unparsed_files": []
+  },
+  "scaling_analysis": {
+    "status": "not_assessed",
+    "metrics": []
+  },
+  "perf_comparison": {
+    "status": "not_assessed",
+    "rows": [],
+    "normalization": []
+  },
+  "sar_comparison": {
+    "status": "not_assessed",
+    "rows": []
+  },
+  "host_sar_observations": [],
+  "host_numa_analysis": {
+    "status": "not_assessed",
+    "observations": [],
+    "missing_evidence": []
+  },
+  "findings": [],
+  "recommendations": [],
+  "limitations": [],
+  "provenance": {
+    "template_only": true,
+    "source_files": [],
+    "parser_versions": [],
+    "transformations": []
+  }
+}

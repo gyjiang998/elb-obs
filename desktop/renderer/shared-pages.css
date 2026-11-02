@@ -1,0 +1,222 @@
+.shared-react-page {
+  display: block;
+  min-height: 100%;
+  padding: 0;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.desktop-agent-repair {
+  position: sticky;
+  z-index: 8;
+  top: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 14px 0;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid #d19a66;
+  border-radius: 5px;
+  background: #fff7e9;
+  color: #4a3522;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 10%);
+}
+
+.desktop-agent-repair[hidden] { display: none; }
+.desktop-agent-repair > div { display: grid; gap: 2px; min-width: 0; }
+.desktop-agent-repair strong { font-size: 12px; }
+.desktop-agent-repair span { color: #705136; font-size: 11px; line-height: 1.45; }
+.desktop-agent-repair-action { white-space: nowrap; }
+.desktop-agent-repair-dismiss {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font-size: 17px;
+  cursor: pointer;
+}
+.desktop-agent-repair-dismiss:hover { background: rgb(0 0 0 / 7%); }
+.desktop-agent-repair.submitted { border-color: #7ba989; background: #edf8f0; color: #204d2e; }
+.desktop-agent-repair.submitted span { color: #3d6648; }
+
+html[data-theme="dark"] .desktop-agent-repair {
+  border-color: #8b693e;
+  background: #352c20;
+  color: #f0d3aa;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 30%);
+}
+html[data-theme="dark"] .desktop-agent-repair span { color: #d0b68f; }
+html[data-theme="dark"] .desktop-agent-repair.submitted { border-color: #477557; background: #203328; color: #b9ddc5; }
+html[data-theme="dark"] .desktop-agent-repair.submitted span { color: #9bc2a7; }
+
+.shared-react-page .parallel-studio {
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--sans);
+}
+
+.shared-react-page :is(.quiet-button, .primary-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.shared-react-page .primary-button {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+/* Mermaid's viewer chrome normally comes from the Web app's global stylesheet.
+ * Keep the shared modeling page self-contained when it is mounted in Desktop. */
+.shared-react-page .pm-graph .mermaid-viewer { position: relative; min-width: 0; }
+.shared-react-page .pm-graph .mermaid-viewer-toolbar {
+  position: absolute;
+  z-index: 2;
+  top: 9px;
+  right: 9px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #d6dde1;
+  border-radius: 5px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 2px 8px rgb(29 48 60 / 10%);
+  backdrop-filter: blur(7px);
+}
+.shared-react-page .pm-graph .mermaid-viewer-toolbar button {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #46545d;
+}
+.shared-react-page .pm-graph .mermaid-viewer-toolbar button:hover:not(:disabled),
+.shared-react-page .pm-graph .mermaid-viewer-toolbar button.selected { background: #e7f1f7; color: #24688e; }
+.shared-react-page .pm-graph .mermaid-viewer-toolbar button:disabled { color: #b7bec2; cursor: default; }
+.shared-react-page .pm-graph .mermaid-viewer-toolbar > span { min-width: 43px; color: var(--muted); font-family: var(--mono); font-size: 10px; text-align: center; }
+.shared-react-page .pm-graph .application-flow-diagram,
+.shared-react-page .pm-graph .application-flow-diagram-state {
+  height: min(55svh, 620px);
+  min-height: 360px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+.shared-react-page .pm-graph .application-flow-diagram { display: block; overflow: auto; cursor: grab; overscroll-behavior: contain; touch-action: none; }
+.shared-react-page .pm-graph .application-flow-diagram.dragging { cursor: grabbing; user-select: none; }
+.shared-react-page .pm-graph .application-flow-diagram-canvas { min-width: 1px; min-height: 1px; margin: auto; padding: 16px; box-sizing: content-box; }
+.shared-react-page .pm-graph .application-flow-diagram-canvas svg { display: block; width: 100%; height: 100%; max-width: none; }
+.shared-react-page .pm-graph .application-flow-diagram-state { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 11px; }
+
+.shared-react-page .spin { animation: shared-page-spin .9s linear infinite; }
+@keyframes shared-page-spin { to { transform: rotate(360deg); } }
+
+html[data-theme="dark"] .shared-react-page {
+  --surface: #181818;
+  --surface-strong: #252526;
+  --ink: #cccccc;
+  --muted: #9d9d9d;
+  --faint: #858585;
+  --line: #3c3c3c;
+  --line-strong: #555555;
+  --green-soft: #193c25;
+  --amber-soft: #44381b;
+  --red-soft: #4a2020;
+}
+
+html[data-theme="dark"] .shared-react-page .hardware-topology strong { color: #8ec8e8; }
+html[data-theme="dark"] .shared-react-page .hardware-profile-footer code { color: #75b6dc; }
+
+html[data-theme="dark"] .shared-react-page :is(.pm-note, .pm-notice, .pm-device-card, .pm-step.selected, .pm-history button.selected, .pm-table tr.selected td, .pm-progress, .pm-file, .pm-chain > span, .wf-empty-domains article, .wf-evidence, .wf-boundary-note) {
+  background: #202a30;
+  border-color: #3c4b53;
+  color: #c6d6df;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.pm-box, .pm-metrics, .pm-table-scroll, .pm-history button, .pm-archive-list, .wf-domain-grid article, .wf-scheduling-grid article, .wf-method-grid article) {
+  background: #252526;
+  border-color: #3c3c3c;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.pm-table th, .wf-stage-table th, .pm-code) {
+  background: #2d2d30;
+  color: #b7b7b7;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.pm-table td, .wf-metric-row, .wf-time-sub, .wf-service-summary) { border-color: #3c3c3c; }
+html[data-theme="dark"] .shared-react-page :is(.pm-field, .wf-timeline-header span, .wf-class-legend, .wf-state-legend, .wf-metric-row span, .wf-scheduling-grid h5, .wf-scheduling-grid p, .wf-time-sub, .wf-evidence p, .wf-handoff p, .wf-boundary-note p, .wf-method-grid p, .wf-classification-method>p, .wf-benchmark-method>p, .wf-cpu-placement small) { color: #a9a9a9; }
+html[data-theme="dark"] .shared-react-page .pm-details > summary { color: #75b6dc; }
+html[data-theme="dark"] .shared-react-page .pm-metrics strong { color: #8ec8e8; }
+html[data-theme="dark"] .shared-react-page .wf-timeline { background: #2b2b2c; }
+
+html[data-theme="dark"] .shared-react-page .pm-tabs {
+  background: #202020;
+  border-color: #3c3c3c;
+}
+html[data-theme="dark"] .shared-react-page .pm-tabs button { color: #b7b7b7; }
+html[data-theme="dark"] .shared-react-page .pm-tabs button:hover:not(:disabled) { background: #2a2d2e; color: #e7e7e7; }
+html[data-theme="dark"] .shared-react-page .pm-tabs button[aria-selected="true"] {
+  background: #333337;
+  color: #8ec8e8;
+  box-shadow: inset 0 0 0 1px #454549;
+}
+html[data-theme="dark"] .shared-react-page .pm-tabs button:disabled { color: #656565; }
+html[data-theme="dark"] .shared-react-page .pm-archive-list > button { border-color: #3c3c3c; color: #cccccc; }
+html[data-theme="dark"] .shared-react-page .pm-archive-list > button:hover { background: #2a2d2e; }
+html[data-theme="dark"] .shared-react-page .pm-archive-list > button.selected { background: #253845; box-shadow: inset 3px 0 0 #3794c6; }
+html[data-theme="dark"] .shared-react-page .pm-archive-list b { color: #8ec8e8; }
+html[data-theme="dark"] .shared-react-page .pm-graph,
+html[data-theme="dark"] .shared-react-page .pm-graph :is(.application-flow-diagram, .application-flow-diagram-state) {
+  background: #1e1e1e;
+  border-color: #3c3c3c;
+}
+html[data-theme="dark"] .shared-react-page .pm-graph .mermaid-viewer-toolbar {
+  background: rgb(37 37 38 / 94%);
+  border-color: #4a4a4a;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+html[data-theme="dark"] .shared-react-page .pm-graph .mermaid-viewer-toolbar button { color: #b7b7b7; }
+html[data-theme="dark"] .shared-react-page .pm-graph .mermaid-viewer-toolbar button:hover:not(:disabled),
+html[data-theme="dark"] .shared-react-page .pm-graph .mermaid-viewer-toolbar button.selected { background: #35434b; color: #a9d6ef; }
+html[data-theme="dark"] .shared-react-page .pm-graph .mermaid-viewer-toolbar button:disabled { color: #656565; }
+
+html[data-theme="dark"] .shared-react-page :is(.cs-model-map > div, .cs-methods > article, .cost-model-explanation, .cm-example, .ci-measurement-path > div, .ci-formula, .ci-plan-controls) {
+  background: #252526;
+  border-color: #3c3c3c;
+  color: #cccccc;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.cs-workflow-tabs, .cm-term, .cm-simulation-path span, .cm-simulation-path strong, .ci-matrix th, .ci-matrix td) {
+  background: #2d2d30;
+  border-color: #464647;
+  color: #c2c2c2;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.cs-workflow-tabs button.selected, .cs-history-grid > button.selected) {
+  background: #20323d;
+  border-color: #42657a;
+  color: #d2e8f4;
+}
+
+html[data-theme="dark"] .shared-react-page :is(.cm-symbol, .cm-factor-grid p strong, .cm-bar-row strong, .cm-worked-equation > span:last-child, .cm-fraction, .ci-measurement-path strong) { color: #d4dde2; }
+html[data-theme="dark"] .shared-react-page :is(.cm-term > span:last-child, .cost-model-explanation p.cm-reference, .cost-model-explanation p.cm-scope, .cm-factor-grid p, .cm-controls > p, .cm-controls label, .cm-controls small, .cm-example-result > p, .cm-total > p, .cm-detail p, .ci-measurement-path span) { color: #a7b2b9; }

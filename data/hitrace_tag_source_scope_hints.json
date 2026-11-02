@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "knowledge_id": "openharmony-hitrace-tag-source-scope-hints",
+  "purpose": "Search prioritization only. A tag scope narrows instrumentation lookup; it is not source binding or ownership proof.",
+  "records": [
+    {
+      "tag_macro": "HITRACE_TAG_APP",
+      "relative_roots": [
+        "foundation/bundlemanager",
+        "foundation/appexecfwk",
+        "foundation/ability",
+        "foundation/distributedschedule",
+        "applications"
+      ]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_ABILITY_MANAGER",
+      "relative_roots": ["foundation/ability", "foundation/appexecfwk"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_WINDOW_MANAGER",
+      "relative_roots": ["foundation/window/window_manager", "window_window_manager"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_GRAPHIC_AGP",
+      "relative_roots": ["foundation/graphic/graphic_2d", "graphic_graphic_2d", "third_party/vulkan-loader/openharmony"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_ACE",
+      "relative_roots": [
+        "foundation/arkui/napi",
+        "foundation/arkui/ace_engine",
+        "arkui_ace_engine"
+      ]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_ARK",
+      "relative_roots": ["arkcompiler"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_FFRT",
+      "relative_roots": ["foundation/resourceschedule/ffrt", "ffrt"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_MULTIMODALINPUT",
+      "relative_roots": ["foundation/multimodalinput"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_RPC",
+      "relative_roots": ["foundation/communication/ipc"]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_ZIMAGE",
+      "relative_roots": [
+        "foundation/multimedia/image_framework",
+        "foundation/multimedia/image_effect",
+        "multimedia_image_framework",
+        "multimedia_image_effect"
+      ]
+    },
+    {
+      "tag_macro": "HITRACE_TAG_ZMEDIA",
+      "relative_roots": ["foundation/multimedia", "multimedia_player_framework"]
+    }
+  ]
+}

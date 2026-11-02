@@ -1,0 +1,101 @@
+{
+  "name": "heterogeneous-workbench-desktop",
+  "productName": "Heterogeneous Workbench",
+  "version": "0.1.95",
+  "description": "Local capture, Trace library, Code Agent and SSH workbench",
+  "author": "Heterogeneous Workbench contributors",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "postinstall": "node build/prepare-native.cjs",
+    "prepare:electron": "node build/prepare-electron.cjs",
+    "prepare:python": "node build/prepare-python.cjs",
+    "build": "node build/build.cjs",
+    "start": "npm run build && electron .",
+    "test": "node --test tests/*.test.cjs",
+    "pack": "npm run build && electron-builder --dir",
+    "dist:win": "npm run prepare:win && npm run build && electron-builder --win portable nsis --x64",
+    "dist:mac": "npm run build && electron-builder --mac zip --arm64",
+    "prepare:win": "npm run --silent prepare:python"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0",
+    "lucide-react": "0.468.0",
+    "mermaid": "11.16.1",
+    "node-pty": "1.1.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "ssh2": "1.17.0"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
+    "monaco-editor": "0.53.0",
+    "playwright": "1.56.1",
+    "unzipper": "0.12.3"
+  },
+  "build": {
+    "appId": "dev.heterogeneous.workbench",
+    "artifactName": "Heterogeneous-Workbench-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "runtime-manifest.cjs",
+      "runtime/**",
+      "dist/**",
+      "!dist/**/*.map",
+      "examples/**",
+      "package.json",
+      "assets/**"
+    ],
+    "asarUnpack": [
+      "runtime/**",
+      "node_modules/node-pty/**"
+    ],
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "extraResources": [
+        {
+          "from": "build/resources/python-win-x64",
+          "to": "python-win-x64"
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "signExecutable": false
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": null
+    },
+    "extraResources": [
+      {
+        "from": "build/resources/capture-runtime",
+        "to": "capture-runtime"
+      },
+      {
+        "from": "build/resources/analysis-worker",
+        "to": "analysis-worker"
+      }
+    ],
+    "nsis": {
+      "artifactName": "Heterogeneous-Workbench-${version}-win-x64-setup.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "rule_id": "ui_or_render_thread_hotspot",
+    "category": "runtime_hotspot_rule",
+    "applies_to": [
+      "UI",
+      "RenderThread",
+      "RS"
+    ],
+    "conditions": {
+      "wall_time_ms_min": 2.0,
+      "call_count_min": 5,
+      "critical_path": true
+    },
+    "priority_boost": [
+      "frame_miss",
+      "startup_path",
+      "animation_path"
+    ],
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  },
+  {
+    "rule_id": "high_frequency_cpu_kernel",
+    "category": "runtime_hotspot_rule",
+    "applies_to": [
+      "any_thread"
+    ],
+    "conditions": {
+      "cpu_time_ms_total_min": 10.0,
+      "call_count_min": 30
+    },
+    "priority_boost": [
+      "repeated_frame_path",
+      "batchable"
+    ],
+    "provenance": {
+      "origin": "seed_example",
+      "confidence": "unverified",
+      "references": []
+    }
+  }
+]
